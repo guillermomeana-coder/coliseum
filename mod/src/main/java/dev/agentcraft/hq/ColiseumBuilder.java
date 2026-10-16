@@ -9,45 +9,27 @@ import java.util.List;
 import java.util.Locale;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The OpenClaw Coliseum: a circular arena where AI agents debate ideas while the user spectates
- * from tiered seating above. Designed for the Arena skill — agents stand at podiums around a
- * central stage, present arguments via speech bubbles, and the audience (user) judges.
+ * The OpenClaw Coliseum: an elliptical Roman amphitheater inspired by the real Colosseum.
+ * Agents debate from podiums on the arena floor while the user spectates from tiered seating.
+ *
+ * <p>Based on the Compact Roman Colosseum schematic palette: polished diorite, chiseled sandstone,
+ * stone bricks, cut sandstone, smooth sandstone. Elliptical shape (wider on X axis), 4 axial
+ * gates (N/S/E/W), 3 tiers of arched walls, interior seating bowl, central arena with stage.
  *
  * <pre>
- *   Layout (top view, centre at 0,0):
- *
- *          ┌─── Tier 3 (r=22-24) ── upper gallery ───┐
- *          │  ┌─ Tier 2 (r=18-21) ── mid seating ──┐ │
- *          │  │  ┌─ Tier 1 (r=14-17) ── front ──┐  │ │
- *          │  │  │                               │  │ │
- *          │  │  │    Podiums (r=10) × 8         │  │ │
- *          │  │  │         ┌─────┐               │  │ │
- *          │  │  │         │Stage│               │  │ │
- *          │  │  │         │ r=4 │               │  │ │
- *          │  │  │         └─────┘               │  │ │
- *          │  │  │                               │  │ │
- *          │  │  └───────────────────────────────┘  │ │
- *          │  └─────────────────────────────────────┘ │
- *          └──────────── Gate (south) ────────────────┘
- *
- *   Cross-section:
- *     y=74  ·····  Tier 3 seating
- *     y=72  ···    Tier 2 seating
- *     y=70  ·      Tier 1 seating
- *     y=68         Podium level (agents stand here)
- *     y=67         Arena floor
- *     y=66         Stage platform
+ *   Ellipse radii: X=23, Z=18 (outer wall)
+ *   Arena radii:   X=13, Z=10
+ *   4 tiers of seating between arena and outer wall
+ *   4 axial gates at N/S/E/W
+ *   8 podiums around central stage
+ *   28 blocks tall (floor to parapet)
  * </pre>
- *
- * Floor at y=65 (same as StudioHqBuilder for compatibility). The coliseum sits in a cleared
- * flat area. Podiums are evenly spaced around the central stage at 45° intervals.
  */
 public final class ColiseumBuilder implements HqBuilder {
     public static final String ID = "coliseum";
@@ -56,60 +38,66 @@ public final class ColiseumBuilder implements HqBuilder {
     static final int GROUND = 64;
     static final int FLOOR = 65;
     static final int FEET = 66;
-    static final int ARENA_FLOOR = FEET;
-    static final int STAGE_Y = FEET;
-    static final int PODIUM_Y = FEET;
 
     /** Centre of the coliseum. */
     static final int CX = 0, CZ = 0;
-    /** Radii */
-    static final int STAGE_R = 4;
-    static final int PODIUM_R = 10;
-    static final int ARENA_R = 13;
-    static final int TIER1_R = 14;
-    static final int TIER2_R = 18;
-    static final int TIER3_R = 22;
-    static final int OUTER_R = 25;
-    /** Wall height above ground. */
-    static final int WALL_H = 12;
+
+    /** Ellipse semi-axes for the outer wall. */
+    static final int OUTER_RX = 23;
+    static final int OUTER_RZ = 18;
+
+    /** Ellipse semi-axes for the arena floor. */
+    static final int ARENA_RX = 13;
+    static final int ARENA_RZ = 10;
+
+    /** Stage radius (circular, centred). */
+    static final int STAGE_R = 3;
+
+    /** Podium ring semi-axes. */
+    static final int PODIUM_RX = 9;
+    static final int PODIUM_RZ = 7;
+
+    /** Wall height tiers. */
+    static final int TIER_H = 5;      // height per tier
+    static final int NUM_TIERS = 4;   // 4 tiers of arched wall
+    static final int WALL_TOP = FEET + NUM_TIERS * TIER_H; // y=86
+    static final int PARAPET = WALL_TOP + 2;
+
+    /** Gate half-width. */
+    static final int GATE_W = 2;
 
     /** Site box. */
-    static final int[] SITE = {-28, 60, -28, 28, 90, 28};
+    static final int[] SITE = {-26, 60, -21, 26, 95, 21};
 
-    // ------------------------------------------------------------------ materials
+    // ------------------------------------------------------------------ materials (Roman Colosseum palette)
     static final BlockState AIR = Blocks.AIR.defaultBlockState();
-    static final BlockState STONE = Blocks.POLISHED_DEEPSLATE.defaultBlockState();
-    static final BlockState STONE_BRICK = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
-    static final BlockState STONE_TILE = Blocks.DEEPSLATE_TILES.defaultBlockState();
-    static final BlockState SAND_FLOOR = Blocks.SMOOTH_SANDSTONE.defaultBlockState();
-    static final BlockState STAGE_BLOCK = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
-    static final BlockState STAGE_ACCENT = Blocks.GILDED_BLACKSTONE.defaultBlockState();
-    static final BlockState PILLAR = Blocks.QUARTZ_PILLAR.defaultBlockState();
-    static final BlockState SEAT_STONE = Blocks.POLISHED_ANDESITE.defaultBlockState();
-    static final BlockState SEAT_DARK = Blocks.POLISHED_BASALT.defaultBlockState();
-    static final BlockState PODIUM_BASE = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
+    static final BlockState FOUNDATION = Blocks.STONE_BRICKS.defaultBlockState();
+    static final BlockState WALL_MAIN = Blocks.CHISELED_SANDSTONE.defaultBlockState();
+    static final BlockState WALL_ACCENT = Blocks.CUT_SANDSTONE.defaultBlockState();
+    static final BlockState WALL_SMOOTH = Blocks.SMOOTH_SANDSTONE.defaultBlockState();
+    static final BlockState COLUMN = Blocks.POLISHED_DIORITE.defaultBlockState();
+    static final BlockState COLUMN_TOP = Blocks.SMOOTH_QUARTZ.defaultBlockState();
+    static final BlockState ARCH_BLOCK = Blocks.SMOOTH_SANDSTONE.defaultBlockState();
+    static final BlockState FLOOR_ARENA = Blocks.SMOOTH_SANDSTONE.defaultBlockState();
+    static final BlockState FLOOR_RING = Blocks.SMOOTH_RED_SANDSTONE.defaultBlockState();
+    static final BlockState STAGE_BLOCK = Blocks.POLISHED_DIORITE.defaultBlockState();
+    static final BlockState STAGE_EDGE = Blocks.SMOOTH_QUARTZ.defaultBlockState();
+    static final Block SEAT_STAIRS = Blocks.SANDSTONE_STAIRS;
+    static final Block SEAT_ACCENT_STAIRS = Blocks.STONE_BRICK_STAIRS;
+    static final BlockState RUIN = Blocks.CRACKED_STONE_BRICKS.defaultBlockState();
+    static final BlockState PODIUM_BASE = Blocks.POLISHED_DIORITE.defaultBlockState();
     static final BlockState PODIUM_TOP = Blocks.SMOOTH_QUARTZ.defaultBlockState();
-    static final BlockState BANNER_POLE = Blocks.IRON_BARS.defaultBlockState();
-    static final BlockState TORCH_BLOCK = Blocks.SOUL_LANTERN.defaultBlockState();
-    static final BlockState GLOW = Blocks.SEA_LANTERN.defaultBlockState();
-    static final BlockState FENCE = Blocks.DEEPSLATE_BRICK_WALL.defaultBlockState();
-
-    /** 8 podium positions around the stage (45° intervals). */
-    static final int[][] PODIUM_POS = new int[8][2];
-    static {
-        for (int i = 0; i < 8; i++) {
-            double angle = Math.toRadians(i * 45);
-            PODIUM_POS[i][0] = CX + (int) Math.round(PODIUM_R * Math.sin(angle));
-            PODIUM_POS[i][1] = CZ - (int) Math.round(PODIUM_R * Math.cos(angle));
-        }
-    }
+    static final BlockState LANTERN_BLOCK = St.lantern(Blocks.LANTERN, false);
+    static final BlockState LANTERN_HANG = St.lantern(Blocks.LANTERN, true);
+    static final BlockState BANNER_BLOCK = Blocks.SANDSTONE_WALL.defaultBlockState();
+    static final BlockState PLANK = Blocks.OAK_PLANKS.defaultBlockState();
 
     @Override
     public String id() { return ID; }
 
     @Override
     public String description() {
-        return "OpenClaw Coliseum: circular debate arena with tiered spectator seating and 8 podiums";
+        return "OpenClaw Coliseum: elliptical Roman amphitheater with arched tiers, 8 debate podiums, spectator seating";
     }
 
     @Override
@@ -126,41 +114,63 @@ public final class ColiseumBuilder implements HqBuilder {
                 : y >= GROUND - 3 ? Blocks.DIRT.defaultBlockState()
                 : Blocks.STONE.defaultBlockState());
 
-        // Build all sections
         foundation(p);
         arenaFloor(p);
+        seatingBowl(p);
+        outerWalls(p);
+        arches(p);
+        gates(p);
+        parapet(p);
         stage(p);
         podiums(p, a);
-        tieredSeating(p);
-        outerWall(p);
-        pillarsAndArches(p);
         lighting(p);
-        entrance(p, a);
-        cameras(a);
+        ruins(p);
+        anchors(p, a);
 
-        // Apply
         BlockState[] previous = PlanStore.load(level.getServer(), ID, SITE, p.size());
         Plan.Stats st = p.apply(level, previous, options.force());
         PlanStore.save(level.getServer(), ID, SITE, p.cells());
 
-        a.bounds(-OUTER_R, FLOOR, -OUTER_R, OUTER_R, FLOOR + WALL_H, OUTER_R);
-        a.spot(AnchorNames.ENTRANCE, CX, FEET, OUTER_R + 2, 180);
-        a.put(AnchorNames.SPAWN, CX + 0.5, FEET + 8, OUTER_R - 3.5, 180, 30); // spectator view from top tier
+        a.bounds(-OUTER_RX, FLOOR, -OUTER_RZ, OUTER_RX, PARAPET, OUTER_RZ);
+        a.spot(AnchorNames.ENTRANCE, CX, FEET, OUTER_RZ + 2, 180);
+        a.put(AnchorNames.SPAWN, CX + 0.5, FEET + 12, OUTER_RZ - 2.5, 180, 30);
 
         long ms = (System.nanoTime() - t0) / 1_000_000;
-        AgentCraft.LOGGER.info("Coliseum: {} cells applied in {} ms ({} changed)", st.cells(), ms, st.changed());
+        AgentCraft.LOGGER.info("Coliseum: {} cells, {} changed in {} ms", st.cells(), st.changed(), ms);
         return String.format(Locale.ROOT, "Coliseum built: %d blocks, %d ms", st.changed(), ms);
+    }
+
+    // ================================================================== helpers
+
+    /** Is (x,z) inside the ellipse with semi-axes rx, rz? */
+    static boolean inEllipse(int x, int z, double rx, double rz) {
+        double nx = x / rx, nz = z / rz;
+        return nx * nx + nz * nz <= 1.0;
+    }
+
+    /** Ellipse radius at angle for (x,z). Returns distance from center normalized to 0..1. */
+    static double ellipseNorm(int x, int z, double rx, double rz) {
+        double nx = x / rx, nz = z / rz;
+        return Math.sqrt(nx * nx + nz * nz);
+    }
+
+    /** Is this position inside a gate opening? 4 axial gates at N/S/E/W. */
+    static boolean isGate(int x, int z) {
+        // North/South gates: |x| <= GATE_W
+        if (Math.abs(x) <= GATE_W && (Math.abs(z) > ARENA_RZ - 1)) return true;
+        // East/West gates: |z| <= GATE_W
+        if (Math.abs(z) <= GATE_W && (Math.abs(x) > ARENA_RX - 1)) return true;
+        return false;
     }
 
     // ================================================================== foundation
 
     private static void foundation(Plan p) {
-        for (int x = -OUTER_R - 1; x <= OUTER_R + 1; x++) {
-            for (int z = -OUTER_R - 1; z <= OUTER_R + 1; z++) {
-                double r = Math.sqrt(x * x + z * z);
-                if (r <= OUTER_R + 1) {
+        for (int x = -OUTER_RX - 1; x <= OUTER_RX + 1; x++) {
+            for (int z = -OUTER_RZ - 1; z <= OUTER_RZ + 1; z++) {
+                if (inEllipse(x, z, OUTER_RX + 1.5, OUTER_RZ + 1.5)) {
                     p.set(x, GROUND, z, Blocks.DIRT.defaultBlockState());
-                    p.set(x, FLOOR, z, r <= OUTER_R ? STONE : Blocks.GRASS_BLOCK.defaultBlockState());
+                    p.set(x, FLOOR, z, FOUNDATION);
                 }
             }
         }
@@ -169,19 +179,222 @@ public final class ColiseumBuilder implements HqBuilder {
     // ================================================================== arena floor
 
     private static void arenaFloor(Plan p) {
-        for (int x = -ARENA_R; x <= ARENA_R; x++) {
-            for (int z = -ARENA_R; z <= ARENA_R; z++) {
-                double r = Math.sqrt(x * x + z * z);
-                if (r <= ARENA_R) {
-                    p.set(x, FLOOR, z, SAND_FLOOR);
-                    // Decorative rings on the floor
-                    if (Math.abs(r - 6) < 0.6 || Math.abs(r - ARENA_R) < 0.6) {
-                        p.set(x, FLOOR, z, STONE_TILE);
+        for (int x = -ARENA_RX; x <= ARENA_RX; x++) {
+            for (int z = -ARENA_RZ; z <= ARENA_RZ; z++) {
+                if (!inEllipse(x, z, ARENA_RX + 0.5, ARENA_RZ + 0.5)) continue;
+                p.set(x, FLOOR, z, FLOOR_ARENA);
+                // Decorative elliptical rings
+                double norm = ellipseNorm(x, z, ARENA_RX, ARENA_RZ);
+                if (Math.abs(norm - 0.5) < 0.06 || Math.abs(norm - 0.95) < 0.06) {
+                    p.set(x, FLOOR, z, FLOOR_RING);
+                }
+                // Clear air above
+                for (int y = FEET; y <= PARAPET; y++) {
+                    p.set(x, y, z, AIR);
+                }
+            }
+        }
+    }
+
+    // ================================================================== seating bowl
+
+    private static void seatingBowl(Plan p) {
+        // Stepped seating between arena edge and outer wall
+        for (int x = -OUTER_RX; x <= OUTER_RX; x++) {
+            for (int z = -OUTER_RZ; z <= OUTER_RZ; z++) {
+                if (!inEllipse(x, z, OUTER_RX + 0.5, OUTER_RZ + 0.5)) continue;
+                if (inEllipse(x, z, ARENA_RX + 0.5, ARENA_RZ + 0.5)) continue;
+                if (isGate(x, z)) continue;
+
+                // How far from arena edge to outer wall (0=arena, 1=wall)
+                double normArena = ellipseNorm(x, z, ARENA_RX + 1, ARENA_RZ + 1);
+                double normOuter = ellipseNorm(x, z, OUTER_RX, OUTER_RZ);
+                double seatProgress = (normArena - 1.0) / (normOuter / normArena);
+
+                // Step height: each row is 1 block higher
+                int step = (int) ((ellipseNorm(x, z, ARENA_RX, ARENA_RZ) - 1.0) * 12);
+                step = Math.max(0, Math.min(step, NUM_TIERS * TIER_H - 2));
+
+                // Fill solid underneath
+                for (int y = FLOOR; y <= FLOOR + step; y++) {
+                    p.set(x, y, z, FOUNDATION);
+                }
+                // Seat on top (alternating stairs for texture)
+                BlockState seat = step % 3 == 0 ? WALL_SMOOTH : WALL_ACCENT;
+                p.set(x, FLOOR + step + 1, z, seat);
+
+                // Clear above seats
+                for (int y = FLOOR + step + 2; y <= PARAPET; y++) {
+                    p.set(x, y, z, AIR);
+                }
+            }
+        }
+    }
+
+    // ================================================================== outer walls with arches
+
+    private static void outerWalls(Plan p) {
+        for (int x = -OUTER_RX - 1; x <= OUTER_RX + 1; x++) {
+            for (int z = -OUTER_RZ - 1; z <= OUTER_RZ + 1; z++) {
+                boolean outer = inEllipse(x, z, OUTER_RX + 1.5, OUTER_RZ + 1.5);
+                boolean inner = inEllipse(x, z, OUTER_RX - 0.5, OUTER_RZ - 0.5);
+                if (!outer || inner) continue;
+                if (isGate(x, z)) continue;
+
+                // Wall shell: all tiers
+                for (int y = FLOOR; y <= WALL_TOP; y++) {
+                    int tier = (y - FEET) / TIER_H;
+                    p.set(x, y, z, tier % 2 == 0 ? WALL_MAIN : WALL_ACCENT);
+                }
+                // Horizontal bands between tiers
+                for (int t = 1; t <= NUM_TIERS; t++) {
+                    int bandY = FEET + t * TIER_H;
+                    if (bandY <= WALL_TOP) {
+                        p.set(x, bandY, z, WALL_SMOOTH);
                     }
                 }
-                // Clear air above arena
-                for (int y = FEET; y < FEET + WALL_H; y++) {
-                    if (r <= ARENA_R) p.set(x, y, z, AIR);
+            }
+        }
+    }
+
+    // ================================================================== arches in outer wall
+
+    private static void arches(Plan p) {
+        // Place arches around the ellipse perimeter at regular intervals
+        int numArches = 32;
+        for (int i = 0; i < numArches; i++) {
+            double angle = Math.toRadians(i * (360.0 / numArches));
+            int ax = (int) Math.round(OUTER_RX * Math.sin(angle));
+            int az = (int) Math.round(OUTER_RZ * Math.cos(angle));
+
+            if (isGate(ax, az)) continue;
+
+            // Column on each side of arch
+            for (int tier = 0; tier < NUM_TIERS; tier++) {
+                int baseY = FEET + tier * TIER_H;
+
+                // Columns (2 blocks apart, centered on arch position)
+                // Use perpendicular direction to ellipse
+                double normAngle = Math.atan2(ax / (double) OUTER_RX, az / (double) OUTER_RZ);
+                int dx = (int) Math.round(Math.cos(normAngle));
+                int dz = (int) Math.round(-Math.sin(normAngle));
+
+                // Left and right column
+                for (int s : new int[]{-1, 1}) {
+                    int cx = ax + s * dz;
+                    int cz = az + s * dx;
+                    if (!inEllipse(cx, cz, OUTER_RX + 1.5, OUTER_RZ + 1.5)) continue;
+
+                    for (int y = baseY; y < baseY + TIER_H - 1; y++) {
+                        p.set(cx, y, cz, COLUMN);
+                    }
+                    // Capital
+                    p.set(cx, baseY + TIER_H - 1, cz, COLUMN_TOP);
+                }
+
+                // Arch opening between columns (clear 1 block wide, 3 tall)
+                if (tier < 3) { // only lower 3 tiers have open arches
+                    for (int y = baseY; y < baseY + 3; y++) {
+                        p.set(ax, y, az, AIR);
+                    }
+                    // Arch top (rounded)
+                    p.set(ax, baseY + 3, az, ARCH_BLOCK);
+                }
+            }
+        }
+    }
+
+    // ================================================================== 4 axial gates
+
+    private static void gates(Plan p) {
+        int gateH = 4;
+
+        // South gate (main entrance)
+        for (int x = -GATE_W; x <= GATE_W; x++) {
+            for (int z = ARENA_RZ; z <= OUTER_RZ + 1; z++) {
+                p.set(x, FLOOR, z, WALL_SMOOTH);
+                for (int y = FEET; y < FEET + gateH; y++) {
+                    p.set(x, y, z, AIR);
+                }
+                // Arch top
+                if (Math.abs(x) < GATE_W) {
+                    p.set(x, FEET + gateH, z, ARCH_BLOCK);
+                } else {
+                    // Gate frame columns
+                    for (int y = FEET; y <= FEET + gateH + 1; y++) {
+                        p.set(x, y, z, COLUMN);
+                    }
+                }
+            }
+        }
+
+        // North gate
+        for (int x = -GATE_W; x <= GATE_W; x++) {
+            for (int z = -OUTER_RZ - 1; z <= -ARENA_RZ; z++) {
+                p.set(x, FLOOR, z, WALL_SMOOTH);
+                for (int y = FEET; y < FEET + gateH; y++) {
+                    p.set(x, y, z, AIR);
+                }
+                if (Math.abs(x) < GATE_W) {
+                    p.set(x, FEET + gateH, z, ARCH_BLOCK);
+                } else {
+                    for (int y = FEET; y <= FEET + gateH + 1; y++) {
+                        p.set(x, y, z, COLUMN);
+                    }
+                }
+            }
+        }
+
+        // East gate
+        for (int z = -GATE_W; z <= GATE_W; z++) {
+            for (int x = ARENA_RX; x <= OUTER_RX + 1; x++) {
+                p.set(x, FLOOR, z, WALL_SMOOTH);
+                for (int y = FEET; y < FEET + gateH; y++) {
+                    p.set(x, y, z, AIR);
+                }
+                if (Math.abs(z) < GATE_W) {
+                    p.set(x, FEET + gateH, z, ARCH_BLOCK);
+                } else {
+                    for (int y = FEET; y <= FEET + gateH + 1; y++) {
+                        p.set(x, y, z, COLUMN);
+                    }
+                }
+            }
+        }
+
+        // West gate
+        for (int z = -GATE_W; z <= GATE_W; z++) {
+            for (int x = -OUTER_RX - 1; x <= -ARENA_RX; x++) {
+                p.set(x, FLOOR, z, WALL_SMOOTH);
+                for (int y = FEET; y < FEET + gateH; y++) {
+                    p.set(x, y, z, AIR);
+                }
+                if (Math.abs(z) < GATE_W) {
+                    p.set(x, FEET + gateH, z, ARCH_BLOCK);
+                } else {
+                    for (int y = FEET; y <= FEET + gateH + 1; y++) {
+                        p.set(x, y, z, COLUMN);
+                    }
+                }
+            }
+        }
+    }
+
+    // ================================================================== parapet and top
+
+    private static void parapet(Plan p) {
+        for (int x = -OUTER_RX - 1; x <= OUTER_RX + 1; x++) {
+            for (int z = -OUTER_RZ - 1; z <= OUTER_RZ + 1; z++) {
+                boolean outer = inEllipse(x, z, OUTER_RX + 1.5, OUTER_RZ + 1.5);
+                boolean inner = inEllipse(x, z, OUTER_RX - 0.5, OUTER_RZ - 0.5);
+                if (!outer || inner) continue;
+                if (isGate(x, z)) continue;
+
+                // Crenellations: alternating merlons and crenels
+                boolean merlon = ((x + z) % 2 == 0);
+                if (merlon) {
+                    p.set(x, WALL_TOP + 1, z, WALL_ACCENT);
+                    p.set(x, WALL_TOP + 2, z, WALL_SMOOTH);
                 }
             }
         }
@@ -193,34 +406,32 @@ public final class ColiseumBuilder implements HqBuilder {
         for (int x = -STAGE_R; x <= STAGE_R; x++) {
             for (int z = -STAGE_R; z <= STAGE_R; z++) {
                 double r = Math.sqrt(x * x + z * z);
-                if (r <= STAGE_R) {
-                    // Raised platform
-                    p.set(x, FLOOR, z, STAGE_BLOCK);
-                    p.set(x, FEET, z, STAGE_BLOCK);
-                    // Accent ring
-                    if (Math.abs(r - STAGE_R) < 0.7) {
-                        p.set(x, FEET, z, STAGE_ACCENT);
-                    }
-                    // Clear above
-                    for (int y = FEET + 1; y < FEET + 10; y++) {
-                        p.set(x, y, z, AIR);
-                    }
+                if (r > STAGE_R + 0.5) continue;
+
+                p.set(x, FLOOR, z, STAGE_BLOCK);
+                p.set(x, FEET, z, STAGE_BLOCK);
+                if (r > STAGE_R - 0.7) {
+                    p.set(x, FEET, z, STAGE_EDGE);
+                }
+                for (int y = FEET + 1; y <= FEET + 6; y++) {
+                    p.set(x, y, z, AIR);
                 }
             }
         }
-        // Central beacon/hologram point
-        p.set(CX, FEET + 1, CZ, GLOW);
+        // Central marker
+        p.set(CX, FEET + 1, CZ, Blocks.SEA_LANTERN.defaultBlockState());
     }
 
-    // ================================================================== podiums
+    // ================================================================== 8 podiums
 
     private static void podiums(Plan p, Anchors.Builder a) {
         List<String> cast = Cast.ids();
         for (int i = 0; i < 8; i++) {
-            int px = PODIUM_POS[i][0];
-            int pz = PODIUM_POS[i][1];
+            double angle = Math.toRadians(i * 45);
+            int px = CX + (int) Math.round(PODIUM_RX * Math.sin(angle));
+            int pz = CZ - (int) Math.round(PODIUM_RZ * Math.cos(angle));
 
-            // 3x3 podium base
+            // 3x3 podium
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     p.set(px + dx, FLOOR, pz + dz, PODIUM_BASE);
@@ -228,197 +439,112 @@ public final class ColiseumBuilder implements HqBuilder {
                 }
             }
 
-            // Lectern/desk on podium (facing center)
+            // Lectern facing center
             Direction facing = dirToCenter(px, pz);
             p.set(px, FEET + 1, pz, Blocks.LECTERN.defaultBlockState()
                 .setValue(net.minecraft.world.level.block.LecternBlock.FACING, facing));
 
-            // Anchor for agent desk + monitor
+            // Agent anchors
             String agentId = i < cast.size() ? cast.get(i) : "agent" + i;
-            String deskAnchor = AnchorNames.desk(agentId);
-            String monitorAnchor = AnchorNames.monitor(agentId);
             float yaw = (float) Math.toDegrees(Math.atan2(px - CX, -(pz - CZ)));
-            a.put(deskAnchor, px + 0.5, FEET + 1, pz + 0.5, yaw, 0);
-            a.put(monitorAnchor, px + 0.5, FEET + 2, pz + 0.5, yaw, 0);
+            a.put(AnchorNames.desk(agentId), px + 0.5, FEET + 1, pz + 0.5, yaw, 0);
+            a.put(AnchorNames.monitor(agentId), px + 0.5, FEET + 2, pz + 0.5, yaw, 0);
 
-            // Status lamp above podium
+            // Status lamp
             p.set(px, FEET + 3, pz, ModBlocks.STATUS_LAMP.defaultBlockState());
+
+            // Lanterns flanking podium
+            p.set(px + 1, FEET + 1, pz + 1, LANTERN_BLOCK);
+            p.set(px - 1, FEET + 1, pz - 1, LANTERN_BLOCK);
         }
     }
 
-    /** Direction from (x,z) towards center (0,0). */
     private static Direction dirToCenter(int x, int z) {
         int ax = Math.abs(x), az = Math.abs(z);
         if (ax >= az) return x > 0 ? Direction.WEST : Direction.EAST;
         return z > 0 ? Direction.NORTH : Direction.SOUTH;
     }
 
-    // ================================================================== tiered seating
-
-    private static void tieredSeating(Plan p) {
-        for (int x = -TIER3_R - 1; x <= TIER3_R + 1; x++) {
-            for (int z = -TIER3_R - 1; z <= TIER3_R + 1; z++) {
-                double r = Math.sqrt(x * x + z * z);
-
-                // Tier 1: front row (closest to arena)
-                if (r >= TIER1_R && r < TIER2_R) {
-                    int ty = FEET;
-                    // Stepped: higher rows further out
-                    int step = (int) (r - TIER1_R);
-                    for (int y = FLOOR + 1; y <= FLOOR + 1 + step; y++) {
-                        p.set(x, y, z, STONE_BRICK);
-                    }
-                    p.set(x, FLOOR + 2 + step, z, step % 2 == 0 ? SEAT_STONE : SEAT_DARK);
-                }
-
-                // Tier 2: mid seating
-                if (r >= TIER2_R && r < TIER3_R) {
-                    int step = (int) (r - TIER2_R) + 4;
-                    for (int y = FLOOR + 1; y <= FLOOR + 1 + step; y++) {
-                        p.set(x, y, z, STONE_BRICK);
-                    }
-                    p.set(x, FLOOR + 2 + step, z, step % 2 == 0 ? SEAT_STONE : SEAT_DARK);
-                }
-
-                // Tier 3: upper gallery
-                if (r >= TIER3_R && r <= OUTER_R) {
-                    int step = (int) (r - TIER3_R) + 8;
-                    for (int y = FLOOR + 1; y <= FLOOR + 1 + step; y++) {
-                        p.set(x, y, z, STONE_BRICK);
-                    }
-                    p.set(x, FLOOR + 2 + step, z, step % 2 == 0 ? SEAT_STONE : SEAT_DARK);
-                }
-            }
-        }
-    }
-
-    // ================================================================== outer wall
-
-    private static void outerWall(Plan p) {
-        for (int x = -OUTER_R - 1; x <= OUTER_R + 1; x++) {
-            for (int z = -OUTER_R - 1; z <= OUTER_R + 1; z++) {
-                double r = Math.sqrt(x * x + z * z);
-                if (r >= OUTER_R && r < OUTER_R + 1.5) {
-                    for (int y = FLOOR; y <= FLOOR + WALL_H; y++) {
-                        p.set(x, y, z, STONE_BRICK);
-                    }
-                    // Crenellations at top
-                    boolean merlon = (x + z) % 3 == 0;
-                    if (merlon) {
-                        p.set(x, FLOOR + WALL_H + 1, z, STONE_TILE);
-                    }
-                }
-            }
-        }
-    }
-
-    // ================================================================== pillars & arches
-
-    private static void pillarsAndArches(Plan p) {
-        // 16 evenly spaced pillars on the outer wall
-        for (int i = 0; i < 16; i++) {
-            double angle = Math.toRadians(i * 22.5);
-            int px = CX + (int) Math.round((OUTER_R) * Math.sin(angle));
-            int pz = CZ - (int) Math.round((OUTER_R) * Math.cos(angle));
-
-            // Pillar column
-            for (int y = FLOOR; y <= FLOOR + WALL_H + 2; y++) {
-                p.set(px, y, pz, PILLAR);
-            }
-            // Capital
-            p.set(px, FLOOR + WALL_H + 2, pz, St.slab(Blocks.QUARTZ_SLAB, false));
-
-            // Torch on each pillar (interior side)
-            int tx = px - (int) Math.signum(px);
-            int tz = pz - (int) Math.signum(pz);
-            p.set(tx, FLOOR + WALL_H - 2, tz, TORCH_BLOCK);
-        }
-    }
-
     // ================================================================== lighting
 
     private static void lighting(Plan p) {
-        // Ring of sea lanterns around the arena edge (recessed in floor)
+        // Ring of lanterns at arena edge
         for (int i = 0; i < 24; i++) {
             double angle = Math.toRadians(i * 15);
-            int lx = CX + (int) Math.round(ARENA_R * Math.sin(angle));
-            int lz = CZ - (int) Math.round(ARENA_R * Math.cos(angle));
-            p.set(lx, FLOOR, lz, GLOW);
+            int lx = (int) Math.round(ARENA_RX * Math.sin(angle));
+            int lz = (int) Math.round(ARENA_RZ * Math.cos(angle));
+            p.set(lx, FLOOR, lz, Blocks.SEA_LANTERN.defaultBlockState());
         }
 
-        // Lanterns on podium posts
+        // Lanterns on top of outer wall columns (every 8th position)
+        for (int i = 0; i < 16; i++) {
+            double angle = Math.toRadians(i * 22.5);
+            int wx = (int) Math.round((OUTER_RX + 0.5) * Math.sin(angle));
+            int wz = (int) Math.round((OUTER_RZ + 0.5) * Math.cos(angle));
+            p.set(wx, WALL_TOP + 1, wz, LANTERN_BLOCK);
+        }
+
+        // Hanging lanterns inside the arena at seating level
         for (int i = 0; i < 8; i++) {
-            int px = PODIUM_POS[i][0];
-            int pz = PODIUM_POS[i][1];
-            p.set(px + 1, FEET + 3, pz + 1, St.lantern(Blocks.LANTERN, false));
-            p.set(px - 1, FEET + 3, pz - 1, St.lantern(Blocks.LANTERN, false));
-        }
-
-        // Central stage spotlight (light blocks above)
-        for (int y = FEET + 6; y <= FEET + 8; y++) {
-            p.set(CX, y, CZ, GLOW); // sea lantern as spotlight
+            double angle = Math.toRadians(i * 45 + 22.5);
+            int hx = (int) Math.round((ARENA_RX + 2) * Math.sin(angle));
+            int hz = (int) Math.round((ARENA_RZ + 2) * Math.cos(angle));
+            // Pole + hanging lantern
+            p.set(hx, FEET + 8, hz, Blocks.OAK_FENCE.defaultBlockState());
+            p.set(hx, FEET + 7, hz, LANTERN_HANG);
         }
     }
 
-    // ================================================================== entrance
+    // ================================================================== ruins (weathering at top)
 
-    private static void entrance(Plan p, Anchors.Builder a) {
-        // South gate: 5-wide, 4-tall opening
-        for (int x = -2; x <= 2; x++) {
-            for (int y = FEET; y <= FEET + 3; y++) {
-                p.set(x, y, OUTER_R, AIR);
-                p.set(x, y, OUTER_R + 1, AIR);
+    private static void ruins(Plan p) {
+        // Add cracked/weathered blocks to top tier for authentic Roman look
+        java.util.Random rng = new java.util.Random(42); // deterministic
+        for (int x = -OUTER_RX - 1; x <= OUTER_RX + 1; x++) {
+            for (int z = -OUTER_RZ - 1; z <= OUTER_RZ + 1; z++) {
+                boolean outer = inEllipse(x, z, OUTER_RX + 1.5, OUTER_RZ + 1.5);
+                boolean inner = inEllipse(x, z, OUTER_RX - 0.5, OUTER_RZ - 0.5);
+                if (!outer || inner) continue;
+
+                // Random weathering on top tier
+                if (rng.nextFloat() < 0.15) {
+                    int wy = WALL_TOP - rng.nextInt(3);
+                    p.set(x, wy, z, RUIN);
+                }
+                // Random missing blocks at very top (broken parapet)
+                if (rng.nextFloat() < 0.1) {
+                    p.set(x, WALL_TOP, z, AIR);
+                    p.set(x, WALL_TOP + 1, z, AIR);
+                    p.set(x, WALL_TOP + 2, z, AIR);
+                }
             }
         }
-        // Gate frame
-        p.fill(-3, FLOOR, OUTER_R, -3, FLOOR + WALL_H, OUTER_R, PILLAR);
-        p.fill(3, FLOOR, OUTER_R, 3, FLOOR + WALL_H, OUTER_R, PILLAR);
-        p.fill(-2, FEET + 4, OUTER_R, 2, FEET + 4, OUTER_R, STONE);
+    }
 
-        // Path from gate
-        for (int z = OUTER_R + 1; z <= OUTER_R + 5; z++) {
-            for (int x = -2; x <= 2; x++) {
-                p.set(x, FLOOR, z, STONE_TILE);
-            }
-        }
+    // ================================================================== anchors
 
-        // Task wall (west side of arena, visible from spectator seats)
-        int twX = -ARENA_R + 1;
-        a.spot(AnchorNames.TASK_WALL, twX, FEET + 1, CZ, 90);
-
-        // Decision podium (east side, user faces it)
-        a.spot(AnchorNames.DECISION_PODIUM, ARENA_R - 1, FEET, CZ, 270);
-
-        // Goal atrium anchor (center of stage)
+    private static void anchors(Plan p, Anchors.Builder a) {
+        // Task wall (west inner wall)
+        a.spot(AnchorNames.TASK_WALL, -ARENA_RX + 1, FEET + 1, CZ, 90);
+        // Decision podium (east inner wall)
+        a.spot(AnchorNames.DECISION_PODIUM, ARENA_RX - 1, FEET, CZ, 270);
+        // Goal atrium (centre stage)
         a.spot(AnchorNames.GOAL_ATRIUM, CX, FEET + 1, CZ, 180);
 
-        // Lounge slots for off-shift agents (behind tier 3, north side)
+        // Lounge slots (upper tiers, north)
         for (int i = 0; i < 6; i++) {
-            int lx = -8 + i * 3;
-            a.put(AnchorNames.slot(AnchorNames.LOUNGE, i + 1), lx + 0.5, FEET + 9, -TIER3_R + 0.5, 180, 0);
+            int lx = -6 + i * 2;
+            a.put(AnchorNames.slot(AnchorNames.LOUNGE, i + 1), lx + 0.5, FEET + 10, -ARENA_RZ - 2.5, 180, 0);
         }
-
-        // Meeting slots (in the upper gallery, east)
+        // Meeting slots (upper tiers, east)
         for (int i = 0; i < 6; i++) {
-            a.put(AnchorNames.slot(AnchorNames.MEETING, i + 1), TIER3_R - 1.5, FEET + 9, -4 + i * 2 + 0.5, 270, 0);
+            a.put(AnchorNames.slot(AnchorNames.MEETING, i + 1), ARENA_RX + 2.5, FEET + 10, -3 + i * 1.5, 270, 0);
         }
-    }
 
-    // ================================================================== cameras
-
-    private static void cameras(Anchors.Builder a) {
-        // Overhead view
-        a.put("camera_overview", CX + 0.5, FEET + 20, CZ + 0.5, 0, 90);
-        // Stage close-up
-        a.put("camera_stage", CX + 0.5, FEET + 4, STAGE_R + 4.5, 0, 20);
-        // Spectator POV
-        a.put("camera_spectator", 0.5, FEET + 10, OUTER_R - 2.5, 180, 30);
-        // Each podium
-        for (int i = 0; i < 8; i++) {
-            int px = PODIUM_POS[i][0];
-            int pz = PODIUM_POS[i][1];
-            float yaw = (float) Math.toDegrees(Math.atan2(-(px - CX), pz - CZ));
-            a.put("camera_podium_" + i, px + 0.5, FEET + 3, pz + 0.5, yaw, 10);
-        }
+        // Cameras
+        a.put("camera_overview", CX + 0.5, FEET + 25, CZ + 0.5, 0, 90);
+        a.put("camera_stage", CX + 0.5, FEET + 5, CZ + STAGE_R + 5.5, 0, 15);
+        a.put("camera_spectator", 0.5, FEET + 15, OUTER_RZ - 1.5, 180, 35);
+        a.cameraLookAt("gate_south", CX + 0.5, FEET + 2, OUTER_RZ + 3.5, CX, FEET + 2, CZ);
     }
 }
