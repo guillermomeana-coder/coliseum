@@ -23,6 +23,9 @@ const THEMES = [
   { id: 'warm_studio', name: 'Warm Studio', desc: 'Original timber + copper + plaster (default)' },
   { id: 'modern_glass', name: 'Modern Glass', desc: 'Clean quartz + glass + iron — contemporary office' },
   { id: 'executive', name: 'Executive Suite', desc: 'Dark deepslate + dark oak + gold accents — premium' },
+  { id: 'industrial', name: 'Industrial Loft', desc: 'Exposed brick + iron + spruce + concrete' },
+  { id: 'minimal', name: 'Minimal', desc: 'White quartz + birch + light gray — ultra clean' },
+  { id: 'penthouse', name: 'Penthouse', desc: 'Luxury blackstone + gilded accents + crimson wood' },
 ];
 
 const AUTH_METHODS = [

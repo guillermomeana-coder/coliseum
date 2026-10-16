@@ -4,11 +4,14 @@
 
 A fork of [AgentCraft](https://github.com/blendi-remade/agentcraft) by [Blendi](https://github.com/blendi-remade), enhanced with:
 
-- **Office Themes** -- choose your style: Warm Studio, Modern Glass, or Executive Suite
+- **6 Office Themes** -- Warm Studio, Modern Glass, Executive, Industrial, Minimal, Penthouse
+- **Coliseum Arena** -- Roman Colosseum-inspired debate arena with 8 podiums and tiered seating
 - **OpenClaw Bridge** -- control the team from Claude Code or any CLI without opening Minecraft
+- **Smart Autopilot** -- auto-approves permissions, validates merges (CI + size + sensitive files)
 - **Setup Wizard** -- interactive config for auth (Claude Login or API key), theme, and repos
 - **Bypass Permissions** -- agents work autonomously without stopping to ask
 - **Headless Mode** -- run the team without the Minecraft window (`--NoGame`)
+- **Multi-repo** -- register multiple repos and target goals to specific projects
 
 ## Quick Start
 
@@ -33,15 +36,19 @@ node tools/openclaw-bridge.mjs watch
 The OpenClaw Bridge lets you orchestrate the team from any terminal:
 
 ```bash
-node tools/openclaw-bridge.mjs status           # team overview
-node tools/openclaw-bridge.mjs agents            # who's doing what
-node tools/openclaw-bridge.mjs goal "..."        # submit work
-node tools/openclaw-bridge.mjs tasks             # task board
-node tools/openclaw-bridge.mjs decisions         # pending decisions
-node tools/openclaw-bridge.mjs merge <id>        # approve a merge
-node tools/openclaw-bridge.mjs diff <worktree>   # review changes
-node tools/openclaw-bridge.mjs msg kit "..."     # message an agent
-node tools/openclaw-bridge.mjs watch             # live event stream
+node tools/openclaw-bridge.mjs status                    # team overview + cost
+node tools/openclaw-bridge.mjs agents                    # who's doing what
+node tools/openclaw-bridge.mjs goal "..." [--repo name]  # submit work (optionally to a specific repo)
+node tools/openclaw-bridge.mjs tasks [goalId]            # task board
+node tools/openclaw-bridge.mjs decisions                 # pending decisions
+node tools/openclaw-bridge.mjs merge <id>                # approve a merge
+node tools/openclaw-bridge.mjs diff <worktree>           # review changes
+node tools/openclaw-bridge.mjs msg <agent|all> "..."     # message an agent
+node tools/openclaw-bridge.mjs repos                     # list registered repos
+node tools/openclaw-bridge.mjs cost                      # total API cost
+node tools/openclaw-bridge.mjs watch                     # live event stream
+node tools/openclaw-bridge.mjs autopilot                 # auto-approve with smart merge criteria
+node tools/openclaw-bridge.mjs run "goal" --autopilot    # submit + watch + auto-approve in one
 ```
 
 ## Office Themes
@@ -51,6 +58,17 @@ node tools/openclaw-bridge.mjs watch             # live event stream
 | `warm_studio` | Original -- timber frame, copper dome, plaster walls, parquet floors |
 | `modern_glass` | Contemporary -- quartz, glass, iron, polished stone |
 | `executive` | Premium -- deepslate, dark oak, tinted glass, soul lanterns |
+| `industrial` | Loft -- exposed brick, iron, spruce, concrete |
+| `minimal` | Clean -- white quartz, birch, light gray, very minimal |
+| `penthouse` | Luxury -- blackstone, gilded accents, crimson wood, red sofas |
+
+### Arena Maps
+
+| Map | Style |
+|-----|-------|
+| `coliseum` | Roman Colosseum -- elliptical amphitheater, sandstone, 8 debate podiums |
+
+Switch in-game: `/agentcraft hq coliseum` or `/agentcraft hq openclaw`
 
 Set via `node tools/setup.mjs` or `node tools/setup.mjs --theme executive`.
 

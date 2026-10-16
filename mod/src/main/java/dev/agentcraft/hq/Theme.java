@@ -11,11 +11,14 @@ import net.minecraft.world.level.block.state.BlockState;
  * and decorative elements while keeping functional blocks (monitors, desks,
  * lamps, task boards) untouched.
  *
- * <p>Three built-in themes ship with OpenClaw Office:
+ * <p>Six built-in themes ship with OpenClaw Office:
  * <ul>
  *   <li>{@link #WARM_STUDIO} — the original timber + copper + plaster look</li>
  *   <li>{@link #MODERN_GLASS} — clean lines, quartz + glass + iron</li>
  *   <li>{@link #EXECUTIVE} — dark oak + deepslate + gold accents</li>
+ *   <li>{@link #INDUSTRIAL} — exposed brick + iron + concrete</li>
+ *   <li>{@link #MINIMAL} — white + light gray + birch, very clean</li>
+ *   <li>{@link #PENTHOUSE} — luxury dark + gold + crimson wood</li>
  * </ul>
  */
 public record Theme(
@@ -168,17 +171,134 @@ public record Theme(
         St.lantern(Blocks.SOUL_LANTERN, true)
     );
 
+    // =========================================================================
+    // INDUSTRIAL — exposed brick + iron + concrete
+    // =========================================================================
+    public static final Theme INDUSTRIAL = new Theme(
+        "industrial",
+        "Industrial",
+        // Walls
+        Blocks.BRICKS.defaultBlockState(),
+        Blocks.CRACKED_STONE_BRICKS.defaultBlockState(),
+        Blocks.STONE_BRICKS.defaultBlockState(),
+        Blocks.STRIPPED_SPRUCE_LOG,
+        Blocks.STRIPPED_SPRUCE_LOG,
+        // Floor
+        Blocks.STONE.defaultBlockState(),
+        Blocks.POLISHED_ANDESITE.defaultBlockState(),
+        Blocks.COBBLESTONE.defaultBlockState(),
+        Blocks.STONE_BRICKS.defaultBlockState(),
+        // Roof
+        Blocks.SPRUCE_STAIRS,
+        Blocks.SPRUCE_SLAB,
+        Blocks.SPRUCE_PLANKS.defaultBlockState(),
+        Blocks.SPRUCE_STAIRS,
+        // Ceiling
+        Blocks.SPRUCE_STAIRS,
+        Blocks.SPRUCE_PLANKS.defaultBlockState(),
+        // Dome (no iron stairs/slab in vanilla — use spruce for stairs/slab)
+        Blocks.IRON_BLOCK.defaultBlockState(),
+        Blocks.SPRUCE_STAIRS,
+        Blocks.SPRUCE_SLAB,
+        // Glass
+        Blocks.GLASS_PANE.defaultBlockState(),
+        // Sofa
+        Blocks.WOOL_STAIRS.pick(DyeColor.GRAY),
+        // Ambient
+        St.lantern(Blocks.LANTERN, false),
+        St.lantern(Blocks.LANTERN, true)
+    );
+
+    // =========================================================================
+    // MINIMAL — white + light gray + birch, very clean
+    // =========================================================================
+    public static final Theme MINIMAL = new Theme(
+        "minimal",
+        "Minimal",
+        // Walls
+        Blocks.SMOOTH_QUARTZ.defaultBlockState(),
+        Blocks.QUARTZ_BLOCK.defaultBlockState(),
+        Blocks.SMOOTH_QUARTZ.defaultBlockState(),
+        Blocks.STRIPPED_BIRCH_LOG,
+        Blocks.STRIPPED_BIRCH_LOG,
+        // Floor
+        St.concrete(DyeColor.WHITE),
+        St.concrete(DyeColor.LIGHT_GRAY),
+        St.concrete(DyeColor.WHITE),
+        Blocks.SMOOTH_STONE.defaultBlockState(),
+        // Roof
+        Blocks.QUARTZ_STAIRS,
+        Blocks.QUARTZ_SLAB,
+        Blocks.QUARTZ_BLOCK.defaultBlockState(),
+        Blocks.QUARTZ_STAIRS,
+        // Ceiling
+        Blocks.BIRCH_STAIRS,
+        Blocks.BIRCH_PLANKS.defaultBlockState(),
+        // Dome
+        Blocks.SMOOTH_QUARTZ.defaultBlockState(),
+        Blocks.QUARTZ_STAIRS,
+        Blocks.QUARTZ_SLAB,
+        // Glass
+        Blocks.GLASS_PANE.defaultBlockState(),
+        // Sofa
+        Blocks.WOOL_STAIRS.pick(DyeColor.WHITE),
+        // Ambient
+        St.lantern(Blocks.LANTERN, false),
+        St.lantern(Blocks.LANTERN, true)
+    );
+
+    // =========================================================================
+    // PENTHOUSE — luxury dark + gold + crimson wood
+    // =========================================================================
+    public static final Theme PENTHOUSE = new Theme(
+        "penthouse",
+        "Penthouse",
+        // Walls
+        Blocks.POLISHED_BLACKSTONE.defaultBlockState(),
+        Blocks.GILDED_BLACKSTONE.defaultBlockState(),
+        Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(),
+        Blocks.STRIPPED_CRIMSON_STEM,
+        Blocks.STRIPPED_CRIMSON_STEM,
+        // Floor
+        Blocks.CRIMSON_PLANKS.defaultBlockState(),
+        Blocks.POLISHED_BLACKSTONE.defaultBlockState(),
+        Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(),
+        Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(),
+        // Roof
+        Blocks.CRIMSON_STAIRS,
+        Blocks.CRIMSON_SLAB,
+        Blocks.CRIMSON_PLANKS.defaultBlockState(),
+        Blocks.CRIMSON_STAIRS,
+        // Ceiling
+        Blocks.CRIMSON_STAIRS,
+        Blocks.CRIMSON_PLANKS.defaultBlockState(),
+        // Dome
+        Blocks.GILDED_BLACKSTONE.defaultBlockState(),
+        Blocks.CRIMSON_STAIRS,
+        Blocks.CRIMSON_SLAB,
+        // Glass
+        Blocks.TINTED_GLASS.defaultBlockState(),
+        // Sofa
+        Blocks.WOOL_STAIRS.pick(DyeColor.RED),
+        // Ambient
+        St.lantern(Blocks.SOUL_LANTERN, false),
+        St.lantern(Blocks.SOUL_LANTERN, true)
+    );
+
     /** Look up a theme by id. Falls back to WARM_STUDIO. */
     public static Theme byId(String id) {
         return switch (id.toLowerCase()) {
             case "modern_glass", "modern", "glass" -> MODERN_GLASS;
             case "executive", "exec", "dark" -> EXECUTIVE;
+            case "industrial", "brick", "iron" -> INDUSTRIAL;
+            case "minimal", "clean", "white" -> MINIMAL;
+            case "penthouse", "luxury", "crimson" -> PENTHOUSE;
             default -> WARM_STUDIO;
         };
     }
 
     /** All built-in themes for UI listing. */
     public static Theme[] all() {
-        return new Theme[] { WARM_STUDIO, MODERN_GLASS, EXECUTIVE };
+        return new Theme[] { WARM_STUDIO, MODERN_GLASS, EXECUTIVE, INDUSTRIAL, MINIMAL, PENTHOUSE };
     }
 }

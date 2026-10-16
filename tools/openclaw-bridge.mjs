@@ -8,12 +8,15 @@
  * Usage:
  *   node openclaw-bridge.mjs status                        # show team state
  *   node openclaw-bridge.mjs goal "Fix SEO on homepage"    # submit a goal
+ *   node openclaw-bridge.mjs goal "Fix SEO" --repo elevyte # submit goal to a specific repo
  *   node openclaw-bridge.mjs tasks                         # list all tasks
  *   node openclaw-bridge.mjs tasks <goalId>                # list tasks for a goal
  *   node openclaw-bridge.mjs decide <decisionId> <option>  # answer a decision
  *   node openclaw-bridge.mjs merge <decisionId>            # shorthand: approve merge
  *   node openclaw-bridge.mjs diff <worktree>               # get diff for a worktree
  *   node openclaw-bridge.mjs msg <agentId> "message"       # message an agent
+ *   node openclaw-bridge.mjs repos                         # list registered repos
+ *   node openclaw-bridge.mjs cost                          # show total API cost
  *   node openclaw-bridge.mjs watch                         # live feed of all events
  *   node openclaw-bridge.mjs agents                        # list agents and their state
  */
@@ -131,15 +134,17 @@ if (!cmd || cmd === 'help') {
   console.log(`OpenClaw Bridge — Claude Code ↔ AgentCraft
 
 Commands:
-  status                        Team state overview
+  status                        Team state overview (agents, tasks, cost)
   agents                        List agents and what they're doing
-  goal "<text>"                 Submit a goal to the lead
+  goal "<text>" [--repo <name>] Submit a goal (optionally target a specific repo)
   tasks [goalId]                List tasks
   decisions                     List open decisions
   decide <id> <option> [text]   Answer a decision
   merge <id>                    Approve a merge decision
   diff <worktree>               Get diff for a worktree
   msg <agent|all> "<text>"      Message an agent
+  repos                         List all registered repos (id, name, path, branch, dirty)
+  cost                          Show total API cost so far
   repo-add <path>               Register a new repo
   watch                         Live event stream
   autopilot                     Auto-approve all permissions + merges (full autonomy)
@@ -157,11 +162,18 @@ try {
       const f = fm.state.foreman;
       const onShift = fm.state.agents.filter(a => a.active).length;
       const openD = fm.state.decisions.filter(d => d.status === 'open').length;
+      const doneTasks = fm.state.tasks.filter(t => t.status === 'done').length;
+      const totalTasks = fm.state.tasks.length;
       const activeGoal = fm.state.goals.find(g => g.status === 'active' || g.status === 'planning');
       console.log(`=== OpenClaw × AgentCraft ===`);
-      console.log(`Backend: ${f.backend} | Auth: ${f.auth} | Cost: $${(f.costUsd || 0).toFixed(2)}`);
+      console.log(`Backend: ${f.backend} | Auth: ${f.auth}`);
+      console.log(`Cost: $${(f.costUsd || 0).toFixed(4)}`);
       console.log(`Agents: ${onShift}/${fm.state.agents.length} on shift`);
-      console.log(`Tasks: ${fm.state.tasks.length} | Open decisions: ${openD}`);
+      for (const a of fm.state.agents) {
+        const status = a.active ? a.state : 'off-shift';
+        console.log(`  ${a.active ? '●' : '○'} ${a.name} (${a.role}) — ${status}${a.activity ? ': ' + a.activity : ''}`);
+      }
+      console.log(`Tasks: ${doneTasks}/${totalTasks} done | Open decisions: ${openD}`);
       console.log(`Repos: ${fm.state.repos.map(r => r.name).join(', ') || 'none'}`);
       if (activeGoal) console.log(`Goal: "${activeGoal.text}" (${activeGoal.status}, ${Math.round((activeGoal.progress || 0) * 100)}%)`);
       break;
@@ -175,10 +187,21 @@ try {
       break;
     }
     case 'goal': {
-      const text = args.join(' ');
-      if (!text) { console.error('Usage: goal "<text>"'); process.exit(1); }
-      const goalId = await fm.submitGoal(text);
-      console.log(`Goal submitted: ${goalId}`);
+      const repoFlagIdx = args.indexOf('--repo');
+      let repoId;
+      const textParts = [...args];
+      if (repoFlagIdx >= 0) {
+        const repoName = args[repoFlagIdx + 1];
+        if (!repoName) { console.error('--repo requires a repo name'); process.exit(1); }
+        const repo = fm.state.repos.find(r => r.id === repoName || r.name === repoName);
+        if (!repo) { console.error(`Repo "${repoName}" not found. Available: ${fm.state.repos.map(r => r.name || r.id).join(', ') || 'none'}`); process.exit(1); }
+        repoId = repo.id;
+        textParts.splice(repoFlagIdx, 2);
+      }
+      const text = textParts.join(' ');
+      if (!text) { console.error('Usage: goal "<text>" [--repo <name>]'); process.exit(1); }
+      const goalId = await fm.submitGoal(text, repoId);
+      console.log(`Goal submitted: ${goalId}${repoId ? ` (repo: ${repoId})` : ''}`);
       console.log('Marlow is planning...');
       break;
     }
@@ -241,6 +264,21 @@ try {
     case 'repo-add': {
       const r = await fm.addRepo(args[0]);
       console.log(`Repo added: ${JSON.stringify(r)}`);
+      break;
+    }
+    case 'repos': {
+      if (!fm.state.repos.length) { console.log('No repos registered.'); break; }
+      console.log('=== Registered Repos ===');
+      for (const r of fm.state.repos) {
+        const dirty = r.dirty ? ' [dirty]' : '';
+        console.log(`  ${r.id} — ${r.name || '(unnamed)'}${dirty}`);
+        console.log(`    Path: ${r.path || 'N/A'} | Branch: ${r.branch || 'N/A'}`);
+      }
+      break;
+    }
+    case 'cost': {
+      const costUsd = fm.state.foreman?.costUsd || 0;
+      console.log(`Total API cost: $${costUsd.toFixed(4)}`);
       break;
     }
     case 'watch': {
