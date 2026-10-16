@@ -259,33 +259,104 @@ try {
     }
     case 'autopilot': {
       const autoMerge = !args.includes('--no-merge');
-      console.log(`Autopilot ON${autoMerge ? ' (full: permissions + merges)' : ' (permissions only, merges need review)'}`);
+      const strict = args.includes('--strict');
+      console.log(`Autopilot ON${autoMerge ? ' (smart merge: CI + size + safety checks)' : ' (permissions only, merges manual)'}`);
+      if (strict) console.log('  --strict: max 200 lines, no env/config/auth files');
       console.log('Ctrl+C to stop.\n');
-      let approved = 0;
-      fm._watchHandler = (msg) => {
+
+      // Merge criteria thresholds
+      const MAX_FILES = strict ? 10 : 30;
+      const MAX_ADDITIONS = strict ? 200 : 1000;
+      const SENSITIVE_PATTERNS = /\.(env|pem|key|secret|credentials|auth)\b|password|api[_-]?key|secret/i;
+
+      async function evaluateMerge(d) {
         const ts = new Date().toLocaleTimeString();
-        // Auto-answer open decisions
+        // Extract diff stats from context (format: "N files, +X -Y | tests: pass/fail")
+        const ctx = d.context || '';
+        const fileMatch = ctx.match(/(\d+)\s*files?/);
+        const addMatch = ctx.match(/\+(\d+)/);
+        const delMatch = ctx.match(/-(\d+)/);
+        const ciMatch = ctx.match(/tests?:\s*(\w+)/i);
+
+        const files = fileMatch ? parseInt(fileMatch[1]) : 0;
+        const additions = addMatch ? parseInt(addMatch[1]) : 0;
+        const deletions = delMatch ? parseInt(delMatch[1]) : 0;
+        const ci = ciMatch ? ciMatch[1].toLowerCase() : 'unknown';
+
+        const reasons = [];
+
+        // Rule 1: CI must pass (if reported)
+        if (ci === 'fail') {
+          reasons.push(`CI FAILED`);
+        }
+
+        // Rule 2: Size limits
+        if (files > MAX_FILES) {
+          reasons.push(`too many files (${files} > ${MAX_FILES})`);
+        }
+        if (additions > MAX_ADDITIONS) {
+          reasons.push(`too many additions (+${additions} > +${MAX_ADDITIONS})`);
+        }
+
+        // Rule 3: Check for sensitive files in the question/context
+        if (SENSITIVE_PATTERNS.test(d.question || '') || SENSITIVE_PATTERNS.test(ctx)) {
+          reasons.push(`touches sensitive file pattern`);
+        }
+
+        // Rule 4: Try to get actual diff for deeper check
+        let diffWarnings = [];
+        if (d.worktree && fm.state.repos[0]) {
+          try {
+            const diff = await fm.requestDiff(fm.state.repos[0].id, d.worktree);
+            if (diff && diff.files) {
+              for (const f of diff.files) {
+                if (SENSITIVE_PATTERNS.test(f.path)) {
+                  diffWarnings.push(f.path);
+                }
+              }
+              if (diffWarnings.length > 0) {
+                reasons.push(`sensitive files: ${diffWarnings.join(', ')}`);
+              }
+            }
+          } catch { /* diff unavailable, proceed with context-based check */ }
+        }
+
+        if (reasons.length > 0) {
+          console.log(`[${ts}] ⏸ HOLD merge ${d.id}: ${reasons.join('; ')}`);
+          console.log(`         ${d.question}`);
+          console.log(`         Stats: ${files} files, +${additions} -${deletions}, CI: ${ci}`);
+          console.log(`         Manual: node tools/openclaw-bridge.mjs merge ${d.id}`);
+          console.log(`         Reject: node tools/openclaw-bridge.mjs decide ${d.id} Reject`);
+          return false;
+        }
+
+        // All checks passed — auto-merge
+        await fm.answerDecision(d.id, 'Merge');
+        console.log(`[${ts}] ✓ Smart-merged ${d.id}: ${files} files, +${additions} -${deletions}, CI: ${ci}`);
+        return true;
+      }
+
+      let approved = 0;
+      fm._watchHandler = async (msg) => {
+        const ts = new Date().toLocaleTimeString();
         if (msg.type === 'decision.upsert' && msg.decision.status === 'open') {
           const d = msg.decision;
           if (d.kind === 'permission') {
             fm.answerDecision(d.id, 'Always allow for this agent').then(() => {
               approved++;
-              console.log(`[${ts}] ✓ Auto-approved permission ${d.id} for ${d.agentId || 'agent'}: ${(d.question || '').slice(0, 80)}`);
+              console.log(`[${ts}] ✓ Permission ${d.id} → always allow`);
             }).catch(() => {});
           } else if (d.kind === 'merge' && autoMerge) {
-            fm.answerDecision(d.id, 'Merge').then(() => {
-              approved++;
-              console.log(`[${ts}] ✓ Auto-merged ${d.id}: ${(d.question || '').slice(0, 80)}`);
-            }).catch(() => {});
+            const ok = await evaluateMerge(d);
+            if (ok) approved++;
           } else if (d.kind === 'merge' && !autoMerge) {
-            console.log(`[${ts}] ⏸ MERGE WAITING: ${d.id} — ${d.question}`);
-            console.log(`         Run: node tools/openclaw-bridge.mjs merge ${d.id}`);
+            console.log(`[${ts}] ⏸ MERGE: ${d.id} — ${d.question}`);
+            console.log(`         node tools/openclaw-bridge.mjs merge ${d.id}`);
           } else if (d.kind === 'question') {
             console.log(`[${ts}] ❓ QUESTION ${d.id} from ${d.agentId}: ${d.question}`);
             console.log(`         Options: ${(d.options || []).join(' | ')}`);
           }
         }
-        // Show progress
         if (msg.type === 'goal.upsert') {
           const g = msg.goal;
           console.log(`[${ts}] Goal ${g.id}: ${g.status} (${Math.round((g.progress || 0) * 100)}%)${g.status === 'done' ? ' ✅ COMPLETE' : ''}`);
@@ -293,23 +364,22 @@ try {
         if (msg.type === 'task.upsert') {
           const t = msg.task;
           if (t.status === 'done') console.log(`[${ts}] ✅ ${t.id} done: ${t.title}`);
-          else if (t.status === 'doing') console.log(`[${ts}] ⚙ ${t.id} started: ${t.title} → ${t.assignee}`);
+          else if (t.status === 'doing') console.log(`[${ts}] ⚙ ${t.id}: ${t.title} → ${t.assignee}`);
         }
         if (msg.type === 'feed.add') console.log(`[${ts}] ${msg.item.text}`);
       };
-      // Also process any currently open decisions
+      // Clear pending
       for (const d of fm.state.decisions.filter(x => x.status === 'open')) {
         if (d.kind === 'permission') {
           fm.answerDecision(d.id, 'Always allow for this agent').catch(() => {});
-          console.log(`✓ Cleared pending permission ${d.id}`);
+          console.log(`✓ Cleared permission ${d.id}`);
           approved++;
         } else if (d.kind === 'merge' && autoMerge) {
-          fm.answerDecision(d.id, 'Merge').catch(() => {});
-          console.log(`✓ Cleared pending merge ${d.id}`);
-          approved++;
+          const ok = await evaluateMerge(d);
+          if (ok) approved++;
         }
       }
-      if (approved > 0) console.log(`Cleared ${approved} pending decisions.\n`);
+      if (approved > 0) console.log(`\nCleared ${approved} pending decisions.\n`);
       await new Promise(() => {});
       break;
     }
@@ -320,24 +390,33 @@ try {
 
       const goalId = await fm.submitGoal(goalText);
       console.log(`Goal submitted: ${goalId}`);
-      console.log(`Mode: ${auto ? 'autopilot (full autonomy)' : 'watch (manual decisions)'}\n`);
+      console.log(`Mode: ${auto ? 'autopilot (smart merge criteria)' : 'watch (manual decisions)'}\n`);
 
-      fm._watchHandler = (msg) => {
+      const SENSITIVE = /\.(env|pem|key|secret|credentials|auth)\b|password|api[_-]?key|secret/i;
+
+      fm._watchHandler = async (msg) => {
         const ts = new Date().toLocaleTimeString();
-        // Auto-approve if autopilot
         if (auto && msg.type === 'decision.upsert' && msg.decision.status === 'open') {
           const d = msg.decision;
           if (d.kind === 'permission') {
             fm.answerDecision(d.id, 'Always allow for this agent').catch(() => {});
-            console.log(`[${ts}] ✓ ${d.id} auto-approved`);
+            console.log(`[${ts}] ✓ ${d.id} permission approved`);
           } else if (d.kind === 'merge') {
-            fm.answerDecision(d.id, 'Merge').catch(() => {});
-            console.log(`[${ts}] ✓ ${d.id} auto-merged`);
+            // Smart merge: check CI + sensitive files
+            const ctx = d.context || '';
+            const ciFail = /tests?:\s*fail/i.test(ctx);
+            const sensitive = SENSITIVE.test(d.question || '') || SENSITIVE.test(ctx);
+            if (ciFail || sensitive) {
+              console.log(`[${ts}] ⏸ HOLD ${d.id}: ${ciFail ? 'CI failed' : 'sensitive files'}`);
+              console.log(`         Manual: node tools/openclaw-bridge.mjs merge ${d.id}`);
+            } else {
+              fm.answerDecision(d.id, 'Merge').catch(() => {});
+              console.log(`[${ts}] ✓ ${d.id} smart-merged`);
+            }
           }
         } else if (!auto && msg.type === 'decision.upsert' && msg.decision.status === 'open') {
           console.log(`[${ts}] ⚡ DECISION ${msg.decision.id}: ${msg.decision.question}`);
         }
-        // Progress
         if (msg.type === 'goal.upsert' && msg.goal.id === goalId) {
           const g = msg.goal;
           console.log(`[${ts}] Progress: ${Math.round((g.progress || 0) * 100)}% — ${g.status}`);
