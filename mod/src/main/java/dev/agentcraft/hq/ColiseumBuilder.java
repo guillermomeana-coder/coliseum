@@ -87,7 +87,13 @@ public final class ColiseumBuilder implements HqBuilder {
     static final BlockState ARCH_BLOCK = Blocks.SMOOTH_SANDSTONE.defaultBlockState();
     static final BlockState FLOOR_ARENA = Blocks.SMOOTH_SANDSTONE.defaultBlockState();
     static final BlockState FLOOR_RING = Blocks.SMOOTH_RED_SANDSTONE.defaultBlockState();
-    static final BlockState STAGE_BLOCK = Blocks.GILDED_BLACKSTONE.defaultBlockState();
+    static final BlockState PAT_SAND = Blocks.SANDSTONE.defaultBlockState();
+    static final BlockState PAT_CUT = Blocks.CUT_SANDSTONE.defaultBlockState();
+    static final BlockState PAT_CHISELED = Blocks.CHISELED_SANDSTONE.defaultBlockState();
+    static final BlockState PAT_RED = Blocks.RED_SANDSTONE.defaultBlockState();
+    static final BlockState PAT_CUT_RED = Blocks.CUT_RED_SANDSTONE.defaultBlockState();
+    static final BlockState PAT_CHISELED_RED = Blocks.CHISELED_RED_SANDSTONE.defaultBlockState();
+    static final BlockState STAGE_BLOCK =Blocks.GILDED_BLACKSTONE.defaultBlockState();
     static final BlockState STAGE_EDGE = Blocks.SEA_LANTERN.defaultBlockState();
     static final Block SEAT_STAIRS = Blocks.SANDSTONE_STAIRS;
     static final Block SEAT_ACCENT_STAIRS = Blocks.STONE_BRICK_STAIRS;
@@ -126,6 +132,7 @@ public final class ColiseumBuilder implements HqBuilder {
 
         foundation(p);
         arenaFloor(p);
+        arenaFloorPatterns(p);
         seatingBowl(p);
         outerWalls(p);
         arches(p);
@@ -190,6 +197,39 @@ public final class ColiseumBuilder implements HqBuilder {
     }
 
     // ================================================================== arena floor
+
+    /**
+     * Sandstone patterns on the floor layer only: a checker mosaic band between the two red rings,
+     * chiseled radial spokes toward the 4 gates, a patterned inner disc and a chiseled edge border.
+     * Ring cells (SMOOTH_RED_SANDSTONE) are left untouched so both rings stay readable.
+     */
+    private static void arenaFloorPatterns(Plan p) {
+        for (int x = -ARENA_RX; x <= ARENA_RX; x++) {
+            for (int z = -ARENA_RZ; z <= ARENA_RZ; z++) {
+                if (!inEllipse(x, z, ARENA_RX + 0.5, ARENA_RZ + 0.5)) continue;
+                double norm = ellipseNorm(x, z, ARENA_RX, ARENA_RZ);
+                if (Math.abs(norm - 0.5) < 0.06 || Math.abs(norm - 0.95) < 0.06) continue; // keep rings
+                boolean checker = ((x + z) & 1) == 0;
+                BlockState b;
+                if (norm > 0.95) {
+                    // chiseled border just inside the arena edge
+                    b = checker ? PAT_CHISELED : PAT_CUT;
+                } else if (x == 0 || z == 0) {
+                    // radial spokes toward the gates (full width 1, alternating chiseled / red chiseled)
+                    b = ((Math.abs(x) + Math.abs(z)) % 4 < 2) ? PAT_CHISELED : PAT_CHISELED_RED;
+                } else if (norm > 0.5) {
+                    // mosaic band between the rings
+                    if (norm < 0.62 || norm > 0.83) b = checker ? PAT_CUT : PAT_SAND;
+                    else b = checker ? PAT_CUT_RED : PAT_RED;
+                } else {
+                    // inner disc: diagonal cut/sand weave, red chiseled heart
+                    if (norm < 0.12) b = PAT_CHISELED_RED;
+                    else b = (Math.abs(x) == Math.abs(z)) ? PAT_CUT_RED : (checker ? FLOOR_ARENA : PAT_SAND);
+                }
+                p.set(x, FLOOR, z, b);
+            }
+        }
+    }
 
     private static void arenaFloor(Plan p) {
         for (int x = -ARENA_RX; x <= ARENA_RX; x++) {
