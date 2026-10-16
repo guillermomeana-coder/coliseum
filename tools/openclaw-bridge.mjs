@@ -142,6 +142,9 @@ Commands:
   msg <agent|all> "<text>"      Message an agent
   repo-add <path>               Register a new repo
   watch                         Live event stream
+  autopilot                     Auto-approve all permissions + merges (full autonomy)
+  autopilot --no-merge          Auto-approve permissions only, pause on merges for review
+  run "<goal>" [--autopilot]    Submit goal + watch + auto-approve in one command
   `);
   process.exit(0);
 }
@@ -252,6 +255,105 @@ try {
         else if (msg.type !== 'snapshot' && msg.type !== 'ack') console.log(`[${ts}] ${msg.type}`);
       };
       await new Promise(() => {}); // hang forever
+      break;
+    }
+    case 'autopilot': {
+      const autoMerge = !args.includes('--no-merge');
+      console.log(`Autopilot ON${autoMerge ? ' (full: permissions + merges)' : ' (permissions only, merges need review)'}`);
+      console.log('Ctrl+C to stop.\n');
+      let approved = 0;
+      fm._watchHandler = (msg) => {
+        const ts = new Date().toLocaleTimeString();
+        // Auto-answer open decisions
+        if (msg.type === 'decision.upsert' && msg.decision.status === 'open') {
+          const d = msg.decision;
+          if (d.kind === 'permission') {
+            fm.answerDecision(d.id, 'Always allow for this agent').then(() => {
+              approved++;
+              console.log(`[${ts}] ✓ Auto-approved permission ${d.id} for ${d.agentId || 'agent'}: ${(d.question || '').slice(0, 80)}`);
+            }).catch(() => {});
+          } else if (d.kind === 'merge' && autoMerge) {
+            fm.answerDecision(d.id, 'Merge').then(() => {
+              approved++;
+              console.log(`[${ts}] ✓ Auto-merged ${d.id}: ${(d.question || '').slice(0, 80)}`);
+            }).catch(() => {});
+          } else if (d.kind === 'merge' && !autoMerge) {
+            console.log(`[${ts}] ⏸ MERGE WAITING: ${d.id} — ${d.question}`);
+            console.log(`         Run: node tools/openclaw-bridge.mjs merge ${d.id}`);
+          } else if (d.kind === 'question') {
+            console.log(`[${ts}] ❓ QUESTION ${d.id} from ${d.agentId}: ${d.question}`);
+            console.log(`         Options: ${(d.options || []).join(' | ')}`);
+          }
+        }
+        // Show progress
+        if (msg.type === 'goal.upsert') {
+          const g = msg.goal;
+          console.log(`[${ts}] Goal ${g.id}: ${g.status} (${Math.round((g.progress || 0) * 100)}%)${g.status === 'done' ? ' ✅ COMPLETE' : ''}`);
+        }
+        if (msg.type === 'task.upsert') {
+          const t = msg.task;
+          if (t.status === 'done') console.log(`[${ts}] ✅ ${t.id} done: ${t.title}`);
+          else if (t.status === 'doing') console.log(`[${ts}] ⚙ ${t.id} started: ${t.title} → ${t.assignee}`);
+        }
+        if (msg.type === 'feed.add') console.log(`[${ts}] ${msg.item.text}`);
+      };
+      // Also process any currently open decisions
+      for (const d of fm.state.decisions.filter(x => x.status === 'open')) {
+        if (d.kind === 'permission') {
+          fm.answerDecision(d.id, 'Always allow for this agent').catch(() => {});
+          console.log(`✓ Cleared pending permission ${d.id}`);
+          approved++;
+        } else if (d.kind === 'merge' && autoMerge) {
+          fm.answerDecision(d.id, 'Merge').catch(() => {});
+          console.log(`✓ Cleared pending merge ${d.id}`);
+          approved++;
+        }
+      }
+      if (approved > 0) console.log(`Cleared ${approved} pending decisions.\n`);
+      await new Promise(() => {});
+      break;
+    }
+    case 'run': {
+      const goalText = args.filter(a => !a.startsWith('--')).join(' ');
+      const auto = args.includes('--autopilot') || args.includes('-a');
+      if (!goalText) { console.error('Usage: run "<goal text>" [--autopilot]'); process.exit(1); }
+
+      const goalId = await fm.submitGoal(goalText);
+      console.log(`Goal submitted: ${goalId}`);
+      console.log(`Mode: ${auto ? 'autopilot (full autonomy)' : 'watch (manual decisions)'}\n`);
+
+      fm._watchHandler = (msg) => {
+        const ts = new Date().toLocaleTimeString();
+        // Auto-approve if autopilot
+        if (auto && msg.type === 'decision.upsert' && msg.decision.status === 'open') {
+          const d = msg.decision;
+          if (d.kind === 'permission') {
+            fm.answerDecision(d.id, 'Always allow for this agent').catch(() => {});
+            console.log(`[${ts}] ✓ ${d.id} auto-approved`);
+          } else if (d.kind === 'merge') {
+            fm.answerDecision(d.id, 'Merge').catch(() => {});
+            console.log(`[${ts}] ✓ ${d.id} auto-merged`);
+          }
+        } else if (!auto && msg.type === 'decision.upsert' && msg.decision.status === 'open') {
+          console.log(`[${ts}] ⚡ DECISION ${msg.decision.id}: ${msg.decision.question}`);
+        }
+        // Progress
+        if (msg.type === 'goal.upsert' && msg.goal.id === goalId) {
+          const g = msg.goal;
+          console.log(`[${ts}] Progress: ${Math.round((g.progress || 0) * 100)}% — ${g.status}`);
+          if (g.status === 'done') {
+            console.log(`\n✅ Goal complete!`);
+            fm.close();
+            process.exit(0);
+          }
+        }
+        if (msg.type === 'task.upsert' && msg.task.goalId === goalId) {
+          const t = msg.task;
+          if (t.status === 'done') console.log(`[${ts}] ✅ ${t.id}: ${t.title}`);
+          else if (t.status === 'doing') console.log(`[${ts}] ⚙ ${t.id}: ${t.title} → ${t.assignee}`);
+        }
+      };
+      await new Promise(() => {});
       break;
     }
     default:

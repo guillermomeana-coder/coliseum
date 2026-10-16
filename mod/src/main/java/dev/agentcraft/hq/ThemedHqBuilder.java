@@ -5,7 +5,10 @@ import dev.agentcraft.layout.Anchors;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
 
@@ -68,11 +71,12 @@ public final class ThemedHqBuilder implements HqBuilder {
 
     /**
      * Walks the site box and swaps materials according to the theme's palette.
-     * Only structural/decorative blocks are swapped — functional blocks (monitors,
-     * desks, lamps, task boards, etc.) are left untouched.
+     * Preserves block state properties (direction, half, waterlogged) when swapping
+     * stairs and slabs. Functional blocks (monitors, desks, lamps, task boards) are untouched.
      */
     private int applyTheme(ServerLevel level) {
-        Map<Block, BlockState> simpleSwaps = buildSwapTable();
+        Map<Block, Block> blockSwaps = buildBlockSwapTable();
+        Map<Block, BlockState> fullSwaps = buildFullSwapTable();
         int count = 0;
         int[] site = {-46, 60, -36, 46, 100, 54}; // StudioHqBuilder.SITE
 
@@ -83,9 +87,21 @@ public final class ThemedHqBuilder implements HqBuilder {
                     BlockState current = level.getBlockState(pos);
                     Block block = current.getBlock();
 
-                    BlockState replacement = simpleSwaps.get(block);
+                    // 1. State-aware swap (stairs, slabs) — preserves facing, half, shape, waterlogged
+                    Block newBlock = blockSwaps.get(block);
+                    if (newBlock != null && newBlock != block) {
+                        BlockState newState = copyProperties(current, newBlock.defaultBlockState());
+                        if (!newState.equals(current)) {
+                            level.setBlock(pos, newState, 2);
+                            count++;
+                        }
+                        continue;
+                    }
+
+                    // 2. Simple full-block swap (planks, bricks, glass)
+                    BlockState replacement = fullSwaps.get(block);
                     if (replacement != null && !replacement.equals(current)) {
-                        level.setBlock(pos, replacement, 2); // 2 = update clients, no block update
+                        level.setBlock(pos, replacement, 2);
                         count++;
                     }
                 }
@@ -95,36 +111,105 @@ public final class ThemedHqBuilder implements HqBuilder {
     }
 
     /**
-     * Maps original warm-studio blocks to theme blocks.
-     * Only maps blocks that should change for the theme.
+     * Copies all matching properties from the source state onto the target state.
+     * This preserves facing, half, shape, waterlogged, etc. when swapping stairs/slabs.
      */
-    private Map<Block, BlockState> buildSwapTable() {
+    @SuppressWarnings("unchecked")
+    private static BlockState copyProperties(BlockState source, BlockState target) {
+        for (Property<?> prop : source.getProperties()) {
+            if (target.hasProperty(prop)) {
+                target = copyProperty(source, target, (Property) prop);
+            }
+        }
+        return target;
+    }
+
+    private static <T extends Comparable<T>> BlockState copyProperty(BlockState source, BlockState target, Property<T> prop) {
+        return target.setValue(prop, source.getValue(prop));
+    }
+
+    /** Block→Block swaps for stairs and slabs (state properties preserved). */
+    private Map<Block, Block> buildBlockSwapTable() {
+        Map<Block, Block> m = new HashMap<>();
+
+        // Roof stairs
+        Block origRoofStairs = Blocks.CUT_COPPER_STAIRS.waxed().unaffected();
+        if (theme.roofStairs() != origRoofStairs) {
+            m.put(origRoofStairs, theme.roofStairs());
+        }
+
+        // Roof trim stairs
+        if (theme.roofTrim() != Blocks.DARK_OAK_STAIRS) {
+            m.put(Blocks.DARK_OAK_STAIRS, theme.roofTrim());
+        }
+
+        // Ceiling stairs
+        if (theme.ceilStairs() != Blocks.PALE_OAK_STAIRS) {
+            m.put(Blocks.PALE_OAK_STAIRS, theme.ceilStairs());
+        }
+
+        // Roof slab
+        Block origRoofSlab = Blocks.CUT_COPPER_SLAB.waxed().unaffected();
+        if (theme.roofSlab() != origRoofSlab) {
+            m.put(origRoofSlab, theme.roofSlab());
+        }
+
+        // Sofa
+        Block origSofa = Blocks.WOOL_STAIRS.pick(net.minecraft.world.item.DyeColor.BROWN);
+        if (theme.sofa() != origSofa) {
+            m.put(origSofa, theme.sofa());
+        }
+
+        // Dome stairs
+        Block origDomeStairs = Blocks.CUT_COPPER_STAIRS.waxed().unaffected();
+        if (theme.domeStairs() != origDomeStairs) {
+            m.put(origDomeStairs, theme.domeStairs());
+        }
+
+        // Dome slab
+        Block origDomeSlab = Blocks.CUT_COPPER_SLAB.waxed().unaffected();
+        if (theme.domeSlab() != origDomeSlab) {
+            m.put(origDomeSlab, theme.domeSlab());
+        }
+
+        return m;
+    }
+
+    /** Block→BlockState swaps for full blocks (no state to preserve). */
+    private Map<Block, BlockState> buildFullSwapTable() {
         Map<Block, BlockState> m = new HashMap<>();
 
-        // Floor swaps
+        // Floors
         m.put(Blocks.BIRCH_PLANKS, theme.floorMain());
         m.put(Blocks.DARK_OAK_PLANKS, theme.floorAccent());
         m.put(Blocks.MUD_BRICKS, theme.plinth());
 
-        // Roof/ceiling swaps
-        // Note: stairs and slabs need directional state preservation,
-        // so we swap the full-block versions and leave stairs for now.
-        // A future version can do state-aware stair swapping.
+        // Ceiling full blocks
+        if (!theme.ceilFull().is(Blocks.PALE_OAK_PLANKS)) {
+            m.put(Blocks.PALE_OAK_PLANKS, theme.ceilFull());
+        }
 
-        // Glass swaps (only if theme changes glass type)
+        // Roof full blocks
+        // (roofFull swaps are tricky since dark_oak_planks is also floorAccent — skip to avoid conflict)
+
+        // Dome shell
+        Block origCopper = Blocks.COPPER_BLOCK.waxed().unaffected();
+        if (!theme.domeShell().is(origCopper)) {
+            m.put(origCopper, theme.domeShell());
+        }
+        Block origCutCopper = Blocks.CUT_COPPER.waxed().unaffected();
+        if (!theme.domeShell().is(origCutCopper)) {
+            m.put(origCutCopper, theme.domeShell());
+        }
+
+        // Glass
         if (theme.glassPane().getBlock() != Blocks.GLASS_PANE) {
             m.put(Blocks.GLASS_PANE, theme.glassPane());
         }
 
-        // Sofa swaps
-        // Brown wool stairs → theme sofa (handled by block identity)
-
-        // Lantern swaps
+        // Lanterns
         if (theme.lantern().getBlock() != Blocks.LANTERN) {
             m.put(Blocks.LANTERN, theme.lantern());
-        }
-        if (theme.lanternHanging().getBlock() != Blocks.SOUL_LANTERN) {
-            m.put(Blocks.SOUL_LANTERN, theme.lanternHanging());
         }
 
         return m;
