@@ -109,11 +109,41 @@ class ArenaBridge {
     });
   }
 
+  send(msg) {
+    this.ws.send(JSON.stringify({ v: 1, ...msg }));
+  }
+
   broadcast(text) {
-    this.ws.send(JSON.stringify({
-      v: 1, type: 'user.message', to: 'all', text,
-      id: `arena-${this.nextId++}`
-    }));
+    this.send({ type: 'user.message', to: 'all', text, id: `arena-${this.nextId++}` });
+  }
+
+  /** Send full arena state to Foreman (rendered on scoreboard). */
+  sendState(state) {
+    this.send({
+      type: 'arena.state',
+      topic: state.topic,
+      round: state.round,
+      combatants: state.combatants.map(c => ({
+        id: c.id, spot: c.spot, score: c.score,
+        status: c.status, lastArgument: c.arguments.at(-1)?.text
+      })),
+      champion: state.champion?.id
+    });
+  }
+
+  /** Send score update for one combatant. */
+  sendScore(combatantId, score, argument) {
+    this.send({ type: 'arena.score', combatantId, score, argument });
+  }
+
+  /** Eliminate a combatant. */
+  sendEliminate(combatantId, reason) {
+    this.send({ type: 'arena.eliminate', combatantId, reason });
+  }
+
+  /** Crown the champion. */
+  sendCrown(combatantId) {
+    this.send({ type: 'arena.crown', combatantId });
   }
 
   announce(text) {

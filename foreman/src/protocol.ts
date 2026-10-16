@@ -329,6 +329,46 @@ export const ErrorMsg = z.object({
   re: z.string().optional(),
 });
 
+// Arena (Battle Royale) messages ---------------------------------------------------------------
+
+export const ArenaStatus = z.enum(['waiting', 'fighting', 'eliminated', 'champion']);
+export type ArenaStatus = z.infer<typeof ArenaStatus>;
+
+export const ArenaCombatant = z.object({
+  id: z.string(),
+  spot: z.number().int().nonnegative().describe('arena_spot_N index'),
+  score: z.number(),
+  status: ArenaStatus,
+  lastArgument: z.string().optional().describe('latest argument text'),
+});
+export type ArenaCombatant = z.infer<typeof ArenaCombatant>;
+
+export const ArenaStateMsg = z.object({
+  ...envelope('arena.state'),
+  topic: z.string(),
+  round: z.number().int().nonnegative(),
+  combatants: z.array(ArenaCombatant),
+  champion: z.string().optional().describe('combatant id of the winner'),
+});
+
+export const ArenaScoreMsg = z.object({
+  ...envelope('arena.score'),
+  combatantId: z.string(),
+  score: z.number(),
+  argument: z.string().optional(),
+});
+
+export const ArenaEliminateMsg = z.object({
+  ...envelope('arena.eliminate'),
+  combatantId: z.string(),
+  reason: z.string().optional(),
+});
+
+export const ArenaCrownMsg = z.object({
+  ...envelope('arena.crown'),
+  combatantId: z.string(),
+});
+
 export const ServerMessage = z.discriminatedUnion('type', [
   SnapshotMsg,
   AgentUpsertMsg,
@@ -345,6 +385,11 @@ export const ServerMessage = z.discriminatedUnion('type', [
   ForemanStatusMsg,
   AckMsg,
   ErrorMsg,
+  // Arena (Battle Royale)
+  ArenaStateMsg,
+  ArenaScoreMsg,
+  ArenaEliminateMsg,
+  ArenaCrownMsg,
 ]);
 export type ServerMessage = z.infer<typeof ServerMessage>;
 
