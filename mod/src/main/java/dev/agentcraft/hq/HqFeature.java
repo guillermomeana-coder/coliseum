@@ -36,6 +36,7 @@ public final class HqFeature {
 		HqBuilders.register(new TestRoomBuilder());
 		HqBuilders.register(new StudioHqBuilder());
 		HqBuilders.register(new ThemedHqBuilder());
+		HqBuilders.register(new ColiseumBuilder());
 		HqBuilders.setDefault(ThemedHqBuilder.ID);
 		// A fresh HQ world (no saved layout yet) gets the default HQ built before the player joins, so
 		// the first launch walks straight into it. AGENTCRAFT_HQ_AUTOBUILD=0 turns this off.
