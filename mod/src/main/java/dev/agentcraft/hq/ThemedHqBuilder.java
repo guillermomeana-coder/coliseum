@@ -1,6 +1,7 @@
 package dev.agentcraft.hq;
 
 import dev.agentcraft.AgentCraft;
+import dev.agentcraft.block.ModBlocks;
 import dev.agentcraft.layout.Anchors;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
@@ -172,6 +173,11 @@ public final class ThemedHqBuilder implements HqBuilder {
             m.put(origDomeSlab, theme.domeSlab());
         }
 
+        // Frame posts and beams (stripped logs — axis property preserved by copyProperties)
+        if (theme.framePost() != Blocks.STRIPPED_DARK_OAK_LOG) {
+            m.put(Blocks.STRIPPED_DARK_OAK_LOG, theme.framePost());
+        }
+
         return m;
     }
 
@@ -179,10 +185,39 @@ public final class ThemedHqBuilder implements HqBuilder {
     private Map<Block, BlockState> buildFullSwapTable() {
         Map<Block, BlockState> m = new HashMap<>();
 
-        // Floors
+        // Floors — vanilla blocks
         m.put(Blocks.BIRCH_PLANKS, theme.floorMain());
         m.put(Blocks.DARK_OAK_PLANKS, theme.floorAccent());
         m.put(Blocks.MUD_BRICKS, theme.plinth());
+
+        // Floors — mod blocks
+        if (!theme.floorMain().is(ModBlocks.OAK_PARQUET)) {
+            m.put(ModBlocks.OAK_PARQUET, theme.floorMain());
+        }
+        if (!theme.floorTile().is(ModBlocks.TERRACOTTA_TILE)) {
+            m.put(ModBlocks.TERRACOTTA_TILE, theme.floorTile());
+        }
+
+        // Walls — plaster (mod blocks)
+        if (!theme.wallPrimary().is(ModBlocks.PLASTER_PANEL)) {
+            m.put(ModBlocks.PLASTER_PANEL, theme.wallPrimary());
+        }
+        if (!theme.wallFrame().is(ModBlocks.PLASTER_FRAME)) {
+            m.put(ModBlocks.PLASTER_FRAME, theme.wallFrame());
+        }
+
+        // Walls — walnut (mod blocks)
+        if (!theme.wallTrim().is(ModBlocks.WALNUT_TRIM)) {
+            m.put(ModBlocks.WALNUT_TRIM, theme.wallTrim());
+        }
+        if (!theme.wallWood().is(ModBlocks.WALNUT_PANEL)) {
+            m.put(ModBlocks.WALNUT_PANEL, theme.wallWood());
+        }
+
+        // Glow panel (mod block)
+        if (!theme.glowPanel().is(ModBlocks.GLOW_PANEL)) {
+            m.put(ModBlocks.GLOW_PANEL, theme.glowPanel());
+        }
 
         // Ceiling full blocks
         if (!theme.ceilFull().is(Blocks.PALE_OAK_PLANKS)) {

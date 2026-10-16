@@ -15,19 +15,21 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The OpenClaw Coliseum: an elliptical Roman amphitheater inspired by the real Colosseum.
- * Agents debate from podiums on the arena floor while the user spectates from tiered seating.
+ * The OpenClaw Coliseum: a battle-royale arena supporting up to 100 simultaneous agents.
+ * Elliptical Roman amphitheater inspired by the real Colosseum, scaled up for mass combat.
  *
  * <p>Based on the Compact Roman Colosseum schematic palette: polished diorite, chiseled sandstone,
  * stone bricks, cut sandstone, smooth sandstone. Elliptical shape (wider on X axis), 4 axial
- * gates (N/S/E/W), 3 tiers of arched walls, interior seating bowl, central arena with stage.
+ * gates (N/S/E/W), 3 tiers of arched walls, interior seating bowl (= eliminated zone),
+ * 100 arena spots in concentric rings, central champion stage.
  *
  * <pre>
- *   Ellipse radii: X=23, Z=18 (outer wall)
- *   Arena radii:   X=13, Z=10
- *   4 tiers of seating between arena and outer wall
- *   4 axial gates at N/S/E/W
- *   8 podiums around central stage
+ *   Ellipse radii: X=35, Z=28 (outer wall)
+ *   Arena radii:   X=22, Z=17
+ *   4 concentric rings of arena spots (12+20+28+40 = 100)
+ *   Champion stage: radius 5, raised 2 blocks
+ *   Scoreboard wall on west interior
+ *   4 axial gates (width 3) at N/S/E/W
  *   28 blocks tall (floor to parapet)
  * </pre>
  */
@@ -43,19 +45,15 @@ public final class ColiseumBuilder implements HqBuilder {
     static final int CX = 0, CZ = 0;
 
     /** Ellipse semi-axes for the outer wall. */
-    static final int OUTER_RX = 23;
-    static final int OUTER_RZ = 18;
+    static final int OUTER_RX = 35;
+    static final int OUTER_RZ = 28;
 
     /** Ellipse semi-axes for the arena floor. */
-    static final int ARENA_RX = 13;
-    static final int ARENA_RZ = 10;
+    static final int ARENA_RX = 22;
+    static final int ARENA_RZ = 17;
 
     /** Stage radius (circular, centred). */
-    static final int STAGE_R = 3;
-
-    /** Podium ring semi-axes. */
-    static final int PODIUM_RX = 9;
-    static final int PODIUM_RZ = 7;
+    static final int STAGE_R = 5;
 
     /** Wall height tiers. */
     static final int TIER_H = 5;      // height per tier
@@ -63,11 +61,19 @@ public final class ColiseumBuilder implements HqBuilder {
     static final int WALL_TOP = FEET + NUM_TIERS * TIER_H; // y=86
     static final int PARAPET = WALL_TOP + 2;
 
-    /** Gate half-width. */
-    static final int GATE_W = 2;
+    /** Gate half-width (width 3 means -1..+1). */
+    static final int GATE_W = 1;
 
     /** Site box. */
-    static final int[] SITE = {-26, 60, -21, 26, 95, 21};
+    static final int[] SITE = {-38, 60, -31, 38, 95, 31};
+
+    /** Arena spot ring definitions: {count, radius}. Total = 12+20+28+40 = 100. */
+    static final int[][] SPOT_RINGS = {
+        {12, 7},
+        {20, 10},
+        {28, 13},
+        {40, 16}
+    };
 
     // ------------------------------------------------------------------ materials (Roman Colosseum palette)
     static final BlockState AIR = Blocks.AIR.defaultBlockState();
@@ -80,24 +86,29 @@ public final class ColiseumBuilder implements HqBuilder {
     static final BlockState ARCH_BLOCK = Blocks.SMOOTH_SANDSTONE.defaultBlockState();
     static final BlockState FLOOR_ARENA = Blocks.SMOOTH_SANDSTONE.defaultBlockState();
     static final BlockState FLOOR_RING = Blocks.SMOOTH_RED_SANDSTONE.defaultBlockState();
-    static final BlockState STAGE_BLOCK = Blocks.POLISHED_DIORITE.defaultBlockState();
-    static final BlockState STAGE_EDGE = Blocks.SMOOTH_QUARTZ.defaultBlockState();
+    static final BlockState STAGE_BLOCK = Blocks.GILDED_BLACKSTONE.defaultBlockState();
+    static final BlockState STAGE_EDGE = Blocks.SEA_LANTERN.defaultBlockState();
     static final Block SEAT_STAIRS = Blocks.SANDSTONE_STAIRS;
     static final Block SEAT_ACCENT_STAIRS = Blocks.STONE_BRICK_STAIRS;
     static final BlockState RUIN = Blocks.CRACKED_STONE_BRICKS.defaultBlockState();
-    static final BlockState PODIUM_BASE = Blocks.POLISHED_DIORITE.defaultBlockState();
-    static final BlockState PODIUM_TOP = Blocks.SMOOTH_QUARTZ.defaultBlockState();
     static final BlockState LANTERN_BLOCK = St.lantern(Blocks.LANTERN, false);
     static final BlockState LANTERN_HANG = St.lantern(Blocks.LANTERN, true);
     static final BlockState BANNER_BLOCK = Blocks.SANDSTONE_WALL.defaultBlockState();
     static final BlockState PLANK = Blocks.OAK_PLANKS.defaultBlockState();
+    static final BlockState SCOREBOARD_BLOCK = Blocks.SMOOTH_QUARTZ.defaultBlockState();
+
+    // Spot marker blocks — 4 different colors for the 4 rings
+    static final BlockState SPOT_RING1 = St.concrete(net.minecraft.world.item.DyeColor.RED);
+    static final BlockState SPOT_RING2 = St.concrete(net.minecraft.world.item.DyeColor.ORANGE);
+    static final BlockState SPOT_RING3 = St.concrete(net.minecraft.world.item.DyeColor.YELLOW);
+    static final BlockState SPOT_RING4 = St.concrete(net.minecraft.world.item.DyeColor.LIME);
 
     @Override
     public String id() { return ID; }
 
     @Override
     public String description() {
-        return "OpenClaw Coliseum: elliptical Roman amphitheater with arched tiers, 8 debate podiums, spectator seating";
+        return "OpenClaw Coliseum: elliptical battle-royale arena with 100 agent spots, champion stage, scoreboard, spectator seating";
     }
 
     @Override
@@ -121,8 +132,10 @@ public final class ColiseumBuilder implements HqBuilder {
         arches(p);
         gates(p);
         parapet(p);
-        stage(p);
-        podiums(p, a);
+        championStage(p, a);
+        arenaSpots(p, a);
+        scoreboardWall(p, a);
+        eliminatedZone(p, a);
         lighting(p);
         ruins(p);
         anchors(p, a);
@@ -133,7 +146,8 @@ public final class ColiseumBuilder implements HqBuilder {
 
         a.bounds(-OUTER_RX, FLOOR, -OUTER_RZ, OUTER_RX, PARAPET, OUTER_RZ);
         a.spot(AnchorNames.ENTRANCE, CX, FEET, OUTER_RZ + 2, 180);
-        a.put(AnchorNames.SPAWN, CX + 0.5, FEET + 12, OUTER_RZ - 2.5, 180, 30);
+        // Spectator spawn: high above arena center, looking down at 60 degrees
+        a.put(AnchorNames.SPAWN, CX + 0.5, FEET + 20, CZ + 0.5, 0, 60);
 
         long ms = (System.nanoTime() - t0) / 1_000_000;
         AgentCraft.LOGGER.info("Coliseum: {} cells, {} changed in {} ms", st.cells(), st.changed(), ms);
@@ -154,7 +168,7 @@ public final class ColiseumBuilder implements HqBuilder {
         return Math.sqrt(nx * nx + nz * nz);
     }
 
-    /** Is this position inside a gate opening? 4 axial gates at N/S/E/W. */
+    /** Is this position inside a gate opening? 4 axial gates at N/S/E/W (width 3). */
     static boolean isGate(int x, int z) {
         // North/South gates: |x| <= GATE_W
         if (Math.abs(x) <= GATE_W && (Math.abs(z) > ARENA_RZ - 1)) return true;
@@ -206,11 +220,6 @@ public final class ColiseumBuilder implements HqBuilder {
                 if (inEllipse(x, z, ARENA_RX + 0.5, ARENA_RZ + 0.5)) continue;
                 if (isGate(x, z)) continue;
 
-                // How far from arena edge to outer wall (0=arena, 1=wall)
-                double normArena = ellipseNorm(x, z, ARENA_RX + 1, ARENA_RZ + 1);
-                double normOuter = ellipseNorm(x, z, OUTER_RX, OUTER_RZ);
-                double seatProgress = (normArena - 1.0) / (normOuter / normArena);
-
                 // Step height: each row is 1 block higher
                 int step = (int) ((ellipseNorm(x, z, ARENA_RX, ARENA_RZ) - 1.0) * 12);
                 step = Math.max(0, Math.min(step, NUM_TIERS * TIER_H - 2));
@@ -219,7 +228,7 @@ public final class ColiseumBuilder implements HqBuilder {
                 for (int y = FLOOR; y <= FLOOR + step; y++) {
                     p.set(x, y, z, FOUNDATION);
                 }
-                // Seat on top (alternating stairs for texture)
+                // Seat on top (alternating for texture)
                 BlockState seat = step % 3 == 0 ? WALL_SMOOTH : WALL_ACCENT;
                 p.set(x, FLOOR + step + 1, z, seat);
 
@@ -261,7 +270,7 @@ public final class ColiseumBuilder implements HqBuilder {
 
     private static void arches(Plan p) {
         // Place arches around the ellipse perimeter at regular intervals
-        int numArches = 32;
+        int numArches = 48; // more arches for larger perimeter
         for (int i = 0; i < numArches; i++) {
             double angle = Math.toRadians(i * (360.0 / numArches));
             int ax = (int) Math.round(OUTER_RX * Math.sin(angle));
@@ -304,7 +313,7 @@ public final class ColiseumBuilder implements HqBuilder {
         }
     }
 
-    // ================================================================== 4 axial gates
+    // ================================================================== 4 axial gates (width 3)
 
     private static void gates(Plan p) {
         int gateH = 4;
@@ -316,11 +325,9 @@ public final class ColiseumBuilder implements HqBuilder {
                 for (int y = FEET; y < FEET + gateH; y++) {
                     p.set(x, y, z, AIR);
                 }
-                // Arch top
                 if (Math.abs(x) < GATE_W) {
                     p.set(x, FEET + gateH, z, ARCH_BLOCK);
                 } else {
-                    // Gate frame columns
                     for (int y = FEET; y <= FEET + gateH + 1; y++) {
                         p.set(x, y, z, COLUMN);
                     }
@@ -400,95 +407,130 @@ public final class ColiseumBuilder implements HqBuilder {
         }
     }
 
-    // ================================================================== central stage
+    // ================================================================== champion stage (central raised platform)
 
-    private static void stage(Plan p) {
+    private static void championStage(Plan p, Anchors.Builder a) {
         for (int x = -STAGE_R; x <= STAGE_R; x++) {
             for (int z = -STAGE_R; z <= STAGE_R; z++) {
                 double r = Math.sqrt(x * x + z * z);
                 if (r > STAGE_R + 0.5) continue;
 
+                // Raised 2 blocks: fill FLOOR and FEET with solid, stand on FEET+1
                 p.set(x, FLOOR, z, STAGE_BLOCK);
                 p.set(x, FEET, z, STAGE_BLOCK);
+                p.set(x, FEET + 1, z, STAGE_BLOCK);
+                // Edge ring of sea lanterns
                 if (r > STAGE_R - 0.7) {
-                    p.set(x, FEET, z, STAGE_EDGE);
+                    p.set(x, FEET + 1, z, STAGE_EDGE);
                 }
-                for (int y = FEET + 1; y <= FEET + 6; y++) {
+                // Clear air above the platform
+                for (int y = FEET + 2; y <= FEET + 8; y++) {
                     p.set(x, y, z, AIR);
                 }
             }
         }
-        // Central marker
-        p.set(CX, FEET + 1, CZ, Blocks.SEA_LANTERN.defaultBlockState());
+        // Central marker on top of the platform
+        p.set(CX, FEET + 2, CZ, Blocks.SEA_LANTERN.defaultBlockState());
+
+        // Champion stage anchor (standing on top of the raised platform)
+        a.put("champion_stage", CX + 0.5, FEET + 2, CZ + 0.5, 0, 0);
     }
 
-    // ================================================================== 8 podiums
+    // ================================================================== 100 arena spots in concentric rings
 
-    private static void podiums(Plan p, Anchors.Builder a) {
-        List<String> cast = Cast.ids();
-        for (int i = 0; i < 8; i++) {
-            double angle = Math.toRadians(i * 45);
-            int px = CX + (int) Math.round(PODIUM_RX * Math.sin(angle));
-            int pz = CZ - (int) Math.round(PODIUM_RZ * Math.cos(angle));
+    private static void arenaSpots(Plan p, Anchors.Builder a) {
+        int spotIndex = 0;
+        BlockState[] ringMarkers = {SPOT_RING1, SPOT_RING2, SPOT_RING3, SPOT_RING4};
 
-            // 3x3 podium
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dz = -1; dz <= 1; dz++) {
-                    p.set(px + dx, FLOOR, pz + dz, PODIUM_BASE);
-                    p.set(px + dx, FEET, pz + dz, PODIUM_TOP);
-                }
+        for (int ring = 0; ring < SPOT_RINGS.length; ring++) {
+            int count = SPOT_RINGS[ring][0];
+            int radius = SPOT_RINGS[ring][1];
+            BlockState marker = ringMarkers[ring];
+
+            for (int i = 0; i < count; i++) {
+                double angle = Math.toRadians(i * (360.0 / count));
+                int sx = CX + (int) Math.round(radius * Math.sin(angle));
+                int sz = CZ - (int) Math.round(radius * Math.cos(angle));
+
+                // Floor marker (different color per ring)
+                p.set(sx, FLOOR, sz, marker);
+
+                // Anchor for this spot
+                float yaw = (float) Math.toDegrees(Math.atan2(sx - CX, -(sz - CZ)));
+                a.put("arena_spot_" + spotIndex, sx + 0.5, FEET, sz + 0.5, yaw, 0);
+
+                spotIndex++;
             }
-
-            // Lectern facing center
-            Direction facing = dirToCenter(px, pz);
-            p.set(px, FEET + 1, pz, Blocks.LECTERN.defaultBlockState()
-                .setValue(net.minecraft.world.level.block.LecternBlock.FACING, facing));
-
-            // Agent anchors
-            String agentId = i < cast.size() ? cast.get(i) : "agent" + i;
-            float yaw = (float) Math.toDegrees(Math.atan2(px - CX, -(pz - CZ)));
-            a.put(AnchorNames.desk(agentId), px + 0.5, FEET + 1, pz + 0.5, yaw, 0);
-            a.put(AnchorNames.monitor(agentId), px + 0.5, FEET + 2, pz + 0.5, yaw, 0);
-
-            // Status lamp
-            p.set(px, FEET + 3, pz, ModBlocks.STATUS_LAMP.defaultBlockState());
-
-            // Lanterns flanking podium
-            p.set(px + 1, FEET + 1, pz + 1, LANTERN_BLOCK);
-            p.set(px - 1, FEET + 1, pz - 1, LANTERN_BLOCK);
         }
     }
 
-    private static Direction dirToCenter(int x, int z) {
-        int ax = Math.abs(x), az = Math.abs(z);
-        if (ax >= az) return x > 0 ? Direction.WEST : Direction.EAST;
-        return z > 0 ? Direction.NORTH : Direction.SOUTH;
+    // ================================================================== scoreboard wall (west interior)
+
+    private static void scoreboardWall(Plan p, Anchors.Builder a) {
+        // 20 blocks wide, 10 blocks tall on the west interior wall
+        int wallX = -ARENA_RX + 1;
+        int startZ = -10;
+        int endZ = 9;
+        int startY = FEET + 1;
+        int endY = FEET + 10;
+
+        for (int z = startZ; z <= endZ; z++) {
+            for (int y = startY; y <= endY; y++) {
+                p.set(wallX, y, z, SCOREBOARD_BLOCK);
+            }
+        }
+
+        // Scoreboard anchor at the center of the wall
+        a.put("scoreboard", wallX + 0.5, FEET + 5, CZ + 0.5, 90, 0);
+    }
+
+    // ================================================================== eliminated zone (seating tiers with anchors)
+
+    private static void eliminatedZone(Plan p, Anchors.Builder a) {
+        // Spread 100 eliminated anchors across the seating tiers
+        // Distribute them around the elliptical seating bowl
+        for (int i = 0; i < 100; i++) {
+            double angle = Math.toRadians(i * (360.0 / 100));
+            // Place in the seating area (between arena edge and outer wall)
+            double seatRadius = 0.6; // 60% of the way from arena to outer wall
+            int ex = (int) Math.round((ARENA_RX + (OUTER_RX - ARENA_RX) * seatRadius) * Math.sin(angle));
+            int ez = (int) Math.round((ARENA_RZ + (OUTER_RZ - ARENA_RZ) * seatRadius) * Math.cos(angle));
+
+            // Calculate the seating step height at this position
+            double norm = ellipseNorm(ex, ez, ARENA_RX, ARENA_RZ);
+            int step = (int) ((norm - 1.0) * 12);
+            step = Math.max(0, Math.min(step, NUM_TIERS * TIER_H - 2));
+            int seatY = FLOOR + step + 2; // stand on top of the seat
+
+            float yaw = (float) Math.toDegrees(Math.atan2(-ex, ez));
+            a.put("eliminated_" + i, ex + 0.5, seatY, ez + 0.5, yaw, 0);
+        }
     }
 
     // ================================================================== lighting
 
     private static void lighting(Plan p) {
         // Ring of lanterns at arena edge
-        for (int i = 0; i < 24; i++) {
-            double angle = Math.toRadians(i * 15);
+        for (int i = 0; i < 36; i++) {
+            double angle = Math.toRadians(i * 10);
             int lx = (int) Math.round(ARENA_RX * Math.sin(angle));
             int lz = (int) Math.round(ARENA_RZ * Math.cos(angle));
             p.set(lx, FLOOR, lz, Blocks.SEA_LANTERN.defaultBlockState());
         }
 
         // Lanterns on top of outer wall columns (every 8th position)
-        for (int i = 0; i < 16; i++) {
-            double angle = Math.toRadians(i * 22.5);
+        for (int i = 0; i < 24; i++) {
+            double angle = Math.toRadians(i * 15);
             int wx = (int) Math.round((OUTER_RX + 0.5) * Math.sin(angle));
             int wz = (int) Math.round((OUTER_RZ + 0.5) * Math.cos(angle));
             p.set(wx, WALL_TOP + 1, wz, LANTERN_BLOCK);
         }
 
         // Hanging lanterns inside the arena at seating level
-        for (int i = 0; i < 8; i++) {
-            double angle = Math.toRadians(i * 45 + 22.5);
-            int hx = (int) Math.round((ARENA_RX + 2) * Math.sin(angle));
-            int hz = (int) Math.round((ARENA_RZ + 2) * Math.cos(angle));
+        for (int i = 0; i < 12; i++) {
+            double angle = Math.toRadians(i * 30 + 15);
+            int hx = (int) Math.round((ARENA_RX + 3) * Math.sin(angle));
+            int hz = (int) Math.round((ARENA_RZ + 3) * Math.cos(angle));
             // Pole + hanging lantern
             p.set(hx, FEET + 8, hz, Blocks.OAK_FENCE.defaultBlockState());
             p.set(hx, FEET + 7, hz, LANTERN_HANG);
@@ -529,7 +571,7 @@ public final class ColiseumBuilder implements HqBuilder {
         // Decision podium (east inner wall)
         a.spot(AnchorNames.DECISION_PODIUM, ARENA_RX - 1, FEET, CZ, 270);
         // Goal atrium (centre stage)
-        a.spot(AnchorNames.GOAL_ATRIUM, CX, FEET + 1, CZ, 180);
+        a.spot(AnchorNames.GOAL_ATRIUM, CX, FEET + 2, CZ, 180);
 
         // Lounge slots (upper tiers, north)
         for (int i = 0; i < 6; i++) {
@@ -542,9 +584,9 @@ public final class ColiseumBuilder implements HqBuilder {
         }
 
         // Cameras
-        a.put("camera_overview", CX + 0.5, FEET + 25, CZ + 0.5, 0, 90);
-        a.put("camera_stage", CX + 0.5, FEET + 5, CZ + STAGE_R + 5.5, 0, 15);
-        a.put("camera_spectator", 0.5, FEET + 15, OUTER_RZ - 1.5, 180, 35);
+        a.put("camera_overview", CX + 0.5, FEET + 30, CZ + 0.5, 0, 90);
+        a.put("camera_stage", CX + 0.5, FEET + 6, CZ + STAGE_R + 6.5, 0, 15);
+        a.put("camera_spectator", 0.5, FEET + 20, OUTER_RZ - 1.5, 180, 40);
         a.cameraLookAt("gate_south", CX + 0.5, FEET + 2, OUTER_RZ + 3.5, CX, FEET + 2, CZ);
     }
 }

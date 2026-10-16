@@ -28,6 +28,7 @@ public record Theme(
     BlockState wallPrimary,
     BlockState wallFrame,
     BlockState wallTrim,
+    BlockState wallWood,       // walnut panel or equivalent wood panelling
     Block framePost,           // vertical logs
     Block frameBeam,           // horizontal beams
     // --- Floor ---
@@ -53,7 +54,8 @@ public record Theme(
     Block sofa,
     // --- Ambient ---
     BlockState lantern,
-    BlockState lanternHanging
+    BlockState lanternHanging,
+    BlockState glowPanel       // glow panel for dome interior / accent lighting
 ) {
     // =========================================================================
     // WARM STUDIO — original AgentCraft look (timber + copper + plaster)
@@ -65,6 +67,7 @@ public record Theme(
         ModBlocks.PLASTER_PANEL.defaultBlockState(),
         ModBlocks.PLASTER_FRAME.defaultBlockState(),
         ModBlocks.WALNUT_TRIM.defaultBlockState(),
+        ModBlocks.WALNUT_PANEL.defaultBlockState(),
         Blocks.STRIPPED_DARK_OAK_LOG,
         Blocks.STRIPPED_DARK_OAK_LOG,
         // Floor
@@ -90,7 +93,8 @@ public record Theme(
         Blocks.WOOL_STAIRS.pick(DyeColor.BROWN),
         // Ambient
         St.lantern(Blocks.LANTERN, false),
-        St.lantern(Blocks.LANTERN, true)
+        St.lantern(Blocks.LANTERN, true),
+        ModBlocks.GLOW_PANEL.defaultBlockState()
     );
 
     // =========================================================================
@@ -103,6 +107,7 @@ public record Theme(
         Blocks.QUARTZ_BLOCK.defaultBlockState(),
         Blocks.SMOOTH_QUARTZ.defaultBlockState(),
         Blocks.QUARTZ_PILLAR.defaultBlockState(),
+        Blocks.SMOOTH_QUARTZ.defaultBlockState(),
         Blocks.IRON_BARS != null ? Blocks.STRIPPED_BIRCH_LOG : Blocks.STRIPPED_BIRCH_LOG,
         Blocks.STRIPPED_BIRCH_LOG,
         // Floor
@@ -128,7 +133,8 @@ public record Theme(
         Blocks.WOOL_STAIRS.pick(DyeColor.WHITE),
         // Ambient
         St.lantern(Blocks.LANTERN, false),
-        St.lantern(Blocks.LANTERN, true)
+        St.lantern(Blocks.LANTERN, true),
+        Blocks.SEA_LANTERN.defaultBlockState()
     );
 
     // =========================================================================
@@ -143,6 +149,7 @@ public record Theme(
         Blocks.DEEPSLATE_TILE_WALL != null
             ? Blocks.POLISHED_DEEPSLATE.defaultBlockState()
             : Blocks.POLISHED_DEEPSLATE.defaultBlockState(),
+        Blocks.DARK_OAK_PLANKS.defaultBlockState(),
         Blocks.STRIPPED_DARK_OAK_LOG,
         Blocks.STRIPPED_DARK_OAK_LOG,
         // Floor
@@ -168,7 +175,8 @@ public record Theme(
         Blocks.WOOL_STAIRS.pick(DyeColor.BLACK),
         // Ambient
         St.lantern(Blocks.SOUL_LANTERN, false),
-        St.lantern(Blocks.SOUL_LANTERN, true)
+        St.lantern(Blocks.SOUL_LANTERN, true),
+        Blocks.POLISHED_DEEPSLATE.defaultBlockState()
     );
 
     // =========================================================================
@@ -181,6 +189,7 @@ public record Theme(
         Blocks.BRICKS.defaultBlockState(),
         Blocks.CRACKED_STONE_BRICKS.defaultBlockState(),
         Blocks.STONE_BRICKS.defaultBlockState(),
+        Blocks.SPRUCE_PLANKS.defaultBlockState(),
         Blocks.STRIPPED_SPRUCE_LOG,
         Blocks.STRIPPED_SPRUCE_LOG,
         // Floor
@@ -206,7 +215,8 @@ public record Theme(
         Blocks.WOOL_STAIRS.pick(DyeColor.GRAY),
         // Ambient
         St.lantern(Blocks.LANTERN, false),
-        St.lantern(Blocks.LANTERN, true)
+        St.lantern(Blocks.LANTERN, true),
+        Blocks.GLOWSTONE.defaultBlockState()
     );
 
     // =========================================================================
@@ -219,6 +229,7 @@ public record Theme(
         Blocks.SMOOTH_QUARTZ.defaultBlockState(),
         Blocks.QUARTZ_BLOCK.defaultBlockState(),
         Blocks.SMOOTH_QUARTZ.defaultBlockState(),
+        Blocks.BIRCH_PLANKS.defaultBlockState(),
         Blocks.STRIPPED_BIRCH_LOG,
         Blocks.STRIPPED_BIRCH_LOG,
         // Floor
@@ -244,7 +255,8 @@ public record Theme(
         Blocks.WOOL_STAIRS.pick(DyeColor.WHITE),
         // Ambient
         St.lantern(Blocks.LANTERN, false),
-        St.lantern(Blocks.LANTERN, true)
+        St.lantern(Blocks.LANTERN, true),
+        Blocks.SEA_LANTERN.defaultBlockState()
     );
 
     // =========================================================================
@@ -257,6 +269,7 @@ public record Theme(
         Blocks.POLISHED_BLACKSTONE.defaultBlockState(),
         Blocks.GILDED_BLACKSTONE.defaultBlockState(),
         Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(),
+        Blocks.CRIMSON_PLANKS.defaultBlockState(),
         Blocks.STRIPPED_CRIMSON_STEM,
         Blocks.STRIPPED_CRIMSON_STEM,
         // Floor
@@ -282,7 +295,8 @@ public record Theme(
         Blocks.WOOL_STAIRS.pick(DyeColor.RED),
         // Ambient
         St.lantern(Blocks.SOUL_LANTERN, false),
-        St.lantern(Blocks.SOUL_LANTERN, true)
+        St.lantern(Blocks.SOUL_LANTERN, true),
+        Blocks.SHROOMLIGHT.defaultBlockState()
     );
 
     /** Look up a theme by id. Falls back to WARM_STUDIO. */

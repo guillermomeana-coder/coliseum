@@ -70,6 +70,23 @@ node tools/openclaw-bridge.mjs run "goal" --autopilot    # submit + watch + auto
 
 Switch in-game: `/agentcraft hq coliseum` or `/agentcraft hq openclaw`
 
+## Arena — Battle Royale Mode
+
+Run a battle royale where 16-100 AI agents debate a topic simultaneously:
+
+```bash
+# Start arena
+node tools/arena-bridge.mjs start "Best frontend framework for our stack" --agents 16
+
+# Watch live
+node tools/arena-bridge.mjs spectate
+
+# Check standings
+node tools/arena-bridge.mjs scoreboard
+```
+
+In Minecraft: fly above the arena in spectator mode and watch agents argue in real-time with speech bubbles.
+
 Set via `node tools/setup.mjs` or `node tools/setup.mjs --theme executive`.
 
 ## Requirements
