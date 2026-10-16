@@ -3,6 +3,7 @@ package dev.agentcraft.hq;
 import dev.agentcraft.AgentCraft;
 import dev.agentcraft.Cast;
 import dev.agentcraft.block.ModBlocks;
+import dev.agentcraft.block.PanelBlock;
 import dev.agentcraft.layout.AnchorNames;
 import dev.agentcraft.layout.Anchors;
 import java.util.List;
@@ -95,8 +96,6 @@ public final class ColiseumBuilder implements HqBuilder {
     static final BlockState LANTERN_HANG = St.lantern(Blocks.LANTERN, true);
     static final BlockState BANNER_BLOCK = Blocks.SANDSTONE_WALL.defaultBlockState();
     static final BlockState PLANK = Blocks.OAK_PLANKS.defaultBlockState();
-    static final BlockState SCOREBOARD_BLOCK = Blocks.SMOOTH_QUARTZ.defaultBlockState();
-
     // Spot marker blocks — 4 different colors for the 4 rings
     static final BlockState SPOT_RING1 = St.concrete(net.minecraft.world.item.DyeColor.RED);
     static final BlockState SPOT_RING2 = St.concrete(net.minecraft.world.item.DyeColor.ORANGE);
@@ -467,16 +466,18 @@ public final class ColiseumBuilder implements HqBuilder {
     // ================================================================== scoreboard wall (west interior)
 
     private static void scoreboardWall(Plan p, Anchors.Builder a) {
-        // 20 blocks wide, 10 blocks tall on the west interior wall
+        // 20 blocks wide, 10 blocks tall on the west interior wall — task board panels facing east
         int wallX = -ARENA_RX + 1;
         int startZ = -10;
         int endZ = 9;
         int startY = FEET + 1;
         int endY = FEET + 10;
 
+        BlockState board = ModBlocks.TASK_BOARD.defaultBlockState()
+            .setValue(PanelBlock.FACING, Direction.EAST);
         for (int z = startZ; z <= endZ; z++) {
             for (int y = startY; y <= endY; y++) {
-                p.set(wallX, y, z, SCOREBOARD_BLOCK);
+                p.set(wallX, y, z, board);
             }
         }
 
@@ -566,8 +567,8 @@ public final class ColiseumBuilder implements HqBuilder {
     // ================================================================== anchors
 
     private static void anchors(Plan p, Anchors.Builder a) {
-        // Task wall (west inner wall)
-        a.spot(AnchorNames.TASK_WALL, -ARENA_RX + 1, FEET + 1, CZ, 90);
+        // Task wall — positioned at the front face of the board (panel depth 3px = 0.1875 blocks)
+        a.put(AnchorNames.TASK_WALL, -ARENA_RX + 1 + 1 - 0.1875, FEET + 1, CZ + 0.5, 90, 0);
         // Decision podium (east inner wall)
         a.spot(AnchorNames.DECISION_PODIUM, ARENA_RX - 1, FEET, CZ, 270);
         // Goal atrium (centre stage)
