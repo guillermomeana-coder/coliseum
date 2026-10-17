@@ -19,10 +19,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 import { handleHelp } from './lib/help.mjs';
+import { resolveReadPath, readConfigFile, writeConfigFile } from './lib/configpath.mjs';
 
 const USAGE = `Usage: node tools/setup.mjs [--show | --theme ID | --auth METHOD [--key KEY] | --hq-mode ID]
 
-Coliseum setup: configures auth method, theme, HQ mode and repos in ~/.coliseum/config.json.
+Coliseum setup: configures auth method, theme, HQ mode and repos in config.json (Windows: %APPDATA%\\Coliseum,
+macOS: ~/Library/Application Support/Coliseum, Linux: $XDG_CONFIG_HOME/coliseum or ~/.config/coliseum).
+The old ~/.coliseum/config.json is read as a fallback and migrated on save.
 With no options it runs the interactive wizard.
 
 Options:
@@ -33,15 +36,13 @@ Options:
   --hq-mode ID      coliseum_office, coliseum, coliseum_nether, coliseum_ice
   -h, --help        show this help
 
-Env: HOME / USERPROFILE (config location)
+Env: COLISEUM_HOME (config dir override), APPDATA, XDG_CONFIG_HOME, HOME / USERPROFILE
 Examples:
   node tools/setup.mjs --theme executive
   node tools/setup.mjs --auth claude-login`;
 handleHelp(USAGE);
 
 
-const HOME = path.join(process.env.HOME || process.env.USERPROFILE, '.coliseum');
-const CONFIG_PATH = path.join(HOME, 'config.json');
 
 const THEMES = [
   { id: 'warm_studio', name: 'Warm Studio', desc: 'Original timber + copper + plaster (default)' },
@@ -68,19 +69,18 @@ const HQ_MODES = [
 const LEGACY_OFFICE_MODE = 'openclaw';
 
 function loadConfig() {
-  try {
-    const cfg = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+  const cfg = readConfigFile();
+  if (cfg) {
     if (cfg.hqMode === LEGACY_OFFICE_MODE) cfg.hqMode = 'coliseum_office';
     return cfg;
-  } catch {
+  } else {
     return { theme: 'warm_studio', auth: 'claude-login', apiKey: '', repos: [], hqMode: 'coliseum_office' };
   }
 }
 
 function saveConfig(cfg) {
-  fs.mkdirSync(HOME, { recursive: true });
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2));
-  console.log(`\nConfig saved to ${CONFIG_PATH}`);
+  const p = writeConfigFile(cfg);
+  console.log(`\nConfig saved to ${p}`);
 }
 
 function ask(rl, question) {
@@ -140,6 +140,7 @@ async function interactive() {
 // CLI flags
 const args = process.argv.slice(2);
 if (args.includes('--show')) {
+  console.error(`Config: ${resolveReadPath()}`);
   console.log(JSON.stringify(loadConfig(), null, 2));
 } else if (args.includes('--theme')) {
   const cfg = loadConfig();
