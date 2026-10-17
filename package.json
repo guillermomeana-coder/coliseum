@@ -9,7 +9,9 @@
   },
   "scripts": {
     "setup": "node tools/setup.mjs",
+    "install-mod": "node tools/install-mod.mjs",
     "launch": "node tools/launch.mjs",
+    "doctor": "node tools/doctor.mjs",
     "bridge": "node tools/bridge.mjs",
     "arena": "node tools/arena-bridge.mjs"
   }

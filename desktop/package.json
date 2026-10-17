@@ -5,10 +5,14 @@
   "description": "Coliseum desktop app: setup wizard and launcher",
   "main": "main.js",
   "private": true,
+  "license": "MIT",
   "type": "commonjs",
   "scripts": {
     "start": "electron .",
     "test": "node --test"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "electron": "^33.0.0"
