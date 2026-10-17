@@ -36,6 +36,8 @@ const AUTH_METHODS = [
 const HQ_MODES = [
   { id: 'openclaw', name: 'Office', desc: 'Warm studio office — the team works at desks (default)' },
   { id: 'coliseum', name: 'Coliseum', desc: 'Battle royale arena — 100 agents debate simultaneously' },
+  { id: 'coliseum_nether', name: 'Nether Coliseum', desc: 'Coliseum arena in a hellish Nether palette' },
+  { id: 'coliseum_ice', name: 'Ice Coliseum', desc: 'Coliseum arena in a frozen ice palette' },
 ];
 
 function loadConfig() {
@@ -113,6 +115,15 @@ if (args.includes('--show')) {
 } else if (args.includes('--theme')) {
   const cfg = loadConfig();
   cfg.theme = args[args.indexOf('--theme') + 1];
+  saveConfig(cfg);
+} else if (args.includes('--hq-mode')) {
+  const mode = args[args.indexOf('--hq-mode') + 1];
+  if (!HQ_MODES.some(m => m.id === mode)) {
+    console.error(`Invalid --hq-mode "${mode}". Valid: ${HQ_MODES.map(m => m.id).join(', ')}`);
+    process.exit(1);
+  }
+  const cfg = loadConfig();
+  cfg.hqMode = mode;
   saveConfig(cfg);
 } else if (args.includes('--auth')) {
   const cfg = loadConfig();
