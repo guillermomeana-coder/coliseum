@@ -19,58 +19,134 @@
  *   node bridge.mjs cost                          # show total API cost
  *   node bridge.mjs watch                         # live feed of all events
  *   node bridge.mjs agents                        # list agents and their state
+ *
+ * Env:
+ *   AGENTCRAFT_PORT        Foreman WebSocket port (default 7878)
+ *   AGENTCRAFT_TIMEOUT_MS  RPC timeout in ms (default 15000)
+ *
+ * Connection: retries with exponential backoff (1s,2s,4s,8s,16s, max 30s), logged to stderr.
+ * One-shot commands give up after 5 attempts; watch/autopilot/run retry forever and
+ * reconnect if the socket drops.
  */
 
 import WebSocket from 'ws';
+import { createBackoff, retryWithBackoff } from './lib/backoff.mjs';
 
 const PORT = parseInt(process.env.AGENTCRAFT_PORT || '7878');
-const TIMEOUT = 15000;
+const TIMEOUT = parseInt(process.env.AGENTCRAFT_TIMEOUT_MS || '15000');
+// Test hook: shrink the first backoff step (default 1s -> 2s -> 4s ... max 30s).
+const BACKOFF_BASE_MS = parseInt(process.env.AGENTCRAFT_BACKOFF_BASE_MS || '1000');
+
+const fmtSecs = (ms) => `${+(ms / 1000).toFixed(3)}s`;
+const reasonOf = (e) => (e && (e.message || e.code)) || String(e || 'unknown');
 
 /**
  * Client for the AgentCraft Foreman WebSocket protocol.
  *
- * Wraps an open socket, mirrors the Foreman's snapshot/upsert stream into
+ * Owns a socket, mirrors the Foreman's snapshot/upsert stream into
  * `this.state`, and exposes request/response helpers (goals, decisions,
- * diffs, repos, agent messages) for the CLI commands below.
+ * diffs, repos, agent messages) for the CLI commands below. With
+ * `reconnect` it transparently re-opens the socket when it drops.
  */
 class ForemanBridge {
   /**
-   * @param {import('ws').WebSocket} ws Already-open socket to the Foreman.
+   * @param {number} port Foreman WebSocket port on 127.0.0.1.
+   * @param {{reconnect?: boolean}} [opts] `reconnect`: re-establish the socket after an unexpected close.
    */
-  constructor(ws) {
-    this.ws = ws;
+  constructor(port, { reconnect = false } = {}) {
+    this.port = port;
+    this.reconnect = reconnect;
+    this.closing = false;
+    this.ws = null;
     this.nextId = 1;
     this.pending = new Map();
     this.state = { foreman: null, agents: [], tasks: [], decisions: [], goals: [], repos: [], feed: [] };
-    ws.on('message', (raw) => this._onMsg(JSON.parse(raw)));
   }
 
   /**
-   * Open a socket to the local Foreman and wait for the initial snapshot.
+   * Open a socket to the local Foreman and wait for the initial snapshot,
+   * retrying on error/close with exponential backoff (1s, 2s, 4s, 8s, 16s, then 30s max).
+   * Every retry is logged to stderr as `[bridge] connection failed (<reason>) — retry #N in Xs`.
    * @param {number} [port=PORT] Foreman WebSocket port on 127.0.0.1.
+   * @param {{maxAttempts?: number, reconnect?: boolean}} [opts] `maxAttempts`: total tries before giving up
+   *   (default Infinity). `reconnect`: keep the bridge alive afterwards by reconnecting on unexpected
+   *   close (same instance; `_watchHandler` is kept, state replaced by the new snapshot).
    * @returns {Promise<ForemanBridge>} Bridge with `state` populated from the snapshot.
-   * @throws {Error} Rejects on socket error (e.g. ECONNREFUSED when the Foreman is not running).
+   * @throws {Error} The last connection error once `maxAttempts` is exhausted (e.g. ECONNREFUSED when the Foreman is not running).
    */
-  static async connect(port = PORT) {
+  static async connect(port = PORT, { maxAttempts = Infinity, reconnect = false } = {}) {
+    const bridge = new ForemanBridge(port, { reconnect });
+    await retryWithBackoff(() => bridge._attach(), {
+      maxAttempts,
+      baseMs: BACKOFF_BASE_MS,
+      onRetry: ({ attempt, delayMs, error }) =>
+        console.error(`[bridge] connection failed (${reasonOf(error)}) — retry #${attempt + 1} in ${fmtSecs(delayMs)}`),
+    });
+    return bridge;
+  }
+
+  /**
+   * One connection attempt: open a new socket, send `hello`, wait for the snapshot.
+   * Once it succeeds the socket is live and a later close triggers `_onClose`.
+   * @returns {Promise<void>}
+   * @throws {Error} If the socket errors or closes before the snapshot arrives.
+   */
+  _attach() {
     return new Promise((resolve, reject) => {
-      const ws = new WebSocket(`ws://127.0.0.1:${port}`, { headers: { Host: '127.0.0.1' } });
-      ws.once('error', reject);
+      const ws = new WebSocket(`ws://127.0.0.1:${this.port}`, { headers: { Host: '127.0.0.1' } });
+      let up = false;
+      ws.on('message', (raw) => { if (this.ws === ws) this._onMsg(JSON.parse(raw)); });
+      ws.on('error', (e) => { if (!up) reject(e); }); // after the snapshot, 'close' follows
+      ws.on('close', () => {
+        if (!up) reject(new Error('closed before snapshot'));
+        else this._onClose(ws);
+      });
       ws.once('open', () => {
-        const bridge = new ForemanBridge(ws);
-        bridge._waitSnapshot().then(() => resolve(bridge)).catch(reject);
+        this.ws = ws;
+        this._waitSnapshot().then(() => { up = true; resolve(); });
+        this._send({ type: 'hello', modVersion: '0.1.0', protocol: 1, client: 'openclaw' });
       });
     });
   }
 
   /**
-   * Send the `hello` handshake and resolve once the Foreman replies with a snapshot.
-   * @returns {Promise<void>} Resolves when the snapshot message has been processed.
+   * Resolve once the next snapshot has been processed (the caller sends `hello`).
+   * @returns {Promise<void>}
    */
   _waitSnapshot() {
-    return new Promise((resolve) => {
-      this._snapshotResolve = resolve;
-      this._send({ type: 'hello', modVersion: '0.1.0', protocol: 1, client: 'openclaw' });
-    });
+    return new Promise((resolve) => { this._snapshotResolve = resolve; });
+  }
+
+  /**
+   * Socket closed after a successful connect: fail in-flight work, then reconnect
+   * (with backoff, forever) unless the close was intentional or `reconnect` is off.
+   * Pending RPCs are rejected with Error('connection lost') and never replayed.
+   * @param {import('ws').WebSocket} ws The socket that closed.
+   * @returns {Promise<void>}
+   */
+  async _onClose(ws) {
+    if (ws !== this.ws) return;
+    this.ws = null;
+    for (const p of this.pending.values()) { clearTimeout(p.timer); p.reject(new Error('connection lost')); }
+    this.pending.clear();
+    if (this._diffResolve) { this._diffResolve(null); this._diffResolve = null; }
+    if (this.closing || !this.reconnect) return;
+    const backoff = createBackoff({ baseMs: BACKOFF_BASE_MS });
+    let what = 'lost', reason = 'socket closed';
+    while (!this.closing) {
+      const delayMs = backoff.next();
+      console.error(`[bridge] connection ${what} (${reason}) — retry #${backoff.attempt} in ${fmtSecs(delayMs)}`);
+      await new Promise((r) => setTimeout(r, delayMs));
+      if (this.closing) return;
+      try {
+        await this._attach();
+        backoff.reset();
+        console.error('[bridge] reconnected');
+        return;
+      } catch (e) {
+        what = 'failed'; reason = reasonOf(e);
+      }
+    }
   }
 
   /**
@@ -78,7 +154,7 @@ class ForemanBridge {
    * @param {object} msg Message body; `type` is required.
    * @returns {void}
    */
-  _send(msg) { this.ws.send(JSON.stringify({ v: 1, ...msg })); }
+  _send(msg) { if (!this.ws || this.ws.readyState !== WebSocket.OPEN) throw new Error('connection lost'); this.ws.send(JSON.stringify({ v: 1, ...msg })); }
 
   /**
    * Handle one parsed Foreman message: apply snapshots and upserts to `state`,
@@ -136,7 +212,7 @@ class ForemanBridge {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { this.pending.delete(id); reject(new Error('timeout')); }, TIMEOUT);
       this.pending.set(id, { resolve, reject, timer });
-      this._send({ ...msg, id });
+      try { this._send({ ...msg, id }); } catch (e) { this.pending.delete(id); clearTimeout(timer); reject(e); }
     });
   }
 
@@ -231,10 +307,11 @@ class ForemanBridge {
   }
 
   /**
-   * Close the underlying socket.
+   * Intentionally close the socket. Sets `closing` so no reconnect is attempted.
+   * Pending RPCs are rejected with Error('connection lost') when the close completes.
    * @returns {void}
    */
-  close() { this.ws.close(); }
+  close() { this.closing = true; this.ws?.close(); }
 }
 
 // === CLI ===
@@ -253,7 +330,7 @@ if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h' || args.includes(
   console.log(`OpenClaw Bridge — Claude Code ↔ AgentCraft
 
 Usage: node tools/bridge.mjs <command> [args]   (-h, --help, help)
-Env: AGENTCRAFT_PORT (default 7878)
+Env: AGENTCRAFT_PORT (default 7878), AGENTCRAFT_TIMEOUT_MS (RPC timeout, default 15000)
 Example: node tools/bridge.mjs status
 
 Commands:
@@ -278,7 +355,8 @@ Commands:
 }
 
 try {
-  const fm = await ForemanBridge.connect();
+  const LIVE = ['watch', 'autopilot', 'run'].includes(cmd);
+  const fm = await ForemanBridge.connect(PORT, LIVE ? { reconnect: true } : { maxAttempts: 5 });
 
   switch (cmd) {
     /** `status`: print backend, cost, agents, task/decision counts, repos and active goal. No args. */
