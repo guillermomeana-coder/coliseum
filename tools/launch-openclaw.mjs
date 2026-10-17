@@ -39,6 +39,7 @@ console.log('║     OpenClaw Office — Launching      ║');
 console.log('╚══════════════════════════════════════╝');
 console.log(`  Auth:   ${cfg.auth}`);
 console.log(`  Theme:  ${cfg.theme}`);
+console.log(`  HQ:     ${cfg.hqMode || 'openclaw'}`);
 console.log(`  Repos:  ${repos.join(', ') || 'none'}`);
 console.log(`  Game:   ${withGame ? 'yes' : 'headless'}`);
 console.log('');
@@ -52,6 +53,7 @@ for (const r of repos) psArgs.push('-Repo', `"${r}"`);
 // Set env vars
 const env = { ...process.env };
 env.OPENCLAW_THEME = cfg.theme;
+env.OPENCLAW_HQ_DEFAULT = cfg.hqMode || 'openclaw';
 if (cfg.auth === 'api-key' && cfg.apiKey) {
   env.ANTHROPIC_API_KEY = cfg.apiKey;
 }
