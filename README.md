@@ -4,6 +4,8 @@
 
 A fork of [AgentCraft](https://github.com/blendi-remade/agentcraft) by [Blendi](https://github.com/blendi-remade), enhanced with six office themes, a Coliseum debate arena, a CLI bridge, and a smart autopilot.
 
+See [CHANGELOG.md](CHANGELOG.md) for the version history.
+
 ## Table of Contents
 
 - [Features](#features)
