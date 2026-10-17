@@ -163,6 +163,7 @@ if (!cmd || cmd === 'help') {
 
 Commands:
   start "<topic>" [--agents N]    Start a battle royale (default: 16 agents)
+  simulate ["topic"]              Run a fake battle royale for visual testing (no AI needed)
   status                          Show arena state
   scoreboard                      Current rankings
   spectate                        Live commentary feed
@@ -260,6 +261,106 @@ switch (cmd) {
     } catch (e) {
       console.error(`Connection failed: ${e.message}`);
     }
+    break;
+  }
+
+  case 'simulate': {
+    // Simulated battle royale for visual testing — no real AI, just fake scores/eliminations
+    const topic = args.filter(a => !a.startsWith('--')).join(' ') || 'Simulated Arena Test';
+    const count = 16;
+
+    console.log(`\n${'='.repeat(50)}`);
+    console.log(`  SIMULATED BATTLE ROYALE`);
+    console.log(`${'='.repeat(50)}`);
+    console.log(`  Topic: ${topic}`);
+    console.log(`  Fighters: ${count} (simulated)\n`);
+
+    const state = new ArenaState(topic, count);
+
+    let ws;
+    try {
+      ws = await ArenaBridge.connect();
+    } catch {
+      console.log('Foreman not running — simulating in CLI only.\n');
+    }
+
+    const bridge = ws ? new ArenaBridge(ws, state) : null;
+
+    // Simulate rounds
+    const names = ['Alpha','Bravo','Charlie','Delta','Echo','Foxtrot','Golf','Hotel',
+                   'India','Juliet','Kilo','Lima','Mike','November','Oscar','Papa'];
+    state.combatants.forEach((c, i) => { c.id = names[i] || c.id; });
+
+    const arguments_pool = [
+      'Performance is critical — we should optimize first',
+      'Developer experience matters more than raw speed',
+      'Type safety prevents bugs at scale',
+      'Simplicity wins — less code, fewer bugs',
+      'Testing coverage is the real metric',
+      'User experience trumps everything',
+      'Ship fast, iterate later',
+      'Architecture decisions are permanent — think carefully',
+      'Data-driven decisions only',
+      'Community ecosystem matters for long-term',
+    ];
+
+    if (bridge) bridge.sendState(state);
+
+    let round = 0;
+    const interval = setInterval(() => {
+      round++;
+      state.round = round;
+      const active = state.activeFighters();
+
+      if (active.length <= 1) {
+        // Crown winner
+        if (active.length === 1) {
+          state.crown(active[0].id);
+          const ts = new Date().toLocaleTimeString();
+          console.log(`\n[${ts}] CHAMPION: ${active[0].id} with score ${active[0].score}!`);
+          if (bridge) {
+            bridge.sendCrown(active[0].id);
+            bridge.announce(`CHAMPION: ${active[0].id} wins with score ${active[0].score}!`);
+          }
+        }
+        clearInterval(interval);
+
+        // Print final scoreboard
+        console.log(`\n  FINAL SCOREBOARD\n`);
+        const scores = state.scoreboard();
+        for (const s of scores) {
+          const icon = s.status === 'champion' ? 'WINNER' : s.status === 'eliminated' ? 'OUT' : '???';
+          console.log(`  #${String(s.rank).padStart(2)} ${s.id.padEnd(12)} Score: ${String(s.score).padStart(4)}  [${icon}]`);
+        }
+
+        if (bridge) bridge.close();
+        return;
+      }
+
+      const ts = new Date().toLocaleTimeString();
+      console.log(`[${ts}] --- Round ${round} (${active.length} fighters) ---`);
+
+      // Each active fighter gets a random score
+      for (const c of active) {
+        const score = Math.floor(Math.random() * 30) + 1;
+        const arg = arguments_pool[Math.floor(Math.random() * arguments_pool.length)];
+        state.addArgument(c.id, arg, score);
+        if (bridge) bridge.sendScore(c.id, score, arg);
+      }
+
+      // Eliminate the lowest scorer this round
+      const sorted = [...active].sort((a, b) => a.score - b.score);
+      const loser = sorted[0];
+      state.eliminate(loser.id);
+      console.log(`[${ts}] ELIMINATED: ${loser.id} (score: ${loser.score})`);
+      if (bridge) {
+        bridge.sendEliminate(loser.id, `Lowest score in round ${round}`);
+        bridge.sendState(state);
+      }
+
+    }, 3000); // 3 seconds per round
+
+    await new Promise(() => {}); // keep alive
     break;
   }
 
