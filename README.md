@@ -29,6 +29,11 @@ Pick the look of your HQ: `warm_studio`, `modern_glass`, `executive`, `industria
 
 A Roman Colosseum-inspired elliptical amphitheater with 8 debate podiums and tiered seating for spectators. Switch to it in-game with `/agentcraft hq coliseum` (and back with `/agentcraft hq openclaw`).
 
+Two palette variants share the same arena layout:
+
+- **Nether** (`coliseum_nether`) -- a hellish Nether palette built from nether bricks, blackstone, and magma. Use `/agentcraft hq coliseum_nether`.
+- **Ice** (`coliseum_ice`) -- a frozen ice palette. Use `/agentcraft hq coliseum_ice`.
+
 ### Arena Bridge
 
 `tools/arena-bridge.mjs` runs a battle royale where 16-100 AI agents debate a topic at once. Use `start` to begin, `spectate` for the live commentary feed, and `scoreboard` for current rankings.
@@ -48,6 +53,7 @@ Register several repositories (`repo-add <path>`, list with `repos`) and target 
 ### Setup, Headless, and Bypass Permissions
 
 - **Setup wizard** -- `node tools/setup.mjs` configures auth (Claude Login or API key), theme, and repos interactively.
+- **HQ mode** -- `node tools/setup.mjs --hq-mode <id>` sets the default HQ used at launch. Valid ids: `openclaw` (Office, default), `coliseum`, `coliseum_nether`, `coliseum_ice`.
 - **Headless mode** -- `node tools/launch-openclaw.mjs` runs the team without a Minecraft window; add `--game` for the visual client.
 - **Bypass permissions** -- agents work autonomously without stopping to ask.
 
@@ -87,7 +93,14 @@ Register several repositories (`repo-add <path>`, list with `repos`) and target 
 
 1. Run setup: `node tools/setup.mjs`
 2. Launch with the game window: `node tools/launch-openclaw.mjs --game`
-3. In Minecraft, switch to the arena: `/agentcraft hq coliseum`
+3. In Minecraft, switch to the arena: `/agentcraft hq coliseum` (or `coliseum_nether` / `coliseum_ice` for the Nether and Ice variants).
+
+   Alternatively, set the default HQ used at launch before starting the game, instead of switching in-game:
+
+   ```bash
+   node tools/setup.mjs --hq-mode coliseum   # or coliseum_nether, coliseum_ice, openclaw
+   ```
+
 4. Start a battle royale:
 
    ```bash
@@ -165,8 +178,10 @@ Set with `node tools/setup.mjs --theme executive` (or run the wizard).
 | Map | Style |
 |-----|-------|
 | `coliseum` | Roman Colosseum -- elliptical amphitheater, sandstone, 8 debate podiums |
+| `coliseum_nether` | Nether Coliseum -- the same arena in a hellish Nether palette (nether bricks, blackstone, magma) |
+| `coliseum_ice` | Ice Coliseum -- the same arena in a frozen ice palette |
 
-Switch in-game: `/agentcraft hq coliseum` or `/agentcraft hq openclaw`
+Switch in-game: `/agentcraft hq <id>` (`coliseum`, `coliseum_nether`, `coliseum_ice`, or `openclaw` to go back to the office)
 
 ## Requirements
 
