@@ -33,11 +33,16 @@ const AUTH_METHODS = [
   { id: 'api-key', name: 'API Key', desc: 'Use an Anthropic API key (costs per token)' },
 ];
 
+const HQ_MODES = [
+  { id: 'openclaw', name: 'Office', desc: 'Warm studio office — the team works at desks (default)' },
+  { id: 'coliseum', name: 'Coliseum', desc: 'Battle royale arena — 100 agents debate simultaneously' },
+];
+
 function loadConfig() {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
   } catch {
-    return { theme: 'warm_studio', auth: 'claude-login', apiKey: '', repos: [] };
+    return { theme: 'warm_studio', auth: 'claude-login', apiKey: '', repos: [], hqMode: 'openclaw' };
   }
 }
 
@@ -78,6 +83,13 @@ async function interactive() {
   const themeChoice = await ask(rl, `\nChoose theme [1-${THEMES.length}] (current: ${cfg.theme}): `);
   const themeIdx = parseInt(themeChoice) - 1;
   if (themeIdx >= 0 && themeIdx < THEMES.length) cfg.theme = THEMES[themeIdx].id;
+
+  // HQ Mode
+  console.log('\nHQ Mode:');
+  HQ_MODES.forEach((m, i) => console.log(`  ${i + 1}) ${m.name} — ${m.desc}`));
+  const modeChoice = await ask(rl, `\nChoose mode [1-${HQ_MODES.length}] (current: ${cfg.hqMode || 'openclaw'}): `);
+  const modeIdx = parseInt(modeChoice) - 1;
+  if (modeIdx >= 0 && modeIdx < HQ_MODES.length) cfg.hqMode = HQ_MODES[modeIdx].id;
 
   // Repos
   console.log(`\nRegistered repos: ${cfg.repos.length ? cfg.repos.join(', ') : 'none'}`);
