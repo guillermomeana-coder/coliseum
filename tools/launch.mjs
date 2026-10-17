@@ -58,7 +58,8 @@ env.COLISEUM_THEME = cfg.theme;
 env.COLISEUM_HQ_DEFAULT = cfg.hqMode || 'coliseum_office';
 // Older mod builds read the OPENCLAW_* names.
 env.OPENCLAW_THEME = env.COLISEUM_THEME;
-env.OPENCLAW_HQ_DEFAULT = env.COLISEUM_HQ_DEFAULT;
+// Older builds don't know 'coliseum_office' (they'd fall back to the arena); they call it 'openclaw'.
+env.OPENCLAW_HQ_DEFAULT = env.COLISEUM_HQ_DEFAULT === 'coliseum_office' ? 'openclaw' : env.COLISEUM_HQ_DEFAULT;
 if (cfg.auth === 'api-key' && cfg.apiKey) {
   env.ANTHROPIC_API_KEY = cfg.apiKey;
 }

@@ -27,7 +27,7 @@ Pick the look of your HQ: `warm_studio`, `modern_glass`, `executive`, `industria
 
 ### Coliseum Arena
 
-A Roman Colosseum-inspired elliptical amphitheater with 8 debate podiums and tiered seating for spectators. Switch to it in-game with `/agentcraft hq coliseum` (and back with `/agentcraft hq openclaw`).
+A Roman Colosseum-inspired elliptical amphitheater with 8 debate podiums and tiered seating for spectators. Switch to it in-game with `/agentcraft hq coliseum` (and back with `/agentcraft hq coliseum_office`).
 
 Two palette variants share the same arena layout:
 
