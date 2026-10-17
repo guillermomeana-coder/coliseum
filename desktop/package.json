@@ -5,6 +5,7 @@
   "description": "Coliseum desktop app: setup wizard and launcher",
   "main": "main.js",
   "private": true,
+  "type": "commonjs",
   "scripts": {
     "start": "electron .",
     "test": "node --test"
