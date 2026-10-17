@@ -39,6 +39,7 @@ public final class HqFeature {
 		HqBuilders.register(new ThemedHqBuilder());
 		HqBuilders.register(new ColiseumBuilder());
 		HqBuilders.register(NetherColiseum.create());
+		HqBuilders.register(IceColiseum.create());
 		HqBuilders.setDefault(ColiseumBuilder.ID);
 		// A fresh HQ world (no saved layout yet) gets the default HQ built before the player joins, so
 		// the first launch walks straight into it. AGENTCRAFT_HQ_AUTOBUILD=0 turns this off.
