@@ -157,6 +157,7 @@ public final class ColiseumBuilder implements HqBuilder {
         BlockState[] previous = PlanStore.load(level.getServer(), ID, SITE, p.size());
         Plan.Stats st = p.apply(level, previous, options.force());
         PlanStore.save(level.getServer(), ID, SITE, p.cells());
+        ColiseumGuards.spawn(level);
 
         a.bounds(-OUTER_RX, FLOOR, -OUTER_RZ, OUTER_RX, PARAPET, OUTER_RZ);
         a.spot(AnchorNames.ENTRANCE, CX, FEET, OUTER_RZ + 2, 180);
