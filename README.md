@@ -224,7 +224,7 @@ node tools/setup.mjs --auth claude-login
 node tools/setup.mjs --theme modern_glass
 ```
 
-Config is stored in `~/.coliseum/config.json` (never committed).
+Config is stored in `config.json` under `%APPDATA%\Coliseum` (Windows), `~/Library/Application Support/Coliseum` (macOS) or `$XDG_CONFIG_HOME/coliseum` / `~/.config/coliseum` (Linux); set `COLISEUM_HOME` to override. An existing `~/.coliseum/config.json` is still read and migrated on the next save (never committed).
 
 ## Contributing
 

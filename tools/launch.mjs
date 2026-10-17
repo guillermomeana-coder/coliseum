@@ -2,7 +2,7 @@
 /**
  * OpenClaw Office — Unified Launcher
  *
- * Reads config from ~/.coliseum/config.json (created by setup.mjs)
+ * Reads config.json from the platform config dir (see lib/configpath.mjs; created by setup.mjs)
  * and launches the Foreman with the right auth, theme, and repos.
  *
  * Usage:
@@ -15,35 +15,34 @@ import { execSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { handleHelp } from './lib/help.mjs';
+import { readConfigFile } from './lib/configpath.mjs';
 
 const USAGE = `Usage: node tools/launch.mjs [--game] [--repo PATH]
 
-Unified launcher: reads ~/.coliseum/config.json (created by setup.mjs) and launches the Foreman with
+Unified launcher: reads config.json (created by setup.mjs) and launches the Foreman with
 the configured auth, theme, HQ mode and repos via tools/launch.ps1.
+Config dir: Windows %APPDATA%\\Coliseum, macOS ~/Library/Application Support/Coliseum,
+Linux $XDG_CONFIG_HOME/coliseum or ~/.config/coliseum (legacy ~/.coliseum is read as fallback).
 
 Options:
   --game          also start the Minecraft window (default: headless)
   --repo PATH     use this repo instead of the configured ones
   -h, --help      show this help
 
-Env: HOME / USERPROFILE (config location), JAVA_HOME
+Env: COLISEUM_HOME (config dir override), APPDATA, XDG_CONFIG_HOME, HOME / USERPROFILE, JAVA_HOME
 Examples:
   node tools/launch.mjs
   node tools/launch.mjs --game --repo C:\myrepo`;
 handleHelp(USAGE);
 
 
-const HOME = path.join(process.env.HOME || process.env.USERPROFILE, '.coliseum');
-const CONFIG_PATH = path.join(HOME, 'config.json');
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')), '..');
 
 function loadConfig() {
-  try {
-    return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
-  } catch {
-    console.log('No config found. Run: node tools/setup.mjs');
-    process.exit(1);
-  }
+  const cfg = readConfigFile();
+  if (cfg) return cfg;
+  console.log('No config found. Run: node tools/setup.mjs');
+  process.exit(1);
 }
 
 const args = process.argv.slice(2);
