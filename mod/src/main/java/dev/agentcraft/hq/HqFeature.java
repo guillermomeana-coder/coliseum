@@ -38,6 +38,7 @@ public final class HqFeature {
 		HqBuilders.register(new StudioHqBuilder());
 		HqBuilders.register(new ThemedHqBuilder());
 		HqBuilders.register(new ColiseumBuilder());
+		HqBuilders.register(NetherColiseum.create());
 		HqBuilders.register(IceColiseum.create());
 		HqBuilders.setDefault(ColiseumBuilder.ID);
 		// A fresh HQ world (no saved layout yet) gets the default HQ built before the player joins, so
