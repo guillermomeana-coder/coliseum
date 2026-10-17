@@ -149,6 +149,7 @@ public final class ColiseumBuilder implements HqBuilder {
         lighting(p);
         ruins(p);
         pillarBanners(p);
+        redCarpet(p);
         pillarFires(p);
         anchors(p, a);
 
@@ -600,6 +601,24 @@ public final class ColiseumBuilder implements HqBuilder {
 
         // Champion stage anchor (standing on top of the raised platform)
         a.put("champion_stage", CX + 0.5, FEET + 2, CZ + 0.5, 0, 0);
+    }
+
+    // ================================================================== red carpet (south gate to stage centre)
+
+    /** Red carpet, |x| <= GATE_W, from the stage centre (z=CZ) out through the south gate (z=OUTER_RZ+5). */
+    private static void redCarpet(Plan p) {
+        BlockState carpet = St.carpet(net.minecraft.world.item.DyeColor.RED);
+        for (int x = CX - GATE_W; x <= CX + GATE_W; x++) {
+            for (int z = CZ; z <= OUTER_RZ + 5; z++) {
+                // Highest walkable surface first, so the raised stage top wins over the arena floor.
+                for (int y = FEET + 2; y >= FEET; y--) {
+                    if (p.get(x, y, z).isAir() && !p.get(x, y - 1, z).isAir()) {
+                        p.set(x, y, z, carpet);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     // ================================================================== 100 arena spots in concentric rings
