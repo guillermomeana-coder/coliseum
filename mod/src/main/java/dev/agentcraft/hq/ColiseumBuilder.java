@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The OpenClaw Coliseum: a battle-royale arena supporting up to 100 simultaneous agents.
+ * The Coliseum: a battle-royale arena supporting up to 100 simultaneous agents.
  * Elliptical Roman amphitheater inspired by the real Colosseum, scaled up for mass combat.
  *
  * <p>Based on the Compact Roman Colosseum schematic palette: polished diorite, chiseled sandstone,
@@ -116,7 +116,7 @@ public final class ColiseumBuilder implements HqBuilder {
 
     @Override
     public String description() {
-        return "OpenClaw Coliseum: elliptical battle-royale arena with 100 agent spots, champion stage, scoreboard, spectator seating";
+        return "Coliseum: elliptical battle-royale arena with 100 agent spots, champion stage, scoreboard, spectator seating";
     }
 
     @Override
