@@ -24,8 +24,16 @@ const TIMEOUT = 30000;
 
 /**
  * Arena state — tracks all combatants, their arguments, scores, and status.
+ *
+ * Plain in-memory model (JSON-serializable, persisted to `.arena-state.json`
+ * by the `start` command). Combatants are `{id, spot, score, arguments,
+ * status, eliminatedAt}` with status `fighting | eliminated | champion`.
  */
 class ArenaState {
+  /**
+   * @param {string} topic Debate topic.
+   * @param {number} agentCount Number of combatants (`gladiator_0`…`gladiator_N-1`), one arena spot each.
+   */
   constructor(topic, agentCount) {
     this.topic = topic;
     this.startTime = Date.now();
@@ -46,6 +54,14 @@ class ArenaState {
     }
   }
 
+  /**
+   * Record an argument and add its score to a fighting combatant.
+   * Silently ignored if the combatant is unknown or no longer fighting.
+   * @param {string} gladiatorId Combatant id.
+   * @param {string} text Argument text.
+   * @param {number} score Points awarded for this argument.
+   * @returns {void}
+   */
   addArgument(gladiatorId, text, score) {
     const g = this.combatants.find(c => c.id === gladiatorId);
     if (!g || g.status !== 'fighting') return;
@@ -53,6 +69,12 @@ class ArenaState {
     g.score += score;
   }
 
+  /**
+   * Mark a fighting combatant as eliminated and move it to `eliminated`.
+   * Silently ignored if the combatant is unknown or not fighting.
+   * @param {string} gladiatorId Combatant id.
+   * @returns {void}
+   */
   eliminate(gladiatorId) {
     const g = this.combatants.find(c => c.id === gladiatorId);
     if (!g || g.status !== 'fighting') return;
@@ -61,6 +83,11 @@ class ArenaState {
     this.eliminated.push(g);
   }
 
+  /**
+   * Declare a combatant the champion. Ignored if the id is unknown.
+   * @param {string} gladiatorId Combatant id.
+   * @returns {void}
+   */
   crown(gladiatorId) {
     const g = this.combatants.find(c => c.id === gladiatorId);
     if (!g) return;
@@ -68,10 +95,18 @@ class ArenaState {
     this.champion = g;
   }
 
+  /**
+   * List combatants still fighting.
+   * @returns {Array<object>} Combatants whose status is `'fighting'`.
+   */
   activeFighters() {
     return this.combatants.filter(c => c.status === 'fighting');
   }
 
+  /**
+   * Build the rankings, highest score first (does not mutate state).
+   * @returns {Array<{rank: number, id: string, score: number, status: string, args: number}>} One row per combatant.
+   */
   scoreboard() {
     return [...this.combatants]
       .sort((a, b) => b.score - a.score)
@@ -91,12 +126,23 @@ class ArenaState {
  * and arena state updates are sent as feed items.
  */
 class ArenaBridge {
+  /**
+   * @param {import('ws').WebSocket} ws Open socket to the Foreman (from `ArenaBridge.connect`).
+   * @param {ArenaState} state Arena state the bridge reports on.
+   */
   constructor(ws, state) {
     this.ws = ws;
     this.state = state;
     this.nextId = 1;
   }
 
+  /**
+   * Open a socket to the local Foreman, send the `hello` handshake and wait for the first message (the snapshot).
+   * Note: resolves with the raw socket, not an ArenaBridge instance; wrap it with `new ArenaBridge(ws, state)`.
+   * @param {number} [port=PORT] Foreman WebSocket port on 127.0.0.1.
+   * @returns {Promise<import('ws').WebSocket>} The connected socket.
+   * @throws {Error} Rejects on socket error (e.g. ECONNREFUSED when the Foreman is not running).
+   */
   static async connect(port = PORT) {
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(`ws://127.0.0.1:${port}`, { headers: { Host: '127.0.0.1' } });
@@ -109,15 +155,29 @@ class ArenaBridge {
     });
   }
 
+  /**
+   * Serialize a message with the protocol version and write it to the socket.
+   * @param {object} msg Message body; `type` is required.
+   * @returns {void}
+   */
   send(msg) {
     this.ws.send(JSON.stringify({ v: 1, ...msg }));
   }
 
+  /**
+   * Send a `user.message` addressed to all agents.
+   * @param {string} text Message body.
+   * @returns {void}
+   */
   broadcast(text) {
     this.send({ type: 'user.message', to: 'all', text, id: `arena-${this.nextId++}` });
   }
 
-  /** Send full arena state to Foreman (rendered on scoreboard). */
+  /**
+   * Send full arena state to Foreman (rendered on scoreboard).
+   * @param {ArenaState} state State to publish (topic, round, combatants, champion).
+   * @returns {void}
+   */
   sendState(state) {
     this.send({
       type: 'arena.state',
@@ -131,31 +191,63 @@ class ArenaBridge {
     });
   }
 
-  /** Send score update for one combatant. */
+  /**
+   * Send score update for one combatant.
+   * @param {string} combatantId Combatant id.
+   * @param {number} score Points awarded.
+   * @param {string} argument The argument text that earned them.
+   * @returns {void}
+   */
   sendScore(combatantId, score, argument) {
     this.send({ type: 'arena.score', combatantId, score, argument });
   }
 
-  /** Eliminate a combatant. */
+  /**
+   * Eliminate a combatant.
+   * @param {string} combatantId Combatant id.
+   * @param {string} reason Human-readable reason shown in the arena.
+   * @returns {void}
+   */
   sendEliminate(combatantId, reason) {
     this.send({ type: 'arena.eliminate', combatantId, reason });
   }
 
-  /** Crown the champion. */
+  /**
+   * Crown the champion.
+   * @param {string} combatantId Winning combatant id.
+   * @returns {void}
+   */
   sendCrown(combatantId) {
     this.send({ type: 'arena.crown', combatantId });
   }
 
+  /**
+   * Log a timestamped line locally and broadcast it to all agents.
+   * @param {string} text Announcement text.
+   * @returns {void}
+   */
   announce(text) {
     const ts = new Date().toLocaleTimeString();
     console.log(`[${ts}] ${text}`);
     this.broadcast(text);
   }
 
+  /**
+   * Close the underlying socket.
+   * @returns {void}
+   */
   close() { this.ws.close(); }
 }
 
 // === CLI ===
+/**
+ * CLI entry point. Top-level code parses `process.argv`:
+ * `cmd` is the subcommand, `args` its remaining arguments. With no command
+ * (or `help`) it prints usage and exits 0. Otherwise it dispatches in the
+ * `switch` below; each `case` is one command handler. Unknown commands exit 1.
+ *
+ * @type {[string|undefined, ...string[]]}
+ */
 const [cmd, ...args] = process.argv.slice(2);
 
 if (!cmd || cmd === 'help') {
@@ -174,6 +266,12 @@ Commands:
 }
 
 switch (cmd) {
+  /**
+   * `start`: initialize an arena and save it to `.arena-state.json` in the cwd.
+   * args: `<topic...> [--agents N]` (default 16). Exits 1 if no topic.
+   * Does not connect to the Foreman.
+   * @throws {Error} If the state file cannot be written.
+   */
   case 'start': {
     const topic = args.filter(a => !a.startsWith('--')).join(' ');
     const agentIdx = args.indexOf('--agents');
@@ -209,6 +307,7 @@ switch (cmd) {
     break;
   }
 
+  /** `status`: summarize `.arena-state.json`; prints a hint if it is missing or unreadable. No args. */
   case 'status': {
     const fs = await import('node:fs');
     try {
@@ -224,6 +323,7 @@ switch (cmd) {
     break;
   }
 
+  /** `scoreboard`: print rankings from `.arena-state.json`; prints a notice if it is missing or unreadable. No args. */
   case 'scoreboard': {
     const fs = await import('node:fs');
     try {
@@ -242,6 +342,10 @@ switch (cmd) {
     break;
   }
 
+  /**
+   * `spectate`: connect to the Foreman and print `agent.say` / `feed.add` events until interrupted.
+   * Connection errors are caught and reported; no args.
+   */
   case 'spectate': {
     console.log('Connecting to Foreman for live spectating...\n');
     try {
@@ -264,6 +368,11 @@ switch (cmd) {
     break;
   }
 
+  /**
+   * `simulate`: run a fake 16-fighter battle royale, one round every 3 s, eliminating the
+   * lowest scorer each round and crowning the last survivor. Connects to the Foreman if
+   * available, otherwise runs CLI-only. args: `["topic"]`.
+   */
   case 'simulate': {
     // Simulated battle royale for visual testing — no real AI, just fake scores/eliminations
     const topic = args.filter(a => !a.startsWith('--')).join(' ') || 'Simulated Arena Test';
@@ -364,6 +473,7 @@ switch (cmd) {
     break;
   }
 
+  /** Any other command: print an error and exit 1. */
   default:
     console.error(`Unknown command: ${cmd}`);
     process.exit(1);

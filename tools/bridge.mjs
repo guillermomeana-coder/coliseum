@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * OpenClaw Bridge — Claude Code ↔ AgentCraft Foreman
+ * Coliseum Bridge — Claude Code ↔ AgentCraft Foreman
  *
  * Lets Claude Code send goals, monitor progress, answer decisions,
  * and get diffs from AgentCraft workers without opening Minecraft.
@@ -26,7 +26,17 @@ import WebSocket from 'ws';
 const PORT = parseInt(process.env.AGENTCRAFT_PORT || '7878');
 const TIMEOUT = 15000;
 
+/**
+ * Client for the AgentCraft Foreman WebSocket protocol.
+ *
+ * Wraps an open socket, mirrors the Foreman's snapshot/upsert stream into
+ * `this.state`, and exposes request/response helpers (goals, decisions,
+ * diffs, repos, agent messages) for the CLI commands below.
+ */
 class ForemanBridge {
+  /**
+   * @param {import('ws').WebSocket} ws Already-open socket to the Foreman.
+   */
   constructor(ws) {
     this.ws = ws;
     this.nextId = 1;
@@ -35,6 +45,12 @@ class ForemanBridge {
     ws.on('message', (raw) => this._onMsg(JSON.parse(raw)));
   }
 
+  /**
+   * Open a socket to the local Foreman and wait for the initial snapshot.
+   * @param {number} [port=PORT] Foreman WebSocket port on 127.0.0.1.
+   * @returns {Promise<ForemanBridge>} Bridge with `state` populated from the snapshot.
+   * @throws {Error} Rejects on socket error (e.g. ECONNREFUSED when the Foreman is not running).
+   */
   static async connect(port = PORT) {
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(`ws://127.0.0.1:${port}`, { headers: { Host: '127.0.0.1' } });
@@ -46,6 +62,10 @@ class ForemanBridge {
     });
   }
 
+  /**
+   * Send the `hello` handshake and resolve once the Foreman replies with a snapshot.
+   * @returns {Promise<void>} Resolves when the snapshot message has been processed.
+   */
   _waitSnapshot() {
     return new Promise((resolve) => {
       this._snapshotResolve = resolve;
@@ -53,8 +73,19 @@ class ForemanBridge {
     });
   }
 
+  /**
+   * Serialize a message with the protocol version and write it to the socket.
+   * @param {object} msg Message body; `type` is required.
+   * @returns {void}
+   */
   _send(msg) { this.ws.send(JSON.stringify({ v: 1, ...msg })); }
 
+  /**
+   * Handle one parsed Foreman message: apply snapshots and upserts to `state`,
+   * settle pending RPC acks, and forward to the watch handler and diff waiter.
+   * @param {{type: string, [key: string]: any}} msg Decoded server message.
+   * @returns {void}
+   */
   _onMsg(msg) {
     if (msg.type === 'snapshot') {
       this.state.foreman = msg.foreman;
@@ -83,11 +114,23 @@ class ForemanBridge {
     if (msg.type === 'diff' && this._diffResolve) { this._diffResolve(msg); this._diffResolve = null; }
   }
 
+  /**
+   * Insert or replace an entity in a state collection, matched by `id`.
+   * @param {'tasks'|'goals'|'decisions'|'agents'|'repos'} key Collection name in `state`.
+   * @param {{id: string}} obj Entity to store.
+   * @returns {void}
+   */
   _upsert(key, obj) {
     const idx = this.state[key].findIndex(x => x.id === obj.id);
     if (idx >= 0) this.state[key][idx] = obj; else this.state[key].push(obj);
   }
 
+  /**
+   * Send a message with a fresh id and wait for the matching `ack`.
+   * @param {object} msg Message body without `id`.
+   * @returns {Promise<any>} The ack's `result`.
+   * @throws {Error} Rejects with `Error('timeout')` after TIMEOUT ms, or with the ack's `error` when `ok` is false.
+   */
   async _rpc(msg) {
     const id = `oc-${this.nextId++}`;
     return new Promise((resolve, reject) => {
@@ -99,19 +142,47 @@ class ForemanBridge {
 
   // === PUBLIC API ===
 
+  /**
+   * Submit a new goal to the Foreman.
+   * @param {string} text Goal description.
+   * @param {string} [repoId] Target repo id; omitted to use the Foreman default.
+   * @returns {Promise<string>} The new goal id (or the raw result if it has no `goalId`).
+   * @throws {Error} On RPC timeout or rejected ack.
+   */
   async submitGoal(text, repoId) {
     const r = await this._rpc({ type: 'goal.submit', text, ...(repoId ? { repoId } : {}) });
     return r?.goalId || r;
   }
 
+  /**
+   * Answer an open decision (permission, merge or question).
+   * @param {string} decisionId Id of the decision.
+   * @param {string} option One of the decision's options, e.g. `'Merge'`.
+   * @param {string} [text] Optional free-text accompanying the answer.
+   * @returns {Promise<any>} The ack result.
+   * @throws {Error} On RPC timeout or rejected ack.
+   */
   async answerDecision(decisionId, option, text) {
     return this._rpc({ type: 'decision.answer', decisionId, option, ...(text ? { text } : {}) });
   }
 
+  /**
+   * Send a chat message to an agent (fire-and-forget, no ack awaited).
+   * @param {string} to Agent id, or `'all'`.
+   * @param {string} text Message body.
+   * @returns {Promise<void>}
+   */
   async messageAgent(to, text) {
     this._send({ type: 'user.message', to, text });
   }
 
+  /**
+   * Request the diff of a worktree against its base branch.
+   * Never rejects: a missing response after TIMEOUT ms resolves with `null`.
+   * @param {string} repoId Repo id owning the worktree.
+   * @param {string} worktree Worktree identifier/path.
+   * @returns {Promise<object|null>} The `diff` message, or `null` on timeout.
+   */
   async requestDiff(repoId, worktree) {
     return new Promise((resolve) => {
       this._diffResolve = resolve;
@@ -120,14 +191,33 @@ class ForemanBridge {
     });
   }
 
+  /**
+   * Register a repository with the Foreman.
+   * @param {string} path Filesystem path of the repo.
+   * @returns {Promise<object>} The ack result describing the new repo.
+   * @throws {Error} On RPC timeout or rejected ack.
+   */
   async addRepo(path) {
     return this._rpc({ type: 'repo.add', path });
   }
 
+  /**
+   * Close the underlying socket.
+   * @returns {void}
+   */
   close() { this.ws.close(); }
 }
 
 // === CLI ===
+/**
+ * CLI entry point. Top-level code parses `process.argv`:
+ * `cmd` is the subcommand, `args` its remaining arguments. With no command
+ * (or `help`) it prints usage and exits 0. Otherwise it connects to the
+ * Foreman and dispatches in the `switch` below; each `case` is one command
+ * handler. Connection failures print a hint and exit 1.
+ *
+ * @type {[string|undefined, ...string[]]}
+ */
 const [cmd, ...args] = process.argv.slice(2);
 
 if (!cmd || cmd === 'help') {
@@ -158,6 +248,7 @@ try {
   const fm = await ForemanBridge.connect();
 
   switch (cmd) {
+    /** `status`: print backend, cost, agents, task/decision counts, repos and active goal. No args. */
     case 'status': {
       const f = fm.state.foreman;
       const onShift = fm.state.agents.filter(a => a.active).length;
@@ -178,6 +269,7 @@ try {
       if (activeGoal) console.log(`Goal: "${activeGoal.text}" (${activeGoal.status}, ${Math.round((activeGoal.progress || 0) * 100)}%)`);
       break;
     }
+    /** `agents`: list every agent with on/off-shift state, task id and activity. No args. */
     case 'agents': {
       for (const a of fm.state.agents) {
         const status = a.active ? a.state : 'off-shift';
@@ -186,6 +278,11 @@ try {
       }
       break;
     }
+    /**
+     * `goal`: submit a goal to the Foreman.
+     * args: `<text...> [--repo <name|id>]`. Exits 1 on missing text or unknown repo.
+     * @throws {Error} From submitGoal on RPC timeout (reported as a connection failure).
+     */
     case 'goal': {
       const repoFlagIdx = args.indexOf('--repo');
       let repoId;
@@ -205,6 +302,7 @@ try {
       console.log('Marlow is planning...');
       break;
     }
+    /** `tasks`: list tasks. args: `[goalId]` filters to one goal. */
     case 'tasks': {
       const goalFilter = args[0];
       let tasks = fm.state.tasks;
@@ -215,6 +313,7 @@ try {
       }
       break;
     }
+    /** `decisions`: list open decisions with their options. No args. */
     case 'decisions': {
       const open = fm.state.decisions.filter(d => d.status === 'open');
       if (!open.length) { console.log('No open decisions.'); break; }
@@ -224,6 +323,10 @@ try {
       }
       break;
     }
+    /**
+     * `decide`: answer a decision. args: `<decisionId> <option> [text...]`.
+     * @throws {Error} From answerDecision on RPC timeout or rejected ack.
+     */
     case 'decide': {
       const [dId, ...rest] = args;
       const option = rest[0];
@@ -232,11 +335,16 @@ try {
       console.log(`Answered ${dId}: ${option}`);
       break;
     }
+    /**
+     * `merge`: shorthand for answering a decision with `Merge`. args: `<decisionId>`.
+     * @throws {Error} From answerDecision on RPC timeout or rejected ack.
+     */
     case 'merge': {
       await fm.answerDecision(args[0], 'Merge');
       console.log(`Merged ${args[0]}`);
       break;
     }
+    /** `diff`: print the diff of a worktree using the first repo. args: `<worktree>`. Prints a notice on timeout. */
     case 'diff': {
       const repo = fm.state.repos[0]?.id;
       const wt = args[0];
@@ -255,17 +363,23 @@ try {
       }
       break;
     }
+    /** `msg`: message an agent. args: `<agentId|all> <text...>`. */
     case 'msg': {
       const [to, ...msgParts] = args;
       await fm.messageAgent(to, msgParts.join(' '));
       console.log(`Message sent to ${to}`);
       break;
     }
+    /**
+     * `repo-add`: register a repo. args: `<path>`.
+     * @throws {Error} From addRepo on RPC timeout or rejected ack.
+     */
     case 'repo-add': {
       const r = await fm.addRepo(args[0]);
       console.log(`Repo added: ${JSON.stringify(r)}`);
       break;
     }
+    /** `repos`: list registered repos with path, branch and dirty flag. No args. */
     case 'repos': {
       if (!fm.state.repos.length) { console.log('No repos registered.'); break; }
       console.log('=== Registered Repos ===');
@@ -276,11 +390,13 @@ try {
       }
       break;
     }
+    /** `cost`: print total API cost so far. No args. */
     case 'cost': {
       const costUsd = fm.state.foreman?.costUsd || 0;
       console.log(`Total API cost: $${costUsd.toFixed(4)}`);
       break;
     }
+    /** `watch`: stream all Foreman events until interrupted (never resolves; socket stays open). No args. */
     case 'watch': {
       console.log('Watching events (Ctrl+C to stop)...\n');
       fm._watchHandler = (msg) => {
@@ -295,6 +411,12 @@ try {
       await new Promise(() => {}); // hang forever
       break;
     }
+    /**
+     * `autopilot`: auto-approve permission requests and, unless `--no-merge`,
+     * merges that pass the safety checks in `evaluateMerge`. Clears already-open
+     * decisions first, then runs until interrupted.
+     * args: `[--no-merge] [--strict]`.
+     */
     case 'autopilot': {
       const autoMerge = !args.includes('--no-merge');
       const strict = args.includes('--strict');
@@ -307,6 +429,15 @@ try {
       const MAX_ADDITIONS = strict ? 200 : 1000;
       const SENSITIVE_PATTERNS = /\.(env|pem|key|secret|credentials|auth)\b|password|api[_-]?key|secret/i;
 
+      /**
+       * Decide whether a merge decision is safe to auto-approve and act on it.
+       * Holds (and prints manual commands) on failed CI, size over MAX_FILES /
+       * MAX_ADDITIONS, or sensitive-looking paths in the question, context or
+       * fetched diff; otherwise answers `Merge`.
+       * @param {{id: string, question?: string, context?: string, worktree?: string}} d Open merge decision.
+       * @returns {Promise<boolean>} `true` if merged, `false` if held for manual review.
+       * @throws {Error} If answering the decision fails (RPC timeout or rejected ack).
+       */
       async function evaluateMerge(d) {
         const ts = new Date().toLocaleTimeString();
         // Extract diff stats from context (format: "N files, +X -Y | tests: pass/fail")
@@ -421,6 +552,13 @@ try {
       await new Promise(() => {});
       break;
     }
+    /**
+     * `run`: submit a goal and follow it to completion, exiting 0 when the goal is done.
+     * With `--autopilot`/`-a` it auto-approves permissions and smart-merges (holds on
+     * failed CI or sensitive paths); otherwise it only prints decisions.
+     * args: `<goal text...> [--autopilot|-a]`. Exits 1 if no goal text.
+     * @throws {Error} From submitGoal on RPC timeout.
+     */
     case 'run': {
       const goalText = args.filter(a => !a.startsWith('--')).join(' ');
       const auto = args.includes('--autopilot') || args.includes('-a');
@@ -473,6 +611,7 @@ try {
       await new Promise(() => {});
       break;
     }
+    /** Any other command: print an error and exit 1. */
     default:
       console.error(`Unknown command: ${cmd}`);
       process.exit(1);
