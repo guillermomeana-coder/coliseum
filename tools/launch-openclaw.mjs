@@ -30,6 +30,8 @@ function loadConfig() {
 
 const args = process.argv.slice(2);
 const cfg = loadConfig();
+// Legacy 'openclaw' hqMode id maps to coliseum_office.
+if (cfg.hqMode === 'openclaw') cfg.hqMode = 'coliseum_office';
 const withGame = args.includes('--game');
 const repoOverride = args.includes('--repo') ? args[args.indexOf('--repo') + 1] : null;
 const repos = repoOverride ? [repoOverride] : cfg.repos || [];
@@ -39,7 +41,7 @@ console.log('║     OpenClaw Office — Launching      ║');
 console.log('╚══════════════════════════════════════╝');
 console.log(`  Auth:   ${cfg.auth}`);
 console.log(`  Theme:  ${cfg.theme}`);
-console.log(`  HQ:     ${cfg.hqMode || 'openclaw'}`);
+console.log(`  HQ:     ${cfg.hqMode || 'coliseum_office'}`);
 console.log(`  Repos:  ${repos.join(', ') || 'none'}`);
 console.log(`  Game:   ${withGame ? 'yes' : 'headless'}`);
 console.log('');
@@ -52,8 +54,11 @@ for (const r of repos) psArgs.push('-Repo', `"${r}"`);
 
 // Set env vars
 const env = { ...process.env };
-env.OPENCLAW_THEME = cfg.theme;
-env.OPENCLAW_HQ_DEFAULT = cfg.hqMode || 'openclaw';
+env.COLISEUM_THEME = cfg.theme;
+env.COLISEUM_HQ_DEFAULT = cfg.hqMode || 'coliseum_office';
+// Older mod builds read the OPENCLAW_* names.
+env.OPENCLAW_THEME = env.COLISEUM_THEME;
+env.OPENCLAW_HQ_DEFAULT = env.COLISEUM_HQ_DEFAULT;
 if (cfg.auth === 'api-key' && cfg.apiKey) {
   env.ANTHROPIC_API_KEY = cfg.apiKey;
 }
