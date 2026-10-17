@@ -38,9 +38,10 @@ for (let i = 0; i < argv.length; i++) {
   if (['showcase', 'scene', 'only', 'port', 'dev-port', 'home', 'profile', 'run-id', 'columns', 'timeout'].includes(k)) opt[k] = argv[++i];
   else opt[k] = true;
 }
-if (opt.help) {
+if (opt.help || argv.includes('-h')) {
   const lines = fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split(/\r?\n/).slice(1);
-  console.error(lines.slice(0, lines.findIndex((l) => !l.startsWith('//'))).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
+  const text = lines.slice(0, lines.findIndex((l) => !l.startsWith('//'))).map((l) => l.replace(/^\/\/ ?/, '')).join('\n');
+  console.log(`Usage:${text.replace(/^\s*node/, ' node')}\n\n  -h, --help      show this help\nEnv: AGENTCRAFT_PORT, AGENTCRAFT_DEV_PORT`);
   process.exit(0);
 }
 

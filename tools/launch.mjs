@@ -14,6 +14,24 @@
 import { execSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { handleHelp } from './lib/help.mjs';
+
+const USAGE = `Usage: node tools/launch.mjs [--game] [--repo PATH]
+
+Unified launcher: reads ~/.coliseum/config.json (created by setup.mjs) and launches the Foreman with
+the configured auth, theme, HQ mode and repos via tools/launch.ps1.
+
+Options:
+  --game          also start the Minecraft window (default: headless)
+  --repo PATH     use this repo instead of the configured ones
+  -h, --help      show this help
+
+Env: HOME / USERPROFILE (config location), JAVA_HOME
+Examples:
+  node tools/launch.mjs
+  node tools/launch.mjs --game --repo C:\myrepo`;
+handleHelp(USAGE);
+
 
 const HOME = path.join(process.env.HOME || process.env.USERPROFILE, '.coliseum');
 const CONFIG_PATH = path.join(HOME, 'config.json');

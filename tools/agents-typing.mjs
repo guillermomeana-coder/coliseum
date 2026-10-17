@@ -12,6 +12,24 @@
 // message scrolls (the shot shows its tail); Backspace removes one character; Escape closes the line
 // (text input off again); with --send, M + text + Enter sends it ("Sent to <name>").
 import { DevClient } from './lib/devclient.mjs';
+import { handleHelp } from './lib/help.mjs';
+
+const USAGE = `Usage: node tools/agents-typing.mjs [--port N] [--agent NAME] [--prefix P] [--send]
+
+Keyboard-path check for the agent card's message line. Needs a game started with
+AGENTCRAFT_DEV_TEST=1 (for dev.agents.keys).
+
+Options:
+  --port N        DevBridge port (default AGENTCRAFT_DEV_PORT or 7879)
+  --agent NAME    agent whose card is used (default kit)
+  --prefix P      screenshot prefix (default agents_typing/)
+  --send          also send a message (M + text + Enter)
+  -h, --help      show this help
+
+Env: AGENTCRAFT_DEV_PORT
+Example: node tools/agents-typing.mjs --port 7902 --agent kit --send`;
+handleHelp(USAGE);
+
 
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] && !all[i + 1].startsWith('--') ? all[i + 1] : true]] : acc), []),

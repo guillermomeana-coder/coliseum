@@ -18,6 +18,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
+import { handleHelp } from './lib/help.mjs';
+
+const USAGE = `Usage: node tools/setup.mjs [--show | --theme ID | --auth METHOD [--key KEY] | --hq-mode ID]
+
+Coliseum setup: configures auth method, theme, HQ mode and repos in ~/.coliseum/config.json.
+With no options it runs the interactive wizard.
+
+Options:
+  --show            print the current config
+  --theme ID        warm_studio, modern_glass, executive, industrial, minimal, penthouse
+  --auth METHOD     claude-login or api-key
+  --key KEY         API key (with --auth api-key)
+  --hq-mode ID      coliseum_office, coliseum, coliseum_nether, coliseum_ice
+  -h, --help        show this help
+
+Env: HOME / USERPROFILE (config location)
+Examples:
+  node tools/setup.mjs --theme executive
+  node tools/setup.mjs --auth claude-login`;
+handleHelp(USAGE);
+
 
 const HOME = path.join(process.env.HOME || process.env.USERPROFILE, '.coliseum');
 const CONFIG_PATH = path.join(HOME, 'config.json');

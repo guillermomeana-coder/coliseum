@@ -20,7 +20,7 @@ const saveJson = (file, value) => {
 const runFile = (kind, profile) => path.join(runDir, `unix-${kind}-${profile}.json`);
 
 function usage(code = 0) {
-  console.log(`AgentCraft launcher (macOS, Linux)
+  console.log(`Usage: AgentCraft launcher (macOS, Linux)
   node tools/unix.mjs launch [--backend sim|claude|codex] [--repo PATH] [--use-claude-login]
                             [--home PATH] [--profile NAME] [--port N] [--dev-port N]
                             [--dev] [--showcase busy|late] [--reset]
@@ -30,7 +30,13 @@ function usage(code = 0) {
   node tools/unix.mjs stop [--game] [--foreman] [--profile NAME] [--stop-daemon]
 
 Default: Claude backend, ~/.agentcraft, ports 7878/7879. --dev mutes the game,
-keeps it from taking focus, and disables desktop notifications.`);
+keeps it from taking focus, and disables desktop notifications.
+
+Env: AGENTCRAFT_BACKEND, AGENTCRAFT_HOME, AGENTCRAFT_PORT, AGENTCRAFT_DEV_PORT, JAVA_HOME, GRADLE_USER_HOME
+Examples:
+  node tools/unix.mjs launch --backend sim --no-game
+  node tools/unix.mjs stop --game --foreman
+  -h, --help   show this help`);
   process.exit(code);
 }
 
@@ -284,6 +290,8 @@ async function stop(opt) {
     if (result.status !== 0) throw new Error('could not stop the Gradle daemon');
   }
 }
+
+if (process.argv.slice(2).some((a) => a === '-h' || a === '--help')) usage(0);
 
 try {
   const opt = options(process.argv.slice(2));

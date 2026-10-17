@@ -20,7 +20,7 @@
 import { DevClient, DEFAULT_PORT } from './lib/devclient.mjs';
 
 function usage(code = 2) {
-  console.error(`usage: node tools/devcli.mjs <command> [args]
+  (code === 0 ? console.log : console.error)(`Usage: node tools/devcli.mjs <command> [args]
   wait [--bridge-only]          wait for the bridge (and the world unless --bridge-only)
   state | ping | help          ping also reports stalled/msSinceLastFrame (works when the game is hung)
   camera x y z yaw pitch [fov] [--mode spectator|creative|keep] [--feet] [--show-hud]
@@ -32,7 +32,9 @@ function usage(code = 2) {
   release [--mode keep]         hand the view back: FOV pin off, HUD on, spectator -> creative
   raw '<json>'                  send an arbitrary request
   quit                          save and quit the game
-options: --port N (default ${DEFAULT_PORT}), --timeout SECONDS (connect timeout)`);
+options: --port N (default ${DEFAULT_PORT}), --timeout SECONDS (connect timeout), -h/--help
+env: AGENTCRAFT_DEV_PORT
+example: node tools/devcli.mjs state --port 7902`);
   process.exit(code);
 }
 
@@ -55,7 +57,8 @@ for (let i = 0; i < argv.length; i++) {
   }
 }
 const cmd = pos.shift();
-if (!cmd || cmd === '-h' || flags.help) usage(cmd ? 0 : 2);
+if (cmd === '-h' || flags.help || argv.includes('-h')) usage(0);
+if (!cmd) usage(2);
 
 const port = flags.port ? Number(flags.port) : DEFAULT_PORT;
 const num = (v, name) => {

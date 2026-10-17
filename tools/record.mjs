@@ -23,6 +23,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { DevClient, DEFAULT_PORT } from './lib/devclient.mjs';
+import { handleHelp } from './lib/help.mjs';
+
+const USAGE = `Usage: node tools/record.mjs <shot.json> [more.json ...] [--port N] [--hold MS] [--stills t1,t2] [--window WxH] [--no-setup] [--verbose]
+
+Shot player for screen recording (OBS): sets up a shot and plays it in real time through the mod's
+dev.play. The game must be running. Shot format: tools/shots/README.md.
+
+Options:
+  --port N        DevBridge port (default AGENTCRAFT_DEV_PORT or 7879)
+  --hold MS       keep the first frame on screen for MS ms before playing (default 0)
+  --stills T,...  also save stills at these times (seconds) during playback
+  --window WxH    resize the game window first (e.g. 2560x1440)
+  --no-setup      skip time/weather/commands/camera placement
+  --verbose       extra logging
+  -h, --help      show this help
+
+Env: AGENTCRAFT_DEV_PORT
+Example: node tools/record.mjs tools/shots/hq_orbit.json --hold 5000
+Exit code 1 if a shot failed.`;
+handleHelp(USAGE);
+
 
 const argv = process.argv.slice(2);
 const files = [];

@@ -26,9 +26,28 @@ for (let i = 0; i < argv.length; i++) {
   } else pos.push(a);
 }
 const cmd = pos.shift();
-if (!cmd || flags.help) {
-  console.error('usage: node tools/foremancli.mjs status|wait|diff|send [args] [--port N] [--timeout S] [--wait-showcase S] [--json]');
-  process.exit(cmd ? 0 : 2);
+if (!cmd || flags.help || argv.includes('-h')) {
+  const help = `Usage: node tools/foremancli.mjs <command> [args] [--port N] [--timeout S] [--wait-showcase S] [--full] [--json]
+
+Foreman CLI for scripts and QA: connects like the mod does (hello -> snapshot) and prints JSON.
+
+Commands:
+  status [--wait-showcase S]       backend/auth + agents/tasks/decisions summary
+  wait [--timeout S]               wait until the Foreman answers
+  diff <repoId> <worktree>         structured diff stats (diff.request)
+  diff --decision <id>             the diff of a merge decision
+  repo-add <path>                  register a repo (repo.add)
+  send <type> '<json payload>'     send any client message; prints the ack
+  send user.message to=kit "text=hello"   (same, key=value form)
+
+Options: --port N (default AGENTCRAFT_PORT or 7878), --timeout S (connect, default 15),
+  --full (diff: every file/hunk), -h/--help
+Env: AGENTCRAFT_PORT
+Example: node tools/foremancli.mjs status --port 7902
+Exit 0 when ok, 1 on error.`;
+  if (!cmd && !flags.help && !argv.includes('-h')) { console.error(help); process.exit(2); }
+  console.log(help);
+  process.exit(0);
 }
 const port = flags.port ? Number(flags.port) : DEFAULT_FOREMAN_PORT;
 const connectMs = (flags.timeout ? Number(flags.timeout) : cmd === 'wait' ? 120 : 15) * 1000;
