@@ -55,6 +55,7 @@ public final class HqFeature {
 				}
 			}
 		});
+		ColiseumPortcullis.register();
 		ColiseumAmbience.init();
 		AgentCraftCommands.sub(root -> root.then(Commands.literal("spectate").executes(SpectateToggle::toggle)));
 		AgentCraftCommands.sub(root -> root.then(Commands.literal("hq")
