@@ -3,6 +3,7 @@ package dev.agentcraft.hq;
 import dev.agentcraft.AgentCraft;
 import dev.agentcraft.Cast;
 import dev.agentcraft.block.ModBlocks;
+import dev.agentcraft.block.PanelBlock;
 import dev.agentcraft.layout.AnchorNames;
 import dev.agentcraft.layout.Anchors;
 import java.util.List;
@@ -65,7 +66,7 @@ public final class ColiseumBuilder implements HqBuilder {
     static final int GATE_W = 1;
 
     /** Site box. */
-    static final int[] SITE = {-38, 60, -31, 38, 95, 31};
+    static final int[] SITE = {-42, 60, -35, 42, 95, 35};
 
     /** Arena spot ring definitions: {count, radius}. Total = 12+20+28+40 = 100. */
     static final int[][] SPOT_RINGS = {
@@ -86,7 +87,13 @@ public final class ColiseumBuilder implements HqBuilder {
     static final BlockState ARCH_BLOCK = Blocks.SMOOTH_SANDSTONE.defaultBlockState();
     static final BlockState FLOOR_ARENA = Blocks.SMOOTH_SANDSTONE.defaultBlockState();
     static final BlockState FLOOR_RING = Blocks.SMOOTH_RED_SANDSTONE.defaultBlockState();
-    static final BlockState STAGE_BLOCK = Blocks.GILDED_BLACKSTONE.defaultBlockState();
+    static final BlockState PAT_SAND = Blocks.SANDSTONE.defaultBlockState();
+    static final BlockState PAT_CUT = Blocks.CUT_SANDSTONE.defaultBlockState();
+    static final BlockState PAT_CHISELED = Blocks.CHISELED_SANDSTONE.defaultBlockState();
+    static final BlockState PAT_RED = Blocks.RED_SANDSTONE.defaultBlockState();
+    static final BlockState PAT_CUT_RED = Blocks.CUT_RED_SANDSTONE.defaultBlockState();
+    static final BlockState PAT_CHISELED_RED = Blocks.CHISELED_RED_SANDSTONE.defaultBlockState();
+    static final BlockState STAGE_BLOCK =Blocks.GILDED_BLACKSTONE.defaultBlockState();
     static final BlockState STAGE_EDGE = Blocks.SEA_LANTERN.defaultBlockState();
     static final Block SEAT_STAIRS = Blocks.SANDSTONE_STAIRS;
     static final Block SEAT_ACCENT_STAIRS = Blocks.STONE_BRICK_STAIRS;
@@ -95,8 +102,6 @@ public final class ColiseumBuilder implements HqBuilder {
     static final BlockState LANTERN_HANG = St.lantern(Blocks.LANTERN, true);
     static final BlockState BANNER_BLOCK = Blocks.SANDSTONE_WALL.defaultBlockState();
     static final BlockState PLANK = Blocks.OAK_PLANKS.defaultBlockState();
-    static final BlockState SCOREBOARD_BLOCK = Blocks.SMOOTH_QUARTZ.defaultBlockState();
-
     // Spot marker blocks — 4 different colors for the 4 rings
     static final BlockState SPOT_RING1 = St.concrete(net.minecraft.world.item.DyeColor.RED);
     static final BlockState SPOT_RING2 = St.concrete(net.minecraft.world.item.DyeColor.ORANGE);
@@ -127,10 +132,12 @@ public final class ColiseumBuilder implements HqBuilder {
 
         foundation(p);
         arenaFloor(p);
+        arenaFloorPatterns(p);
         seatingBowl(p);
         outerWalls(p);
         arches(p);
         gates(p);
+        gatePodiums(p);
         parapet(p);
         championStage(p, a);
         arenaSpots(p, a);
@@ -192,6 +199,39 @@ public final class ColiseumBuilder implements HqBuilder {
     }
 
     // ================================================================== arena floor
+
+    /**
+     * Sandstone patterns on the floor layer only: a checker mosaic band between the two red rings,
+     * chiseled radial spokes toward the 4 gates, a patterned inner disc and a chiseled edge border.
+     * Ring cells (SMOOTH_RED_SANDSTONE) are left untouched so both rings stay readable.
+     */
+    private static void arenaFloorPatterns(Plan p) {
+        for (int x = -ARENA_RX; x <= ARENA_RX; x++) {
+            for (int z = -ARENA_RZ; z <= ARENA_RZ; z++) {
+                if (!inEllipse(x, z, ARENA_RX + 0.5, ARENA_RZ + 0.5)) continue;
+                double norm = ellipseNorm(x, z, ARENA_RX, ARENA_RZ);
+                if (Math.abs(norm - 0.5) < 0.06 || Math.abs(norm - 0.95) < 0.06) continue; // keep rings
+                boolean checker = ((x + z) & 1) == 0;
+                BlockState b;
+                if (norm > 0.95) {
+                    // chiseled border just inside the arena edge
+                    b = checker ? PAT_CHISELED : PAT_CUT;
+                } else if (x == 0 || z == 0) {
+                    // radial spokes toward the gates (full width 1, alternating chiseled / red chiseled)
+                    b = ((Math.abs(x) + Math.abs(z)) % 4 < 2) ? PAT_CHISELED : PAT_CHISELED_RED;
+                } else if (norm > 0.5) {
+                    // mosaic band between the rings
+                    if (norm < 0.62 || norm > 0.83) b = checker ? PAT_CUT : PAT_SAND;
+                    else b = checker ? PAT_CUT_RED : PAT_RED;
+                } else {
+                    // inner disc: diagonal cut/sand weave, red chiseled heart
+                    if (norm < 0.12) b = PAT_CHISELED_RED;
+                    else b = (Math.abs(x) == Math.abs(z)) ? PAT_CUT_RED : (checker ? FLOOR_ARENA : PAT_SAND);
+                }
+                p.set(x, FLOOR, z, b);
+            }
+        }
+    }
 
     private static void arenaFloor(Plan p) {
         for (int x = -ARENA_RX; x <= ARENA_RX; x++) {
@@ -367,6 +407,45 @@ public final class ColiseumBuilder implements HqBuilder {
         }
     }
 
+    // ================================================================== gate podiums (outside the outer wall)
+
+    private static void gatePodiums(Plan p) {
+        gatePodium(p, 0, 1, OUTER_RZ + 2);
+        gatePodium(p, 0, -1, OUTER_RZ + 2);
+        gatePodium(p, 1, 0, OUTER_RX + 2);
+        gatePodium(p, -1, 0, OUTER_RX + 2);
+    }
+
+    /** One podium outside the gate in direction (dx,dz); d0 = first free cell outward from centre. */
+    private static void gatePodium(Plan p, int dx, int dz, int d0) {
+        BlockState slab = Blocks.SANDSTONE_SLAB.defaultBlockState();
+        for (int t = d0; t <= d0 + 3; t++) {
+            // approach landing in front of the corridor (stays walkable)
+            for (int l = -GATE_W; l <= GATE_W; l++) {
+                p.set(dx != 0 ? dx * t : l, FLOOR, dz != 0 ? dz * t : l, WALL_SMOOTH);
+            }
+            // flanking raised platforms on both sides
+            for (int side = -1; side <= 1; side += 2) {
+                for (int l = GATE_W + 1; l <= GATE_W + 3; l++) {
+                    int x = dx != 0 ? dx * t : side * l;
+                    int z = dz != 0 ? dz * t : side * l;
+                    p.set(x, FLOOR, z, WALL_ACCENT);
+                    p.set(x, FEET, z, t == d0 + 3 ? slab : WALL_SMOOTH);
+                }
+            }
+        }
+        // polished diorite columns (inner + outer corner of each flank), quartz capital, lantern
+        for (int side = -1; side <= 1; side += 2) {
+            for (int t = d0; t <= d0 + 2; t += 2) {
+                int x = dx != 0 ? dx * t : side * (GATE_W + 2);
+                int z = dz != 0 ? dz * t : side * (GATE_W + 2);
+                for (int y = FEET + 1; y <= FEET + 4; y++) p.set(x, y, z, COLUMN);
+                p.set(x, FEET + 5, z, COLUMN_TOP);
+                p.set(x, FEET + 6, z, LANTERN_BLOCK);
+            }
+        }
+    }
+
     // ================================================================== 4 axial gates (width 3)
 
     private static void gates(Plan p) {
@@ -521,16 +600,18 @@ public final class ColiseumBuilder implements HqBuilder {
     // ================================================================== scoreboard wall (west interior)
 
     private static void scoreboardWall(Plan p, Anchors.Builder a) {
-        // 20 blocks wide, 10 blocks tall on the west interior wall
+        // 20 blocks wide, 10 blocks tall on the west interior wall — task board panels facing east
         int wallX = -ARENA_RX + 1;
         int startZ = -10;
         int endZ = 9;
         int startY = FEET + 1;
         int endY = FEET + 10;
 
+        BlockState board = ModBlocks.TASK_BOARD.defaultBlockState()
+            .setValue(PanelBlock.FACING, Direction.EAST);
         for (int z = startZ; z <= endZ; z++) {
             for (int y = startY; y <= endY; y++) {
-                p.set(wallX, y, z, SCOREBOARD_BLOCK);
+                p.set(wallX, y, z, board);
             }
         }
 
@@ -620,8 +701,8 @@ public final class ColiseumBuilder implements HqBuilder {
     // ================================================================== anchors
 
     private static void anchors(Plan p, Anchors.Builder a) {
-        // Task wall (west inner wall)
-        a.spot(AnchorNames.TASK_WALL, -ARENA_RX + 1, FEET + 1, CZ, 90);
+        // Task wall — positioned at the front face of the board (panel depth 3px = 0.1875 blocks)
+        a.put(AnchorNames.TASK_WALL, -ARENA_RX + 1 + 1 - 0.1875, FEET + 1, CZ + 0.5, 90, 0);
         // Decision podium (east inner wall)
         a.spot(AnchorNames.DECISION_PODIUM, ARENA_RX - 1, FEET, CZ, 270);
         // Goal atrium (centre stage)
