@@ -202,6 +202,35 @@ class ForemanBridge {
   }
 
   /**
+   * Clean ghost decisions — merge decisions for worktrees already merged/abandoned.
+   * These get stuck in the UI and block the review queue.
+   * @returns {Promise<number>} Number of ghost decisions rejected.
+   */
+  async cleanGhostDecisions() {
+    let cleaned = 0;
+    for (const d of this.state.decisions.filter(x => x.status === 'open' && x.kind === 'merge')) {
+      // Check if the worktree's task is already done
+      const task = this.state.tasks.find(t => t.id === d.taskId);
+      if (task && task.status === 'done') {
+        try {
+          await this.answerDecision(d.id, 'Reject', 'Ghost decision: task already done');
+          cleaned++;
+        } catch { /* ignore */ }
+      }
+    }
+    // Also clean any merge decisions where the question says "is merged"
+    for (const d of this.state.decisions.filter(x => x.status === 'open')) {
+      if ((d.question || '').includes('is merged') || (d.context || '').includes('is merged')) {
+        try {
+          await this.answerDecision(d.id, 'Reject', 'Ghost: worktree already merged');
+          cleaned++;
+        } catch { /* ignore */ }
+      }
+    }
+    return cleaned;
+  }
+
+  /**
    * Close the underlying socket.
    * @returns {void}
    */
@@ -553,6 +582,9 @@ try {
         }
       }
       if (approved > 0) console.log(`\nCleared ${approved} pending decisions.\n`);
+      // Auto-clean ghost decisions (already-merged worktrees stuck in queue)
+      const ghosts = await fm.cleanGhostDecisions();
+      if (ghosts > 0) console.log(`Cleaned ${ghosts} ghost decision(s).\n`);
       await new Promise(() => {});
       break;
     }
