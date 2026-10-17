@@ -1,0 +1,15 @@
+{
+  "name": "coliseum-desktop",
+  "productName": "Coliseum",
+  "version": "0.1.0",
+  "description": "Coliseum desktop app: setup wizard and launcher",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}
