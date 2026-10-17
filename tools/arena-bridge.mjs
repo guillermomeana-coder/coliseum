@@ -158,8 +158,12 @@ class ArenaBridge {
 // === CLI ===
 const [cmd, ...args] = process.argv.slice(2);
 
-if (!cmd || cmd === 'help') {
+if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h' || args.includes('--help') || args.includes('-h')) {
   console.log(`Coliseum Arena — Battle Royale Bridge
+
+Usage: node tools/arena-bridge.mjs <command> [args]   (-h, --help, help)
+Env: AGENTCRAFT_PORT (default 7878)
+Example: node tools/arena-bridge.mjs simulate
 
 Commands:
   start "<topic>" [--agents N]    Start a battle royale (default: 16 agents)

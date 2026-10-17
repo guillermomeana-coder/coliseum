@@ -130,8 +130,12 @@ class ForemanBridge {
 // === CLI ===
 const [cmd, ...args] = process.argv.slice(2);
 
-if (!cmd || cmd === 'help') {
+if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h' || args.includes('--help') || args.includes('-h')) {
   console.log(`OpenClaw Bridge — Claude Code ↔ AgentCraft
+
+Usage: node tools/bridge.mjs <command> [args]   (-h, --help, help)
+Env: AGENTCRAFT_PORT (default 7878)
+Example: node tools/bridge.mjs status
 
 Commands:
   status                        Team state overview (agents, tasks, cost)

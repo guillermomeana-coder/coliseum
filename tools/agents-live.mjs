@@ -12,6 +12,30 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DevClient } from './lib/devclient.mjs';
 import { ForemanClient } from './lib/foremanclient.mjs';
+import { handleHelp } from './lib/help.mjs';
+
+const USAGE = `Usage: node tools/agents-live.mjs [--port N] [--seconds S] [--prefix P] [--goal "text"] [--camera cam_room|x,y,z,lx,ly,lz|keep] [--every MS] [--foreman PORT --answer-after S]
+
+Live observer for the agents feature: optionally submits a goal to the Foreman via the mod, then
+shoots one camera every N ms and logs agent posture/family/bubble/particles, fps and plate overlaps
+to artifacts/logs/<prefix>live.jsonl.
+
+Options:
+  --port N            DevBridge port (default AGENTCRAFT_DEV_PORT or 7879)
+  --seconds S         observe for S seconds (default 60)
+  --prefix P          shot/log prefix (default agents_live/)
+  --goal "text"       submit this goal first
+  --camera C          anchor name (cam_room), x,y,z,lx,ly,lz, or keep (default cam_room)
+  --every MS          sample interval (default 2500)
+  --foreman PORT      Foreman port (default AGENTCRAFT_PORT or 7878); used with --answer-after
+  --answer-after S    answer every decision with its first option after S seconds
+  -h, --help          show this help
+
+Env: AGENTCRAFT_DEV_PORT, AGENTCRAFT_PORT
+Example: node tools/agents-live.mjs --port 7902 --seconds 60 --goal "Add #tags"
+Requires a running game.`;
+handleHelp(USAGE);
+
 
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1]]] : acc), []),

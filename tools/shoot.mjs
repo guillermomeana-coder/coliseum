@@ -21,6 +21,30 @@ import fs from 'node:fs';
 import { DevClient, DEFAULT_PORT } from './lib/devclient.mjs';
 import { ForemanClient, DEFAULT_FOREMAN_PORT } from './lib/foremanclient.mjs';
 import { loadScene, runScene } from './lib/scene.mjs';
+import { handleHelp } from './lib/help.mjs';
+
+const USAGE = `Usage: node tools/shoot.mjs <scene.json> [--only a,b] [--port N] [--manifest out.json] [--prefix p/] [--foreman [N]] [--anchors f.json] [--release] [--strict] [--verbose]
+
+Scene screenshot runner: drives the DevBridge through a list of shots and writes PNGs to
+artifacts/shots/ (or AGENTCRAFT_SHOTS_DIR). The game must be running.
+
+Options:
+  --only a,b        run only these shots
+  --port N          DevBridge port (default AGENTCRAFT_DEV_PORT or 7879)
+  --manifest F      write the JSON summary to F
+  --prefix P        prefix shot names (may contain '/')
+  --foreman [N]     connect to the Foreman (default AGENTCRAFT_PORT or 7878)
+  --anchors F       JSON {name:{x,y,z,yaw,pitch}} overriding dev.anchors
+  --release         hand the view back at the end
+  --strict          skipped shots count as failures
+  --verbose         extra logging
+  -h, --help        show this help
+
+Env: AGENTCRAFT_DEV_PORT, AGENTCRAFT_PORT, AGENTCRAFT_SHOTS_DIR
+Example: node tools/shoot.mjs tools/scenes/phase1.json --only a,b --port 7902
+Exit code 1 if a shot failed.`;
+handleHelp(USAGE);
+
 
 const argv = process.argv.slice(2);
 let sceneFile = null;
