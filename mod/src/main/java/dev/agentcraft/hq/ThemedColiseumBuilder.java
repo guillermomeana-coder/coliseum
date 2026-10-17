@@ -33,7 +33,7 @@ public final class ThemedColiseumBuilder implements HqBuilder {
 
 	@Override
 	public String description() {
-		return "OpenClaw Coliseum (" + displayName + "): " + new ColiseumBuilder().description();
+		return "Coliseum (" + displayName + "): " + new ColiseumBuilder().description();
 	}
 
 	@Override

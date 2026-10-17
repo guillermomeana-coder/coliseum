@@ -40,7 +40,7 @@ Two palette variants share the same arena layout:
 
 ### Smart Autopilot
 
-Let the team run unattended: `node tools/openclaw-bridge.mjs autopilot` auto-approves permission requests and validates merges against criteria (CI passing, change size, and sensitive files such as env/config/auth). `run "<goal>" --autopilot` submits a goal, watches it, and auto-approves in one command.
+Let the team run unattended: `node tools/bridge.mjs autopilot` auto-approves permission requests and validates merges against criteria (CI passing, change size, and sensitive files such as env/config/auth). `run "<goal>" --autopilot` submits a goal, watches it, and auto-approves in one command.
 
 ### Spectator Mode
 
@@ -54,7 +54,7 @@ Register several repositories (`repo-add <path>`, list with `repos`) and target 
 
 - **Setup wizard** -- `node tools/setup.mjs` configures auth (Claude Login or API key), theme, and repos interactively.
 - **HQ mode** -- `node tools/setup.mjs --hq-mode <id>` sets the default HQ used at launch. Valid ids: `openclaw` (Office, default), `coliseum`, `coliseum_nether`, `coliseum_ice`.
-- **Headless mode** -- `node tools/launch-openclaw.mjs` runs the team without a Minecraft window; add `--game` for the visual client.
+- **Headless mode** -- `node tools/launch.mjs` runs the team without a Minecraft window; add `--game` for the visual client.
 - **Bypass permissions** -- agents work autonomously without stopping to ask.
 
 ## Quickstart: Office mode
@@ -68,31 +68,31 @@ Register several repositories (`repo-add <path>`, list with `repos`) and target 
 2. Launch the team -- headless by default, or with the Minecraft window:
 
    ```bash
-   node tools/launch-openclaw.mjs          # headless
-   node tools/launch-openclaw.mjs --game   # with Minecraft
+   node tools/launch.mjs          # headless
+   node tools/launch.mjs --game   # with Minecraft
    ```
 
 3. Submit a goal through the bridge:
 
    ```bash
-   node tools/openclaw-bridge.mjs status
-   node tools/openclaw-bridge.mjs goal "Add dark mode to the settings page"
+   node tools/bridge.mjs status
+   node tools/bridge.mjs goal "Add dark mode to the settings page"
    ```
 
 4. Watch progress and approve work:
 
    ```bash
-   node tools/openclaw-bridge.mjs watch
-   node tools/openclaw-bridge.mjs decisions
-   node tools/openclaw-bridge.mjs merge <id>
+   node tools/bridge.mjs watch
+   node tools/bridge.mjs decisions
+   node tools/bridge.mjs merge <id>
    ```
 
-   Or skip manual approval: `node tools/openclaw-bridge.mjs autopilot`, or `node tools/openclaw-bridge.mjs run "Add dark mode" --autopilot`.
+   Or skip manual approval: `node tools/bridge.mjs autopilot`, or `node tools/bridge.mjs run "Add dark mode" --autopilot`.
 
 ## Quickstart: Coliseum mode
 
 1. Run setup: `node tools/setup.mjs`
-2. Launch with the game window: `node tools/launch-openclaw.mjs --game`
+2. Launch with the game window: `node tools/launch.mjs --game`
 3. In Minecraft, switch to the arena: `/agentcraft hq coliseum` (or `coliseum_nether` / `coliseum_ice` for the Nether and Ice variants).
 
    Alternatively, set the default HQ used at launch before starting the game, instead of switching in-game:
@@ -133,7 +133,7 @@ Register several repositories (`repo-add <path>`, list with `repos`) and target 
 *Flying above the arena in spectator mode (placeholder).*
 
 ![Bridge CLI](docs/img/readme/bridge-cli.png)
-*Driving the team from the terminal with openclaw-bridge (placeholder).*
+*Driving the team from the terminal with bridge.mjs (placeholder).*
 
 ![Autopilot](docs/img/readme/autopilot.png)
 *Autopilot approving permissions and merges (placeholder).*
@@ -143,21 +143,21 @@ Register several repositories (`repo-add <path>`, list with `repos`) and target 
 The OpenClaw Bridge lets you orchestrate the team from any terminal:
 
 ```bash
-node tools/openclaw-bridge.mjs status                    # team overview + cost
-node tools/openclaw-bridge.mjs agents                    # who's doing what
-node tools/openclaw-bridge.mjs goal "..." [--repo name]  # submit work (optionally to a specific repo)
-node tools/openclaw-bridge.mjs tasks [goalId]            # task board
-node tools/openclaw-bridge.mjs decisions                 # pending decisions
-node tools/openclaw-bridge.mjs merge <id>                # approve a merge
-node tools/openclaw-bridge.mjs diff <worktree>           # review changes
-node tools/openclaw-bridge.mjs msg <agent|all> "..."     # message an agent
-node tools/openclaw-bridge.mjs repos                     # list registered repos
-node tools/openclaw-bridge.mjs decide <id> <option> [text]  # answer a decision
-node tools/openclaw-bridge.mjs repo-add <path>           # register a repo
-node tools/openclaw-bridge.mjs cost                      # total API cost
-node tools/openclaw-bridge.mjs watch                     # live event stream
-node tools/openclaw-bridge.mjs autopilot                 # auto-approve with smart merge criteria
-node tools/openclaw-bridge.mjs run "goal" --autopilot    # submit + watch + auto-approve in one
+node tools/bridge.mjs status                    # team overview + cost
+node tools/bridge.mjs agents                    # who's doing what
+node tools/bridge.mjs goal "..." [--repo name]  # submit work (optionally to a specific repo)
+node tools/bridge.mjs tasks [goalId]            # task board
+node tools/bridge.mjs decisions                 # pending decisions
+node tools/bridge.mjs merge <id>                # approve a merge
+node tools/bridge.mjs diff <worktree>           # review changes
+node tools/bridge.mjs msg <agent|all> "..."     # message an agent
+node tools/bridge.mjs repos                     # list registered repos
+node tools/bridge.mjs decide <id> <option> [text]  # answer a decision
+node tools/bridge.mjs repo-add <path>           # register a repo
+node tools/bridge.mjs cost                      # total API cost
+node tools/bridge.mjs watch                     # live event stream
+node tools/bridge.mjs autopilot                 # auto-approve with smart merge criteria
+node tools/bridge.mjs run "goal" --autopilot    # submit + watch + auto-approve in one
 ```
 
 ## Office Themes
@@ -182,6 +182,17 @@ Set with `node tools/setup.mjs --theme executive` (or run the wizard).
 | `coliseum_ice` | Ice Coliseum -- the same arena in a frozen ice palette |
 
 Switch in-game: `/agentcraft hq <id>` (`coliseum`, `coliseum_nether`, `coliseum_ice`, or `openclaw` to go back to the office)
+
+## npm Scripts
+
+Run `cd tools && npm install` once first (the bridge scripts need `ws`). Then from the repo root:
+
+```bash
+npm run setup     # interactive setup wizard (tools/setup.mjs)
+npm run launch    # start the team (tools/launch.mjs); pass flags after --, e.g. npm run launch -- --game
+npm run bridge    # CLI bridge (tools/bridge.mjs); e.g. npm run bridge -- status
+npm run arena     # arena bridge (tools/arena-bridge.mjs)
+```
 
 ## Requirements
 

@@ -111,7 +111,7 @@ async function interactive() {
   saveConfig(cfg);
   console.log('\nCurrent config:');
   console.log(JSON.stringify(cfg, null, 2));
-  console.log('\nRun: node tools/launch-openclaw.mjs');
+  console.log('\nRun: node tools/launch.mjs');
 
   rl.close();
 }

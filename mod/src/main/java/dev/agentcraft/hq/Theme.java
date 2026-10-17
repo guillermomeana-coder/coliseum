@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * and decorative elements while keeping functional blocks (monitors, desks,
  * lamps, task boards) untouched.
  *
- * <p>Six built-in themes ship with OpenClaw Office:
+ * <p>Six built-in themes ship with Coliseum Office:
  * <ul>
  *   <li>{@link #WARM_STUDIO} — the original timber + copper + plaster look</li>
  *   <li>{@link #MODERN_GLASS} — clean lines, quartz + glass + iron</li>

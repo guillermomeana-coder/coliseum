@@ -6,19 +6,19 @@
  * and get diffs from AgentCraft workers without opening Minecraft.
  *
  * Usage:
- *   node openclaw-bridge.mjs status                        # show team state
- *   node openclaw-bridge.mjs goal "Fix SEO on homepage"    # submit a goal
- *   node openclaw-bridge.mjs goal "Fix SEO" --repo elevyte # submit goal to a specific repo
- *   node openclaw-bridge.mjs tasks                         # list all tasks
- *   node openclaw-bridge.mjs tasks <goalId>                # list tasks for a goal
- *   node openclaw-bridge.mjs decide <decisionId> <option>  # answer a decision
- *   node openclaw-bridge.mjs merge <decisionId>            # shorthand: approve merge
- *   node openclaw-bridge.mjs diff <worktree>               # get diff for a worktree
- *   node openclaw-bridge.mjs msg <agentId> "message"       # message an agent
- *   node openclaw-bridge.mjs repos                         # list registered repos
- *   node openclaw-bridge.mjs cost                          # show total API cost
- *   node openclaw-bridge.mjs watch                         # live feed of all events
- *   node openclaw-bridge.mjs agents                        # list agents and their state
+ *   node bridge.mjs status                        # show team state
+ *   node bridge.mjs goal "Fix SEO on homepage"    # submit a goal
+ *   node bridge.mjs goal "Fix SEO" --repo elevyte # submit goal to a specific repo
+ *   node bridge.mjs tasks                         # list all tasks
+ *   node bridge.mjs tasks <goalId>                # list tasks for a goal
+ *   node bridge.mjs decide <decisionId> <option>  # answer a decision
+ *   node bridge.mjs merge <decisionId>            # shorthand: approve merge
+ *   node bridge.mjs diff <worktree>               # get diff for a worktree
+ *   node bridge.mjs msg <agentId> "message"       # message an agent
+ *   node bridge.mjs repos                         # list registered repos
+ *   node bridge.mjs cost                          # show total API cost
+ *   node bridge.mjs watch                         # live feed of all events
+ *   node bridge.mjs agents                        # list agents and their state
  */
 
 import WebSocket from 'ws';
@@ -363,8 +363,8 @@ try {
           console.log(`[${ts}] ⏸ HOLD merge ${d.id}: ${reasons.join('; ')}`);
           console.log(`         ${d.question}`);
           console.log(`         Stats: ${files} files, +${additions} -${deletions}, CI: ${ci}`);
-          console.log(`         Manual: node tools/openclaw-bridge.mjs merge ${d.id}`);
-          console.log(`         Reject: node tools/openclaw-bridge.mjs decide ${d.id} Reject`);
+          console.log(`         Manual: node tools/bridge.mjs merge ${d.id}`);
+          console.log(`         Reject: node tools/bridge.mjs decide ${d.id} Reject`);
           return false;
         }
 
@@ -389,7 +389,7 @@ try {
             if (ok) approved++;
           } else if (d.kind === 'merge' && !autoMerge) {
             console.log(`[${ts}] ⏸ MERGE: ${d.id} — ${d.question}`);
-            console.log(`         node tools/openclaw-bridge.mjs merge ${d.id}`);
+            console.log(`         node tools/bridge.mjs merge ${d.id}`);
           } else if (d.kind === 'question') {
             console.log(`[${ts}] ❓ QUESTION ${d.id} from ${d.agentId}: ${d.question}`);
             console.log(`         Options: ${(d.options || []).join(' | ')}`);
@@ -446,7 +446,7 @@ try {
             const sensitive = SENSITIVE.test(d.question || '') || SENSITIVE.test(ctx);
             if (ciFail || sensitive) {
               console.log(`[${ts}] ⏸ HOLD ${d.id}: ${ciFail ? 'CI failed' : 'sensitive files'}`);
-              console.log(`         Manual: node tools/openclaw-bridge.mjs merge ${d.id}`);
+              console.log(`         Manual: node tools/bridge.mjs merge ${d.id}`);
             } else {
               fm.answerDecision(d.id, 'Merge').catch(() => {});
               console.log(`[${ts}] ✓ ${d.id} smart-merged`);

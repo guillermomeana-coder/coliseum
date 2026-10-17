@@ -6,9 +6,9 @@
  * and launches the Foreman with the right auth, theme, and repos.
  *
  * Usage:
- *   node tools/launch-openclaw.mjs                    # headless (no game)
- *   node tools/launch-openclaw.mjs --game             # with Minecraft window
- *   node tools/launch-openclaw.mjs --repo C:\myrepo   # override repo
+ *   node tools/launch.mjs                    # headless (no game)
+ *   node tools/launch.mjs --game             # with Minecraft window
+ *   node tools/launch.mjs --repo C:\myrepo   # override repo
  */
 
 import { execSync, spawn } from 'node:child_process';
