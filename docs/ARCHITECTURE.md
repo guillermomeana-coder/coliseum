@@ -353,9 +353,14 @@ switching themes means restarting with a different value and re-running `/agentc
 
 ### ColiseumBuilder
 
-`ColiseumBuilder` (id `coliseum`) is the battle-royale arena and the default builder
-(`HqBuilders.setDefault(ColiseumBuilder.ID)`), so a fresh HQ world auto-builds it on
-`SERVER_STARTED` (disable with `AGENTCRAFT_HQ_AUTOBUILD=0`).
+`ColiseumBuilder` (id `coliseum`) is the battle-royale arena and the fallback default builder.
+`HqFeature.defaultBuilderId()` picks the default after all builders are registered: `-Dagentcraft.hq.default`,
+then env `OPENCLAW_HQ_DEFAULT` (the launcher sets it from the setup wizard's `hqMode`), trimmed and lowercased.
+If it names a registered builder (`openclaw`, `coliseum`, `coliseum_ice`, ...) that builder is the default;
+if it is unknown (e.g. `coliseum_nether` before it exists) a warning lists the known ids and `coliseum` is used;
+blank/absent also means `coliseum`. A fresh HQ world auto-builds the default on `SERVER_STARTED`
+(disable with `AGENTCRAFT_HQ_AUTOBUILD=0`). Auto-build only fires on a fresh HQ world (no saved anchors), so
+changing the mode for an existing world needs a fresh world or `/agentcraft hq <id>`.
 
 #### Geometry
 
