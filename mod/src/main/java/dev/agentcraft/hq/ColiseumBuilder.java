@@ -65,7 +65,7 @@ public final class ColiseumBuilder implements HqBuilder {
     static final int GATE_W = 1;
 
     /** Site box. */
-    static final int[] SITE = {-38, 60, -31, 38, 95, 31};
+    static final int[] SITE = {-42, 60, -35, 42, 95, 35};
 
     /** Arena spot ring definitions: {count, radius}. Total = 12+20+28+40 = 100. */
     static final int[][] SPOT_RINGS = {
@@ -131,6 +131,7 @@ public final class ColiseumBuilder implements HqBuilder {
         outerWalls(p);
         arches(p);
         gates(p);
+        gatePodiums(p);
         parapet(p);
         championStage(p, a);
         arenaSpots(p, a);
@@ -309,6 +310,45 @@ public final class ColiseumBuilder implements HqBuilder {
                     // Arch top (rounded)
                     p.set(ax, baseY + 3, az, ARCH_BLOCK);
                 }
+            }
+        }
+    }
+
+    // ================================================================== gate podiums (outside the outer wall)
+
+    private static void gatePodiums(Plan p) {
+        gatePodium(p, 0, 1, OUTER_RZ + 2);
+        gatePodium(p, 0, -1, OUTER_RZ + 2);
+        gatePodium(p, 1, 0, OUTER_RX + 2);
+        gatePodium(p, -1, 0, OUTER_RX + 2);
+    }
+
+    /** One podium outside the gate in direction (dx,dz); d0 = first free cell outward from centre. */
+    private static void gatePodium(Plan p, int dx, int dz, int d0) {
+        BlockState slab = Blocks.SANDSTONE_SLAB.defaultBlockState();
+        for (int t = d0; t <= d0 + 3; t++) {
+            // approach landing in front of the corridor (stays walkable)
+            for (int l = -GATE_W; l <= GATE_W; l++) {
+                p.set(dx != 0 ? dx * t : l, FLOOR, dz != 0 ? dz * t : l, WALL_SMOOTH);
+            }
+            // flanking raised platforms on both sides
+            for (int side = -1; side <= 1; side += 2) {
+                for (int l = GATE_W + 1; l <= GATE_W + 3; l++) {
+                    int x = dx != 0 ? dx * t : side * l;
+                    int z = dz != 0 ? dz * t : side * l;
+                    p.set(x, FLOOR, z, WALL_ACCENT);
+                    p.set(x, FEET, z, t == d0 + 3 ? slab : WALL_SMOOTH);
+                }
+            }
+        }
+        // polished diorite columns (inner + outer corner of each flank), quartz capital, lantern
+        for (int side = -1; side <= 1; side += 2) {
+            for (int t = d0; t <= d0 + 2; t += 2) {
+                int x = dx != 0 ? dx * t : side * (GATE_W + 2);
+                int z = dz != 0 ? dz * t : side * (GATE_W + 2);
+                for (int y = FEET + 1; y <= FEET + 4; y++) p.set(x, y, z, COLUMN);
+                p.set(x, FEET + 5, z, COLUMN_TOP);
+                p.set(x, FEET + 6, z, LANTERN_BLOCK);
             }
         }
     }
