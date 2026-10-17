@@ -156,4 +156,186 @@ TODO: filled by follow-up task
 
 ## Theme System & ColiseumBuilder
 
-TODO: filled by follow-up task
+Both live in `mod/src/main/java/dev/agentcraft/hq/` and are registered in `HqFeature.init()` via
+`HqBuilders.register(...)`. Builders implement `HqBuilder` (`id()`, `description()`,
+`build(ServerLevel, Anchors.Builder, Options)`) and are run by `/agentcraft hq [builder] [force]`
+through `HqFeature.buildAndPublish`.
+
+### Theme System
+
+#### The `Theme` record
+
+`Theme` is a Java `record` of materials only. Its sole behaviour is two lookups:
+`Theme.byId(String)` (aliases such as `modern`, `exec`, `brick`, `clean`, `luxury`; unknown ids fall
+back to `WARM_STUDIO`) and `Theme.all()`. Its fields, grouped:
+
+| Group | Fields |
+|-------|--------|
+| identity | `id`, `displayName` |
+| walls | `wallPrimary`, `wallFrame`, `wallTrim`, `wallWood`, `framePost`, `frameBeam` |
+| floor | `floorMain`, `floorAccent`, `floorTile`, `plinth` |
+| roof / ceiling | `roofStairs`, `roofSlab`, `roofFull`, `roofTrim`, `ceilStairs`, `ceilFull` |
+| dome | `domeShell`, `domeStairs`, `domeSlab` |
+| misc | `glassPane`, `sofa`, `lantern`, `lanternHanging`, `glowPanel` |
+
+Fields are `BlockState` for full blocks and `Block` where the builder must keep the placed block's
+properties (stairs, slabs, logs, sofa). The six built-in constants:
+
+| Constant | `id` | Look |
+|----------|------|------|
+| `WARM_STUDIO` | `warm_studio` | original timber + copper + plaster (default, no swap pass) |
+| `MODERN_GLASS` | `modern_glass` | quartz + glass + iron |
+| `EXECUTIVE` | `executive` | dark oak + deepslate + gold accents |
+| `INDUSTRIAL` | `industrial` | exposed brick + iron + concrete |
+| `MINIMAL` | `minimal` | white + light gray + birch |
+| `PENTHOUSE` | `penthouse` | dark luxury + gold + crimson wood, soul lanterns |
+
+#### How `ThemedHqBuilder` consumes it
+
+`ThemedHqBuilder` (id `openclaw`) is a decorator around `StudioHqBuilder`: the studio layout is built
+unchanged, then materials are swapped in place.
+
+```
+  OPENCLAW_THEME env --> Theme.byId() --> Theme (record of BlockStates)
+                                              |
+  /agentcraft hq openclaw                     v
+        |                          ThemedHqBuilder.build()
+        v                                     |
+  HqFeature.buildAndPublish                   | 1. delegate.build()   (StudioHqBuilder: Plan -> world)
+        |                                     |
+        '------------------------------------>| 2. applyTheme(level)  (skipped for warm_studio)
+                                              |      buildBlockSwapTable()  Block -> Block
+                                              |      buildFullSwapTable()   Block -> BlockState
+                                              v
+        for every (x,y,z) in StudioHqBuilder SITE {-46,60,-36 .. 46,100,54}:
+           stairs/slab/log?  -> copyProperties(old, new)  (facing, half, shape, waterlogged)
+           planks/panel/glass/lantern? -> level.setBlock(pos, replacement, 2)
+                                              |
+                                              v
+                    report "theme X applied (N blocks)" -> HqFeature.lastReport
+```
+
+The two tables map the studio's original blocks (birch/dark-oak planks, mud bricks, plaster and
+walnut mod blocks, terracotta tile, glow panel, waxed copper, pale-oak ceiling, glass pane, lantern,
+stairs/slabs) onto the theme fields. **What stays fixed:** the functional blocks (monitors, desks,
+status lamps, task-board panels, decision podiums, merge stations) are never keys in either table,
+so geometry, anchors and interactivity are identical across themes.
+
+#### Selecting a theme
+
+There is no in-game theme command. The theme is read once, in the `ThemedHqBuilder()` constructor,
+from the `OPENCLAW_THEME` environment variable (default `warm_studio`). `tools/launch-openclaw.mjs`
+sets it from its config (`env.OPENCLAW_THEME = cfg.theme`) before starting the game; the
+`ThemedHqBuilder(Theme)` constructor allows programmatic use. Because the choice is made at startup,
+switching themes means restarting with a different value and re-running `/agentcraft hq openclaw`.
+
+### ColiseumBuilder
+
+`ColiseumBuilder` (id `coliseum`) is the battle-royale arena and the default builder
+(`HqBuilders.setDefault(ColiseumBuilder.ID)`), so a fresh HQ world auto-builds it on
+`SERVER_STARTED` (disable with `AGENTCRAFT_HQ_AUTOBUILD=0`).
+
+#### Geometry
+
+Constants in `ColiseumBuilder`: centre `CX=CZ=0`; outer wall ellipse `OUTER_RX=35`, `OUTER_RZ=28`;
+arena ellipse `ARENA_RX=22`, `ARENA_RZ=17`; `STAGE_R=5`; `GROUND=64`, `FLOOR=65`, `FEET=66`;
+4 wall tiers of `TIER_H=5` (`WALL_TOP=86`, `PARAPET=88`); four axial gates of width
+`2*GATE_W+1 = 3`; site box `SITE = {-42,60,-35, 42,95,35}`; 100 spots on four `SPOT_RINGS`
+(12/20/28/40 spots at radius 7/10/13/16).
+
+#### Build pipeline
+
+`build()` composes everything into a `Plan` (the in-memory desired state of the site box), then
+applies it as a diff. Phases run in this order:
+
+```
+  Plan p = meadow (grass @64, dirt, stone)
+     |
+     |- foundation(p)            stone-brick base ellipse
+     |- arenaFloor(p)            smooth sandstone + red-sandstone ring
+     |- arenaFloorPatterns(p)    sandstone / cut / chiseled mosaic in the floor
+     |- seatingBowl(p)           stepped seats between arena edge and wall
+     |- outerWalls(p)            4 tiers of chiseled / cut sandstone
+     |- arches(p)                arched bays + diorite/quartz columns
+     |- gates(p), gatePodiums(p) N/S/E/W openings; podium between two columns
+     |- parapet(p)               top rim at PARAPET
+     |- championStage(p, a)      raised gilded-blackstone disc, sea-lantern edge ring
+     |    '- ColiseumAmbience.stageNoteBlocks(p)   8 note blocks buried in the stage base
+     |- arenaSpots / scoreboardWall / eliminatedZone   anchors: 100 agents, board, bench
+     |- lighting(p), ruins(p)    lanterns, cracked-brick ruin accents
+     |- pillarBanners(p)         banners on the outer pillars
+     |- redCarpet(p)             south gate -> stage centre, |x| <= GATE_W
+     |- pillarFires(p)           campfires on every FIRE_EVERY-th arch pair
+     '- anchors(p, a)
+     |
+     v
+  PlanStore.load(ID) --> p.apply(level, previous, force)   diff: only changed cells are written
+  PlanStore.save(ID, SITE, p.cells())                      player edits survive a rebuild
+  ColiseumGuards.spawn(level)                              entities, not blocks
+  anchors: bounds, ENTRANCE (south, z=OUTER_RZ+2), SPAWN (20 above centre, pitch 60)
+```
+
+Top-down sketch (not to scale; the red carpet runs from the south gate to the stage):
+
+```
+                         N gate (|x|<=1)
+              ,-------------[  ]-------------.
+          ,-'   outer wall: 4 tiers, arches    '-.
+        ,'  pillars (banners, fires every 4th)     '.
+       /   ,------------[  ]------------------.       \
+      /   /   seating bowl (stepped)           \       \
+     |   |   ,-------------------------.        |       |
+ W  [ ]  |  /  arena floor (22 x 17)     \       |      [ ] E
+     |   | |   spots: rings r=7,10,13,16  |      |       |
+     |   | |        ( STAGE r=5 )          |      |       |
+      \   \ \   gold stage + note blocks  /      /       /
+       \   `-`-----------[##]-----------'-'      /       /
+        `.                [##] red carpet      .'
+          `-.             [  ]              .-'
+              `-------------[  ]-----------'
+                         S gate   <- ENTRANCE anchor
+```
+
+#### Gates, guards and portcullis
+
+`ColiseumPortcullis` adds an iron-bars row across each gate passage. The built world keeps the
+gates raised; `/agentcraft coliseum gates <raise|lower> [n|s|e|w|all]` toggles them, touching only
+open gate cells (air, carpet or its own bars). `ColiseumPortcullis.gates()` exposes the geometry as
+`Gate(name, outward, cells)` records. `ColiseumGuards.spawn(level)` places 8 iron-armored armor
+stands (2 per gate, tag `agentcraft_coliseum_guard`) and removes stale ones from earlier builds first.
+
+#### Ambience, environment and view
+
+| Class | Role | Trigger |
+|-------|------|---------|
+| `ColiseumAmbience` | 8 note blocks (bell, chime, harp) hidden in the stage base | placed by the Plan; `/agentcraft coliseum fanfare` plays them as a chord |
+| `ColiseumEnvironment` | `apply(level)` runs `time set 18000` + `weather clear` so fires stand out | `HqFeature.buildAndPublish` after a `coliseum` build |
+| `ColiseumView` | `spectateFromAbove(player)`: spectator mode, 20 blocks over the centre, pitch 90 | `/agentcraft hq coliseum` run by a player |
+
+Commands that reach the coliseum code:
+
+- `/agentcraft hq` (default builder) or `/agentcraft hq coliseum [force]`: build, publish anchors, set world spawn, apply environment, spectate from above.
+- `/agentcraft coliseum gates <raise|lower> [n|s|e|w|all]`: `ColiseumPortcullis`.
+- `/agentcraft coliseum fanfare`: `ColiseumAmbience`.
+- `/agentcraft spectate`: generic gamemode toggle (`SpectateToggle`).
+
+#### End-to-end flow
+
+```
+  /agentcraft hq coliseum
+        |
+        v
+  HqFeature.build --- refusal() guard (HQ world only, never Hardcore)
+        |
+        v
+  buildAndPublish --- PlanStore.invalidateUnless("coliseum")  (drop other builders' records)
+        |                 ColiseumBuilder.build --> Plan --> diff --> world blocks
+        |                                       '-> ColiseumGuards --> armor stands
+        |- Anchors.publish --> layout (100 spots, entrance, spawn) --> clients / Foreman
+        |- setworldspawn at the SPAWN anchor
+        '- ColiseumEnvironment.apply ; ColiseumView.spectateFromAbove (caller)
+```
+
+The anchors published here are what the client and the Foreman use to place agents on the arena
+spots. The Theme System and the Coliseum are independent builders sharing only the `Plan`,
+`PlanStore` and anchor infrastructure; the Coliseum is not themed.
