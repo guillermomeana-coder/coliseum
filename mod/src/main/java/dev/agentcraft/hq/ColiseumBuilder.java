@@ -145,6 +145,7 @@ public final class ColiseumBuilder implements HqBuilder {
         eliminatedZone(p, a);
         lighting(p);
         ruins(p);
+        pillarBanners(p);
         anchors(p, a);
 
         BlockState[] previous = PlanStore.load(level.getServer(), ID, SITE, p.size());
@@ -348,6 +349,59 @@ public final class ColiseumBuilder implements HqBuilder {
                     }
                     // Arch top (rounded)
                     p.set(ax, baseY + 3, az, ARCH_BLOCK);
+                }
+            }
+        }
+    }
+
+    // ================================================================== banners on outer wall pillars
+
+    private static void pillarBanners(Plan p) {
+        int numArches = 48;
+        for (int i = 0; i < numArches; i += 2) {
+            double angle = Math.toRadians(i * (360.0 / numArches));
+            int ax = (int) Math.round(OUTER_RX * Math.sin(angle));
+            int az = (int) Math.round(OUTER_RZ * Math.cos(angle));
+            if (isGate(ax, az)) continue;
+
+            double normAngle = Math.atan2(ax / (double) OUTER_RX, az / (double) OUTER_RZ);
+            int dx = (int) Math.round(Math.cos(normAngle));
+            int dz = (int) Math.round(-Math.sin(normAngle));
+
+            for (int s : new int[]{-1, 1}) {
+                int cx = ax + s * dz;
+                int cz = az + s * dx;
+                if (!inEllipse(cx, cz, OUTER_RX + 1.5, OUTER_RZ + 1.5)) continue;
+                if (isGate(cx, cz)) continue;
+
+                // Nearest cardinal direction pointing away from the centre.
+                double nx = cx / ((double) OUTER_RX * OUTER_RX);
+                double nz = cz / ((double) OUTER_RZ * OUTER_RZ);
+                Direction face = Math.abs(nx) > Math.abs(nz)
+                    ? (nx > 0 ? Direction.EAST : Direction.WEST)
+                    : (nz > 0 ? Direction.SOUTH : Direction.NORTH);
+
+                // Walk outward to the first cell outside the wall shell.
+                int bx = cx, bz = cz;
+                int tx = cx + face.getStepX(), tz = cz + face.getStepZ();
+                int steps = 0;
+                while (inEllipse(tx, tz, OUTER_RX + 1.5, OUTER_RZ + 1.5) && steps++ < 4) {
+                    bx = tx; bz = tz;
+                    tx += face.getStepX(); tz += face.getStepZ();
+                }
+                if (inEllipse(tx, tz, OUTER_RX + 1.5, OUTER_RZ + 1.5)) continue;
+                if (isGate(tx, tz) || isGate(bx, bz)) continue;
+
+                boolean red = ((i / 2) % 2 == 0);
+                BlockState banner = (red ? Blocks.WALL_BANNER.red() : Blocks.WALL_BANNER.yellow())
+                    .defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING, face);
+                for (int tier = 1; tier <= 2; tier++) {
+                    int y = FEET + tier * TIER_H + 3;
+                    // Support must be solid wall and the banner cell must be free.
+                    if (p.get(bx, y, bz).isAir()) continue;
+                    if (!p.get(tx, y, tz).isAir()) continue;
+                    p.set(tx, y, tz, banner);
                 }
             }
         }
