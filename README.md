@@ -2,34 +2,128 @@
 
 **Your AI development team, working inside a Minecraft office you can walk around in.**
 
-A fork of [AgentCraft](https://github.com/blendi-remade/agentcraft) by [Blendi](https://github.com/blendi-remade), enhanced with:
+A fork of [AgentCraft](https://github.com/blendi-remade/agentcraft) by [Blendi](https://github.com/blendi-remade), enhanced with six office themes, a Coliseum debate arena, a CLI bridge, and a smart autopilot.
 
-- **6 Office Themes** -- Warm Studio, Modern Glass, Executive, Industrial, Minimal, Penthouse
-- **Coliseum Arena** -- Roman Colosseum-inspired debate arena with 8 podiums and tiered seating
-- **OpenClaw Bridge** -- control the team from Claude Code or any CLI without opening Minecraft
-- **Smart Autopilot** -- auto-approves permissions, validates merges (CI + size + sensitive files)
-- **Setup Wizard** -- interactive config for auth (Claude Login or API key), theme, and repos
-- **Bypass Permissions** -- agents work autonomously without stopping to ask
-- **Headless Mode** -- run the team without the Minecraft window (`--NoGame`)
-- **Multi-repo** -- register multiple repos and target goals to specific projects
+## Table of Contents
 
-## Quick Start
+- [Features](#features)
+- [Quickstart: Office mode](#quickstart-office-mode)
+- [Quickstart: Coliseum mode](#quickstart-coliseum-mode)
+- [Screenshots](#screenshots)
+- [The Bridge (CLI Integration)](#the-bridge-cli-integration)
+- [Office Themes](#office-themes)
+- [Requirements](#requirements)
+- [Project Structure](#project-structure)
+- [Configuration](#configuration)
+- [Contributing](#contributing)
+- [License](#license)
+- [Credits](#credits)
 
-```bash
-# 1. Setup (interactive)
-node tools/setup.mjs
+## Features
 
-# 2. Launch (headless — agents work, no game window)
-node tools/launch-openclaw.mjs
+### 6 Office Themes
 
-# 3. Or with Minecraft window
-node tools/launch-openclaw.mjs --game
+Pick the look of your HQ: `warm_studio`, `modern_glass`, `executive`, `industrial`, `minimal`, or `penthouse`. Set one with `node tools/setup.mjs --theme <id>`. See [Office Themes](#office-themes) for the style of each.
 
-# 4. Control from CLI
-node tools/openclaw-bridge.mjs status
-node tools/openclaw-bridge.mjs goal "Add dark mode to the settings page"
-node tools/openclaw-bridge.mjs watch
-```
+### Coliseum Arena
+
+A Roman Colosseum-inspired elliptical amphitheater with 8 debate podiums and tiered seating for spectators. Switch to it in-game with `/agentcraft hq coliseum` (and back with `/agentcraft hq openclaw`).
+
+### Arena Bridge
+
+`tools/arena-bridge.mjs` runs a battle royale where 16-100 AI agents debate a topic at once. Use `start` to begin, `spectate` for the live commentary feed, and `scoreboard` for current rankings.
+
+### Smart Autopilot
+
+Let the team run unattended: `node tools/openclaw-bridge.mjs autopilot` auto-approves permission requests and validates merges against criteria (CI passing, change size, and sensitive files such as env/config/auth). `run "<goal>" --autopilot` submits a goal, watches it, and auto-approves in one command.
+
+### Spectator Mode
+
+In Minecraft, fly above the arena in spectator mode and watch agents argue in real time with speech bubbles. From a terminal, `node tools/arena-bridge.mjs spectate` streams the same action as a live feed.
+
+### Multi-repo
+
+Register several repositories (`repo-add <path>`, list with `repos`) and target a goal at one of them with `goal "..." --repo <name>`.
+
+### Setup, Headless, and Bypass Permissions
+
+- **Setup wizard** -- `node tools/setup.mjs` configures auth (Claude Login or API key), theme, and repos interactively.
+- **Headless mode** -- `node tools/launch-openclaw.mjs` runs the team without a Minecraft window; add `--game` for the visual client.
+- **Bypass permissions** -- agents work autonomously without stopping to ask.
+
+## Quickstart: Office mode
+
+1. Configure auth, theme, and repos (interactive):
+
+   ```bash
+   node tools/setup.mjs
+   ```
+
+2. Launch the team -- headless by default, or with the Minecraft window:
+
+   ```bash
+   node tools/launch-openclaw.mjs          # headless
+   node tools/launch-openclaw.mjs --game   # with Minecraft
+   ```
+
+3. Submit a goal through the bridge:
+
+   ```bash
+   node tools/openclaw-bridge.mjs status
+   node tools/openclaw-bridge.mjs goal "Add dark mode to the settings page"
+   ```
+
+4. Watch progress and approve work:
+
+   ```bash
+   node tools/openclaw-bridge.mjs watch
+   node tools/openclaw-bridge.mjs decisions
+   node tools/openclaw-bridge.mjs merge <id>
+   ```
+
+   Or skip manual approval: `node tools/openclaw-bridge.mjs autopilot`, or `node tools/openclaw-bridge.mjs run "Add dark mode" --autopilot`.
+
+## Quickstart: Coliseum mode
+
+1. Run setup: `node tools/setup.mjs`
+2. Launch with the game window: `node tools/launch-openclaw.mjs --game`
+3. In Minecraft, switch to the arena: `/agentcraft hq coliseum`
+4. Start a battle royale:
+
+   ```bash
+   node tools/arena-bridge.mjs start "Best frontend framework for our stack" --agents 16
+   ```
+
+5. Spectate the live feed (or fly above the arena in-game): `node tools/arena-bridge.mjs spectate`
+6. Check the standings: `node tools/arena-bridge.mjs scoreboard`
+
+## Screenshots
+
+<!-- Placeholders: the images below marked "(placeholder)" still need to be captured and added under docs/img/readme/. -->
+
+![The OpenClaw Office HQ](docs/img/readme/hero.jpg)
+*The HQ, with agents at work.*
+
+![Debate podium](docs/img/readme/podium.jpg)
+*A debate podium.*
+
+![Warm Studio theme](docs/img/readme/office-warm-studio.png)
+*Warm Studio office theme (placeholder).*
+
+![Penthouse theme](docs/img/readme/office-penthouse.png)
+*Penthouse office theme (placeholder).*
+
+![Coliseum overview](docs/img/readme/coliseum-overview.png)
+*The Coliseum arena with 8 podiums and tiered seating (placeholder).*
+
+![Coliseum spectator view](docs/img/readme/coliseum-spectator.png)
+*Flying above the arena in spectator mode (placeholder).*
+
+![Bridge CLI](docs/img/readme/bridge-cli.png)
+*Driving the team from the terminal with openclaw-bridge (placeholder).*
+
+![Autopilot](docs/img/readme/autopilot.png)
+*Autopilot approving permissions and merges (placeholder).*
 
 ## The Bridge (CLI Integration)
 
@@ -45,6 +139,8 @@ node tools/openclaw-bridge.mjs merge <id>                # approve a merge
 node tools/openclaw-bridge.mjs diff <worktree>           # review changes
 node tools/openclaw-bridge.mjs msg <agent|all> "..."     # message an agent
 node tools/openclaw-bridge.mjs repos                     # list registered repos
+node tools/openclaw-bridge.mjs decide <id> <option> [text]  # answer a decision
+node tools/openclaw-bridge.mjs repo-add <path>           # register a repo
 node tools/openclaw-bridge.mjs cost                      # total API cost
 node tools/openclaw-bridge.mjs watch                     # live event stream
 node tools/openclaw-bridge.mjs autopilot                 # auto-approve with smart merge criteria
@@ -62,6 +158,8 @@ node tools/openclaw-bridge.mjs run "goal" --autopilot    # submit + watch + auto
 | `minimal` | Clean -- white quartz, birch, light gray, very minimal |
 | `penthouse` | Luxury -- blackstone, gilded accents, crimson wood, red sofas |
 
+Set with `node tools/setup.mjs --theme executive` (or run the wizard).
+
 ### Arena Maps
 
 | Map | Style |
@@ -69,25 +167,6 @@ node tools/openclaw-bridge.mjs run "goal" --autopilot    # submit + watch + auto
 | `coliseum` | Roman Colosseum -- elliptical amphitheater, sandstone, 8 debate podiums |
 
 Switch in-game: `/agentcraft hq coliseum` or `/agentcraft hq openclaw`
-
-## Arena — Battle Royale Mode
-
-Run a battle royale where 16-100 AI agents debate a topic simultaneously:
-
-```bash
-# Start arena
-node tools/arena-bridge.mjs start "Best frontend framework for our stack" --agents 16
-
-# Watch live
-node tools/arena-bridge.mjs spectate
-
-# Check standings
-node tools/arena-bridge.mjs scoreboard
-```
-
-In Minecraft: fly above the arena in spectator mode and watch agents argue in real-time with speech bubbles.
-
-Set via `node tools/setup.mjs` or `node tools/setup.mjs --theme executive`.
 
 ## Requirements
 
@@ -118,6 +197,20 @@ node tools/setup.mjs --theme modern_glass
 ```
 
 Config is stored in `~/.openclaw-office/config.json` (never committed).
+
+## Contributing
+
+1. Fork the repo and create a feature branch.
+2. Make your change and run the tests:
+
+   ```bash
+   cd foreman && npm run check   # typecheck + vitest + protocol doc
+   cd tools && npm test          # node --test
+   ```
+
+3. Open a pull request.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full guide.
 
 ## License
 
