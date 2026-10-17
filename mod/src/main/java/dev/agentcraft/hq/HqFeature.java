@@ -119,8 +119,13 @@ public final class HqFeature {
 			return 0;
 		}
 		String report = lastReport;
+		var player = ctx.getSource().getPlayer();
+		boolean spectate = ColiseumBuilder.ID.equals(id) && player != null;
+		if (spectate) {
+			ColiseumView.spectateFromAbove(player);
+		}
 		ctx.getSource().sendSuccess(() -> Component.literal("Built HQ '" + id + "': " + layout.anchors().size() + " anchors"
-			+ (report == null ? "" : ". " + report)), true);
+			+ (report == null ? "" : ". " + report) + (spectate ? ". Spectating from above" : "")), true);
 		return layout.anchors().size();
 	}
 
