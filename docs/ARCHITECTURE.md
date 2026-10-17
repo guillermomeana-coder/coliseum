@@ -17,7 +17,7 @@ This document is the map. It names the components, what each one owns, and how d
 
 ```
   +------------------+     +--------------------------------------------------+
-  | Claude Code/user |---->| Bridge CLI   tools/openclaw-bridge.mjs           |
+  | Claude Code/user |---->| Bridge CLI   tools/bridge.mjs                    |
   +------------------+     | foremancli   tools/foremancli.mjs                |
                            | Arena Bridge tools/arena-bridge.mjs              |
                            +-----------------------+--------------------------+
@@ -156,7 +156,7 @@ Both bridges are small Node scripts (ESM, `ws` package) in `tools/` that speak t
 ([protocol.md](protocol.md)) as just another client, so Claude Code or a shell can drive the team without
 opening Minecraft. Every connection is `ws://127.0.0.1:${AGENTCRAFT_PORT:-7878}` with `hello` -> `snapshot`.
 
-### Bridge CLI (`tools/openclaw-bridge.mjs`)
+### Bridge CLI (`tools/bridge.mjs`)
 
 `ForemanBridge.connect()` opens the socket, sends `{v:1, type:"hello", modVersion:"0.1.0", protocol:1,
 client:"openclaw"}` and waits for the `snapshot`. It keeps a local copy of the state (`foreman`, `agents`,
@@ -185,7 +185,7 @@ to open `decision.upsert` messages by sending `decision.answer` (`Always allow f
 `permission`; `Merge` for `merge` after checks on the decision context and the `diff`).
 
 ```
- Claude Code      openclaw-bridge          Foreman (:7878)            agents
+ Claude Code      bridge                   Foreman (:7878)            agents
      |  goal "Fix SEO"   |                        |                       |
      |------------------>|  ws connect            |                       |
      |                   |----------------------->|                       |
@@ -218,7 +218,7 @@ Related clients (all under `tools/`):
 - `tools/lib/devclient.mjs` and `tools/devcli.mjs`: not the Foreman. They talk to the **DevBridge** inside the
   running game (mod `dev/DevBridge`, `ws://127.0.0.1:${AGENTCRAFT_DEV_PORT:-7879}`) for `state`, `camera`,
   `shot`, `cmd`, `screen`, `key`, `quit` and so on (screenshots/QA).
-- `tools/launch-openclaw.mjs`: reads `~/.openclaw-office/config.json` (written by `tools/setup.mjs`) and
+- `tools/launch.mjs`: reads `~/.openclaw-office/config.json` (written by `tools/setup.mjs`) and
   launches the Foreman (with the game via `--game`, or a `--repo` override).
 
 ### Arena Bridge (`tools/arena-bridge.mjs`)
@@ -346,7 +346,7 @@ so geometry, anchors and interactivity are identical across themes.
 #### Selecting a theme
 
 There is no in-game theme command. The theme is read once, in the `ThemedHqBuilder()` constructor,
-from the `OPENCLAW_THEME` environment variable (default `warm_studio`). `tools/launch-openclaw.mjs`
+from the `OPENCLAW_THEME` environment variable (default `warm_studio`). `tools/launch.mjs`
 sets it from its config (`env.OPENCLAW_THEME = cfg.theme`) before starting the game; the
 `ThemedHqBuilder(Theme)` constructor allows programmatic use. Because the choice is made at startup,
 switching themes means restarting with a different value and re-running `/agentcraft hq openclaw`.
