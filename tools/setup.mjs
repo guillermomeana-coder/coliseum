@@ -10,6 +10,9 @@
  *   node tools/setup.mjs --theme executive
  *   node tools/setup.mjs --auth claude-login
  *   node tools/setup.mjs --auth api-key --key sk-ant-...
+ *   node tools/setup.mjs --hq-mode coliseum_nether
+ *
+ * Valid --hq-mode ids: openclaw, coliseum, coliseum_nether, coliseum_ice
  */
 
 import fs from 'node:fs';
