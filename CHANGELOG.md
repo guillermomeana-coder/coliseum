@@ -8,6 +8,11 @@ All notable changes to this project are documented here, in the style of
 > correspond to published tags. `t<N>` refers to the internal task numbers used
 > in commit messages.
 
+## [Foreman 1.0.0]
+
+### Changed
+- Bumped `foreman` package version from 0.1.0 to 1.0.0 (t45).
+
 ## [2.0.0] - Coliseum rename
 
 ### Added
