@@ -20,19 +20,24 @@ import java.util.Map;
  * Wraps StudioHqBuilder and applies a Theme by swapping materials post-build.
  * This preserves the proven layout and geometry while allowing visual customization.
  *
- * <p>The OPENCLAW_THEME environment variable selects a theme at startup:
+ * <p>The COLISEUM_THEME environment variable (legacy: OPENCLAW_THEME) selects a theme at startup:
  * {@code warm_studio} (default), {@code modern_glass}, or {@code executive}.
  */
 public final class ThemedHqBuilder implements HqBuilder {
-    public static final String ID = "openclaw";
+    public static final String ID = "coliseum_office";
+    /** The id this builder had before the Coliseum rename; still accepted as an alias. */
+    public static final String LEGACY_ID = "openclaw";
 
     private final StudioHqBuilder delegate = new StudioHqBuilder();
     private final Theme theme;
 
     public ThemedHqBuilder() {
-        String themeId = System.getenv("OPENCLAW_THEME");
+        String themeId = System.getenv("COLISEUM_THEME");
+        if (themeId == null) {
+            themeId = System.getenv("OPENCLAW_THEME");
+        }
         this.theme = Theme.byId(themeId != null ? themeId : "warm_studio");
-        AgentCraft.LOGGER.info("OpenClaw Office theme: {} ({})", theme.id(), theme.displayName());
+        AgentCraft.LOGGER.info("Coliseum Office theme: {} ({})", theme.id(), theme.displayName());
     }
 
     public ThemedHqBuilder(Theme theme) {
@@ -46,7 +51,7 @@ public final class ThemedHqBuilder implements HqBuilder {
 
     @Override
     public String description() {
-        return "OpenClaw Office (" + theme.displayName() + "): " + delegate.description();
+        return "Coliseum Office (" + theme.displayName() + "): " + delegate.description();
     }
 
     @Override
@@ -64,7 +69,7 @@ public final class ThemedHqBuilder implements HqBuilder {
             long t0 = System.nanoTime();
             int swapped = applyTheme(level);
             long ms = (System.nanoTime() - t0) / 1_000_000;
-            AgentCraft.LOGGER.info("OpenClaw theme '{}': swapped {} blocks in {} ms", theme.id(), swapped, ms);
+            AgentCraft.LOGGER.info("Coliseum theme '{}': swapped {} blocks in {} ms", theme.id(), swapped, ms);
             return (report != null ? report + "; " : "") + "theme " + theme.displayName() + " applied (" + swapped + " blocks)";
         }
         return report;
