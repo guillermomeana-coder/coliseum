@@ -40,7 +40,7 @@ public final class HqFeature {
 		HqBuilders.register(new ColiseumBuilder());
 		HqBuilders.register(NetherColiseum.create());
 		HqBuilders.register(IceColiseum.create());
-		HqBuilders.setDefault(ColiseumBuilder.ID);
+		HqBuilders.setDefault(defaultBuilderId());
 		// A fresh HQ world (no saved layout yet) gets the default HQ built before the player joins, so
 		// the first launch walks straight into it. AGENTCRAFT_HQ_AUTOBUILD=0 turns this off.
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
@@ -70,6 +70,28 @@ public final class HqFeature {
 				})
 				.executes(ctx -> build(ctx, StringArgumentType.getString(ctx, "builder"), false))
 				.then(Commands.literal("force").executes(ctx -> build(ctx, StringArgumentType.getString(ctx, "builder"), true))))));
+	}
+
+	/**
+	 * The default builder: -Dagentcraft.hq.default, then OPENCLAW_HQ_DEFAULT (set by the launcher from the
+	 * setup wizard's hqMode). Unknown ids warn and fall back to the coliseum. Call after all registers.
+	 */
+	private static String defaultBuilderId() {
+		String v = System.getProperty("agentcraft.hq.default");
+		if (v == null) {
+			v = System.getenv("OPENCLAW_HQ_DEFAULT");
+		}
+		String id = v == null ? "" : v.trim().toLowerCase(Locale.ROOT);
+		if (id.isEmpty()) {
+			return ColiseumBuilder.ID;
+		}
+		if (HqBuilders.get(id) != null) {
+			AgentCraft.LOGGER.info("HQ default builder '{}' (from OPENCLAW_HQ_DEFAULT)", id);
+			return id;
+		}
+		AgentCraft.LOGGER.warn("Unknown HQ default builder '{}' (OPENCLAW_HQ_DEFAULT); known: {}; falling back to '{}'",
+			id, HqBuilders.ids(), ColiseumBuilder.ID);
+		return ColiseumBuilder.ID;
 	}
 
 	private static boolean autoBuild() {
