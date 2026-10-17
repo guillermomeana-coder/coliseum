@@ -194,7 +194,28 @@ npm run setup     # interactive setup wizard (tools/setup.mjs)
 npm run launch    # start the team (tools/launch.mjs); pass flags after --, e.g. npm run launch -- --game
 npm run bridge    # CLI bridge (tools/bridge.mjs); e.g. npm run bridge -- status
 npm run arena     # arena bridge (tools/arena-bridge.mjs)
+npm run install-mod  # install the Fabric mod into Minecraft (tools/install-mod.mjs)
 ```
+
+## Install the mod into your Minecraft
+
+```bash
+npm run install-mod                                   # auto-detects Java 25 and your Minecraft folder
+npm run install-mod -- --minecraft-dir /path/to/.minecraft
+npm run install-mod -- --dry-run --skip-build         # print the steps, change nothing
+```
+
+It finds Java 25, installs the Fabric loader if missing, builds the mod with Gradle, copies the jar
+into `mods/` (replacing older `agentcraft-*.jar`) and downloads Fabric API. Other flags: `--skip-build`,
+`--skip-fabric`, `-h`. Afterwards pick the `fabric-loader-<loader>-<mc>` profile in the Minecraft launcher.
+
+**Java 25 is required** ([Eclipse Temurin 25](https://adoptium.net/temurin/releases/?version=25)):
+
+- **Windows:** `winget install EclipseAdoptium.Temurin.25.JDK`; Minecraft folder is `%APPDATA%\.minecraft`.
+- **macOS:** `brew install --cask temurin@25`; folder is `~/Library/Application Support/minecraft`.
+- **Linux:** install `temurin-25-jdk` (Adoptium repo) or `jdk25-openjdk`; folder is `~/.minecraft`.
+
+Run the Minecraft launcher once first so the folder exists, or pass `--minecraft-dir`.
 
 ## Requirements
 
