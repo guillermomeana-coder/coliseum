@@ -151,6 +151,9 @@ public final class HqFeature {
 				String.format(Locale.ROOT, "setworldspawn %d %d %d %.1f 0", (int) Math.floor(spawn.x()), (int) Math.floor(spawn.y()),
 					(int) Math.floor(spawn.z()), spawn.yaw()));
 		}
+		if (ColiseumBuilder.ID.equals(builder.id())) {
+			ColiseumEnvironment.apply(level);
+		}
 		AgentCraft.LOGGER.info("HQ '{}' built in {} ms{}", builder.id(), (System.nanoTime() - t0) / 1_000_000,
 			lastReport == null ? "" : ": " + lastReport);
 		return layout;

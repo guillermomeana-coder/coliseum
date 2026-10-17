@@ -62,6 +62,9 @@ public final class ColiseumBuilder implements HqBuilder {
     static final int WALL_TOP = FEET + NUM_TIERS * TIER_H; // y=86
     static final int PARAPET = WALL_TOP + 2;
 
+    /** A fire tops both columns of every Nth outer-wall arch. */
+    static final int FIRE_EVERY = 4;
+
     /** Gate half-width (width 3 means -1..+1). */
     static final int GATE_W = 1;
 
@@ -147,6 +150,7 @@ public final class ColiseumBuilder implements HqBuilder {
         ruins(p);
         pillarBanners(p);
         redCarpet(p);
+        pillarFires(p);
         anchors(p, a);
 
         BlockState[] previous = PlanStore.load(level.getServer(), ID, SITE, p.size());
@@ -351,6 +355,35 @@ public final class ColiseumBuilder implements HqBuilder {
                     // Arch top (rounded)
                     p.set(ax, baseY + 3, az, ARCH_BLOCK);
                 }
+            }
+        }
+    }
+
+    // ================================================================== fires on outer wall pillars
+
+    private static void pillarFires(Plan p) {
+        int numArches = 48;
+        for (int i = 0; i < numArches; i += FIRE_EVERY) {
+            double angle = Math.toRadians(i * (360.0 / numArches));
+            int ax = (int) Math.round(OUTER_RX * Math.sin(angle));
+            int az = (int) Math.round(OUTER_RZ * Math.cos(angle));
+            if (isGate(ax, az)) continue;
+
+            double normAngle = Math.atan2(ax / (double) OUTER_RX, az / (double) OUTER_RZ);
+            int dx = (int) Math.round(Math.cos(normAngle));
+            int dz = (int) Math.round(-Math.sin(normAngle));
+
+            for (int s : new int[]{-1, 1}) {
+                int cx = ax + s * dz;
+                int cz = az + s * dx;
+                if (!inEllipse(cx, cz, OUTER_RX + 1.5, OUTER_RZ + 1.5)) continue;
+                if (isGate(cx, cz)) continue;
+
+                // Solid support column up to the parapet (overrides parapet/ruins air), fire on top.
+                for (int y = WALL_TOP - 1; y <= WALL_TOP + 1; y++) {
+                    p.set(cx, y, cz, WALL_ACCENT);
+                }
+                p.set(cx, PARAPET, cz, Blocks.CAMPFIRE.defaultBlockState());
             }
         }
     }
