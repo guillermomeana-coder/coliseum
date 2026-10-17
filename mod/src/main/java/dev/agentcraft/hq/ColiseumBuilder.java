@@ -143,6 +143,7 @@ public final class ColiseumBuilder implements HqBuilder {
         gatePodiums(p);
         parapet(p);
         championStage(p, a);
+        ColiseumAmbience.stageNoteBlocks(p);
         arenaSpots(p, a);
         scoreboardWall(p, a);
         eliminatedZone(p, a);
