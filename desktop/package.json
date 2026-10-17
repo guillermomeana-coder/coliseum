@@ -1,5 +1,14 @@
 {
   "name": "coliseum-desktop",
+  "version": "0.1.0",
   "private": true,
-  "type": "commonjs"
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
 }
