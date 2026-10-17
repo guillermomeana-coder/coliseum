@@ -49,7 +49,7 @@ Launcher options are in [tools/README.md](tools/README.md).
 Common changes:
 
 - **New theme:** `mod/src/main/java/dev/agentcraft/hq/Theme.java` and `ThemedHqBuilder.java`; theme choice is also handled in `tools/setup.mjs`.
-- **New office bridge command:** `tools/openclaw-bridge.mjs` (arena commands: `tools/arena-bridge.mjs`).
+- **New office bridge command:** `tools/bridge.mjs` (arena commands: `tools/arena-bridge.mjs`).
 - **Protocol message:** `foreman/src/protocol.ts`, then regenerate the doc (below).
 
 ## Running tests
