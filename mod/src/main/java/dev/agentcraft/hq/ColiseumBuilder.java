@@ -753,18 +753,6 @@ public final class ColiseumBuilder implements HqBuilder {
 
     // ================================================================== anchors
 
-    /** Red carpet from the south edge of the champion stage out through the south gate to the end of the podium landing. */
-    private static void redCarpet(Plan p) {
-        BlockState carpet = Blocks.CARPET.red().defaultBlockState();
-        for (int x = -GATE_W; x <= GATE_W; x++) {
-            for (int z = STAGE_R + 1; z <= OUTER_RZ + 5; z++) {
-                if (!p.get(x, FEET, z).isAir()) continue;
-                if (p.get(x, FLOOR, z).isAir()) continue;
-                p.set(x, FEET, z, carpet);
-            }
-        }
-    }
-
     private static void anchors(Plan p, Anchors.Builder a) {
         // Task wall — positioned at the front face of the board (panel depth 3px = 0.1875 blocks)
         a.put(AnchorNames.TASK_WALL, -ARENA_RX + 1 + 1 - 0.1875, FEET + 1, CZ + 0.5, 90, 0);
