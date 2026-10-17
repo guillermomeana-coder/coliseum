@@ -73,24 +73,34 @@ public final class HqFeature {
 	}
 
 	/**
-	 * The default builder: -Dagentcraft.hq.default, then OPENCLAW_HQ_DEFAULT (set by the launcher from the
-	 * setup wizard's hqMode). Unknown ids warn and fall back to the coliseum. Call after all registers.
+	 * The default builder: -Dagentcraft.hq.default, then COLISEUM_HQ_DEFAULT (set by the launcher from the
+	 * setup wizard's hqMode), then the legacy OPENCLAW_HQ_DEFAULT. The legacy id "openclaw" maps to
+	 * coliseum_office. Unknown ids warn and fall back to the coliseum. Call after all registers.
 	 */
 	private static String defaultBuilderId() {
-		String v = System.getProperty("agentcraft.hq.default");
+		String source = "agentcraft.hq.default";
+		String v = System.getProperty(source);
 		if (v == null) {
-			v = System.getenv("OPENCLAW_HQ_DEFAULT");
+			source = "COLISEUM_HQ_DEFAULT";
+			v = System.getenv(source);
+		}
+		if (v == null) {
+			source = "OPENCLAW_HQ_DEFAULT";
+			v = System.getenv(source);
 		}
 		String id = v == null ? "" : v.trim().toLowerCase(Locale.ROOT);
 		if (id.isEmpty()) {
 			return ColiseumBuilder.ID;
 		}
+		if (ThemedHqBuilder.LEGACY_ID.equals(id)) {
+			id = ThemedHqBuilder.ID;
+		}
 		if (HqBuilders.get(id) != null) {
-			AgentCraft.LOGGER.info("HQ default builder '{}' (from OPENCLAW_HQ_DEFAULT)", id);
+			AgentCraft.LOGGER.info("HQ default builder '{}' (from {})", id, source);
 			return id;
 		}
-		AgentCraft.LOGGER.warn("Unknown HQ default builder '{}' (OPENCLAW_HQ_DEFAULT); known: {}; falling back to '{}'",
-			id, HqBuilders.ids(), ColiseumBuilder.ID);
+		AgentCraft.LOGGER.warn("Unknown HQ default builder '{}' ({}); known: {}; falling back to '{}'",
+			id, source, HqBuilders.ids(), ColiseumBuilder.ID);
 		return ColiseumBuilder.ID;
 	}
 
@@ -127,7 +137,8 @@ public final class HqFeature {
 		return v != null && (v.trim().equals("1") || v.trim().equalsIgnoreCase("true") || v.trim().equalsIgnoreCase("on"));
 	}
 
-	private static int build(CommandContext<CommandSourceStack> ctx, String id, boolean force) {
+	private static int build(CommandContext<CommandSourceStack> ctx, String requestedId, boolean force) {
+		String id = ThemedHqBuilder.LEGACY_ID.equals(requestedId) ? ThemedHqBuilder.ID : requestedId;
 		String refused = refusal(ctx.getSource());
 		if (refused != null) {
 			ctx.getSource().sendFailure(Component.literal(refused));
@@ -157,8 +168,11 @@ public final class HqFeature {
 		return layout.anchors().size();
 	}
 
-	/** True for the plain coliseum and its themed variants ({@code coliseum_*}). */
+	/** True for the plain coliseum and its themed variants ({@code coliseum_*}), but not the office HQ. */
 	static boolean isColiseum(String id) {
+		if (ThemedHqBuilder.ID.equals(id)) {
+			return false;
+		}
 		return ColiseumBuilder.ID.equals(id) || id.startsWith(ColiseumBuilder.ID + "_");
 	}
 
