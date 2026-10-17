@@ -19,7 +19,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * HQ feature (common side): {@code /agentcraft hq [builder] [force]} builds the HQ and publishes its
  * anchors. The studio builder keeps cells the player changed since its last build; {@code force}
- * resets them too.
+ * resets them too. {@code /agentcraft spectate} toggles the caller between spectator and their previous
+ * gamemode (see {@link SpectateToggle}).
  */
 public final class HqFeature {
 	private HqFeature() {
@@ -54,6 +55,7 @@ public final class HqFeature {
 				}
 			}
 		});
+		AgentCraftCommands.sub(root -> root.then(Commands.literal("spectate").executes(SpectateToggle::toggle)));
 		AgentCraftCommands.sub(root -> root.then(Commands.literal("hq")
 			.executes(ctx -> build(ctx, HqBuilders.defaultId(), false))
 			.then(Commands.literal("force").executes(ctx -> build(ctx, HqBuilders.defaultId(), true)))
