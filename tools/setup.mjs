@@ -12,7 +12,7 @@
  *   node tools/setup.mjs --auth api-key --key sk-ant-...
  *   node tools/setup.mjs --hq-mode coliseum_nether
  *
- * Valid --hq-mode ids: openclaw, coliseum, coliseum_nether, coliseum_ice
+ * Valid --hq-mode ids: coliseum_office, coliseum, coliseum_nether, coliseum_ice
  */
 
 import fs from 'node:fs';
@@ -37,17 +37,22 @@ const AUTH_METHODS = [
 ];
 
 const HQ_MODES = [
-  { id: 'openclaw', name: 'Office', desc: 'Warm studio office — the team works at desks (default)' },
+  { id: 'coliseum_office', name: 'Office', desc: 'Warm studio office — the team works at desks (default)' },
   { id: 'coliseum', name: 'Coliseum', desc: 'Battle royale arena — 100 agents debate simultaneously' },
   { id: 'coliseum_nether', name: 'Nether Coliseum', desc: 'Coliseum arena in a hellish Nether palette' },
   { id: 'coliseum_ice', name: 'Ice Coliseum', desc: 'Coliseum arena in a frozen ice palette' },
 ];
 
+// Legacy id for the office mode, mapped to coliseum_office on load.
+const LEGACY_OFFICE_MODE = 'openclaw';
+
 function loadConfig() {
   try {
-    return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    const cfg = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    if (cfg.hqMode === LEGACY_OFFICE_MODE) cfg.hqMode = 'coliseum_office';
+    return cfg;
   } catch {
-    return { theme: 'warm_studio', auth: 'claude-login', apiKey: '', repos: [], hqMode: 'openclaw' };
+    return { theme: 'warm_studio', auth: 'claude-login', apiKey: '', repos: [], hqMode: 'coliseum_office' };
   }
 }
 
@@ -92,7 +97,7 @@ async function interactive() {
   // HQ Mode
   console.log('\nHQ Mode:');
   HQ_MODES.forEach((m, i) => console.log(`  ${i + 1}) ${m.name} — ${m.desc}`));
-  const modeChoice = await ask(rl, `\nChoose mode [1-${HQ_MODES.length}] (current: ${cfg.hqMode || 'openclaw'}): `);
+  const modeChoice = await ask(rl, `\nChoose mode [1-${HQ_MODES.length}] (current: ${cfg.hqMode || 'coliseum_office'}): `);
   const modeIdx = parseInt(modeChoice) - 1;
   if (modeIdx >= 0 && modeIdx < HQ_MODES.length) cfg.hqMode = HQ_MODES[modeIdx].id;
 
