@@ -6,7 +6,7 @@
   "type": "commonjs",
   "main": "main.js",
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test"
   },
   "dependencies": {
     "ws": "^8.22.0"
