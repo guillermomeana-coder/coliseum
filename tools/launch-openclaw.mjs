@@ -2,7 +2,7 @@
 /**
  * OpenClaw Office — Unified Launcher
  *
- * Reads config from ~/.openclaw-office/config.json (created by setup.mjs)
+ * Reads config from ~/.coliseum/config.json (created by setup.mjs)
  * and launches the Foreman with the right auth, theme, and repos.
  *
  * Usage:
@@ -15,7 +15,7 @@ import { execSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const HOME = path.join(process.env.HOME || process.env.USERPROFILE, '.openclaw-office');
+const HOME = path.join(process.env.HOME || process.env.USERPROFILE, '.coliseum');
 const CONFIG_PATH = path.join(HOME, 'config.json');
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')), '..');
 

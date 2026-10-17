@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * OpenClaw Arena Bridge — connects the Arena skill to the Coliseum visualization.
+ * Coliseum Arena Bridge — connects the Arena skill to the Coliseum visualization.
  *
  * Manages a battle royale of N agents debating the same topic simultaneously.
  * Each agent gets an arena spot, their arguments are broadcast as speech,
@@ -159,7 +159,7 @@ class ArenaBridge {
 const [cmd, ...args] = process.argv.slice(2);
 
 if (!cmd || cmd === 'help') {
-  console.log(`OpenClaw Arena — Battle Royale Bridge
+  console.log(`Coliseum Arena — Battle Royale Bridge
 
 Commands:
   start "<topic>" [--agents N]    Start a battle royale (default: 16 agents)
@@ -185,7 +185,7 @@ switch (cmd) {
     }
 
     console.log(`\n${'='.repeat(50)}`);
-    console.log(`  OPENCLAW ARENA — BATTLE ROYALE`);
+    console.log(`  COLISEUM ARENA — BATTLE ROYALE`);
     console.log(`${'='.repeat(50)}`);
     console.log(`  Topic:    ${topic}`);
     console.log(`  Fighters: ${agentCount}`);

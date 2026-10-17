@@ -1,4 +1,4 @@
-# OpenClaw Office
+# Coliseum
 
 **Your AI development team, working inside a Minecraft office you can walk around in.**
 
@@ -114,7 +114,7 @@ Register several repositories (`repo-add <path>`, list with `repos`) and target 
 
 <!-- Placeholders: the images below marked "(placeholder)" still need to be captured and added under docs/img/readme/. -->
 
-![The OpenClaw Office HQ](docs/img/readme/hero.jpg)
+![The Coliseum HQ](docs/img/readme/hero.jpg)
 *The HQ, with agents at work.*
 
 ![Debate podium](docs/img/readme/podium.jpg)
@@ -211,7 +211,7 @@ node tools/setup.mjs --auth claude-login
 node tools/setup.mjs --theme modern_glass
 ```
 
-Config is stored in `~/.openclaw-office/config.json` (never committed).
+Config is stored in `~/.coliseum/config.json` (never committed).
 
 ## Contributing
 
@@ -233,4 +233,6 @@ MIT License. See [LICENSE](./LICENSE) for the full text.
 
 ## Credits
 
-Built on [AgentCraft](https://github.com/blendi-remade/agentcraft) by [Blendi](https://github.com/blendi-remade). Enhanced by [OpenClaw](https://github.com/openclaw).
+Created by **Guillermo Von Papendieck** ([guillermomeana-coder](https://github.com/guillermomeana-coder)) — OpenClaw / [Elevyte](https://orionblue.space).
+
+Built on [AgentCraft](https://github.com/blendi-remade/agentcraft) by [Blendi](https://github.com/blendi-remade). Development assisted by Claude (Anthropic).

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * OpenClaw Office — Interactive Setup
+ * Coliseum — Interactive Setup
  *
  * Configures auth method, theme, and repos before launching.
  *
@@ -19,7 +19,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 
-const HOME = path.join(process.env.HOME || process.env.USERPROFILE, '.openclaw-office');
+const HOME = path.join(process.env.HOME || process.env.USERPROFILE, '.coliseum');
 const CONFIG_PATH = path.join(HOME, 'config.json');
 
 const THEMES = [
@@ -66,7 +66,7 @@ async function interactive() {
   const cfg = loadConfig();
 
   console.log('\n╔══════════════════════════════════════╗');
-  console.log('║     OpenClaw Office — Setup          ║');
+  console.log('║     Coliseum — Setup          ║');
   console.log('╚══════════════════════════════════════╝\n');
 
   // Auth

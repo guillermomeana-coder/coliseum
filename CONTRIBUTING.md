@@ -1,4 +1,4 @@
-# Contributing to OpenClaw Office
+# Contributing to Coliseum
 
 Thanks for helping out. This guide covers setup, where things live, how to test, and how to send changes.
 
