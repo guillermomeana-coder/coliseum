@@ -97,7 +97,11 @@
     const saved = await api.saveConfig(cfg);
     if (!saved.ok) { errorEl.textContent = saved.errors.join('; '); return; }
     const res = await api.start(cfg);
-    if (!res.ok) errorEl.textContent = 'Could not start: ' + (res.reason || 'unknown error');
+    if (!res.ok) {
+      errorEl.textContent = 'Could not start: ' + (res.errors || [res.reason || 'unknown error']).join('; ');
+      return;
+    }
+    showRunning('starting', []);
   }
 
   const renderers = [renderAuth, renderTheme, renderRepos, renderSummary];
@@ -123,10 +127,53 @@
     if (!errorEl.textContent) { step = Math.min(LAST, step + 1); render(); }
   });
 
-  api.loadConfig().then(res => {
+  // --- Running view ---
+  const runningEl = document.getElementById('running');
+  const navEl = document.getElementById('nav');
+  const statusEl = document.getElementById('run-status');
+  const logEl = document.getElementById('log');
+  const MAX_LOG = 200;
+  let running = false;
+
+  function appendLog(line) {
+    const stick = logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 8;
+    logEl.append(document.createTextNode(line + '\n'));
+    while (logEl.childNodes.length > MAX_LOG) logEl.firstChild.remove();
+    if (stick) logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function setStatus(s) { statusEl.textContent = s; statusEl.dataset.status = s; }
+
+  function showRunning(status, lines) {
+    running = true;
+    errorEl.textContent = '';
+    content.hidden = true;
+    navEl.hidden = true;
+    runningEl.hidden = false;
+    logEl.replaceChildren();
+    lines.forEach(appendLog);
+    setStatus(status);
+  }
+
+  function showSetup() {
+    running = false;
+    runningEl.hidden = true;
+    content.hidden = false;
+    navEl.hidden = false;
+    render();
+  }
+
+  api.onLog(line => { if (running) appendLog(line); });
+  api.onStatus(s => { if (running) setStatus(s); });
+  document.getElementById('stop').addEventListener('click', () => api.stop());
+  document.getElementById('open-setup').addEventListener('click', showSetup);
+
+  Promise.all([api.loadConfig(), api.runState()]).then(([res, run]) => {
     cfg = res.config;
     if (!Array.isArray(cfg.repos)) cfg.repos = [];
     meta = res;
+    if (res.valid) step = LAST;
     render();
+    if (run.status !== 'stopped') showRunning(run.status, run.logs);
   });
 })();
