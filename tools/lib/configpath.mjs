@@ -1,3 +1,4 @@
+// KEEP IN SYNC with desktop/lib/config.js (CommonJS port of this resolution for Electron).
 // Platform-appropriate location of the Coliseum config. Nothing is created at import time.
 import fs from 'node:fs';
 import os from 'node:os';

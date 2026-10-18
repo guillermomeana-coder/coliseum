@@ -30,13 +30,43 @@ function defaults() {
   return { theme: 'warm_studio', auth: 'claude-login', apiKey: '', repos: [], hqMode: 'coliseum_office' };
 }
 
-function configPath(home) {
-  return path.join(home, '.coliseum', 'config.json');
+// KEEP IN SYNC with tools/lib/configpath.mjs (ESM; Electron's Node can't require it,
+// so the resolution is reimplemented here). desktop/test/config.test.js checks parity.
+const os = require('node:os');
+
+function resolveOpts(o = {}) {
+  return { platform: o.platform ?? process.platform, env: o.env ?? process.env, homedir: o.homedir ?? os.homedir() };
 }
 
-function loadConfig(home) {
+/** Directory holding config.json. COLISEUM_HOME overrides everything. */
+function configDir(opts) {
+  const { platform, env, homedir } = resolveOpts(opts);
+  if (env.COLISEUM_HOME) return env.COLISEUM_HOME;
+  if (platform === 'win32') return path.win32.join(env.APPDATA || path.win32.join(homedir, 'AppData', 'Roaming'), 'Coliseum');
+  if (platform === 'darwin') return path.posix.join(homedir, 'Library', 'Application Support', 'Coliseum');
+  return path.posix.join(env.XDG_CONFIG_HOME || path.posix.join(homedir, '.config'), 'coliseum');
+}
+
+function configPath(opts) {
+  const { platform } = resolveOpts(opts);
+  return (platform === 'win32' ? path.win32 : path.posix).join(configDir(opts), 'config.json');
+}
+
+/** Pre-t57 location: ~/.coliseum/config.json. */
+function legacyConfigPath(opts) {
+  return path.join(resolveOpts(opts).homedir, '.coliseum', 'config.json');
+}
+
+function resolveReadPath(opts) {
+  const p = configPath(opts);
+  if (fs.existsSync(p)) return p;
+  const legacy = legacyConfigPath(opts);
+  return fs.existsSync(legacy) ? legacy : p;
+}
+
+function loadConfig(opts) {
   try {
-    const cfg = JSON.parse(fs.readFileSync(configPath(home), 'utf8'));
+    const cfg = JSON.parse(fs.readFileSync(resolveReadPath(opts), 'utf8'));
     if (cfg.hqMode === LEGACY_OFFICE_MODE) cfg.hqMode = 'coliseum_office';
     return cfg;
   } catch {
@@ -44,8 +74,9 @@ function loadConfig(home) {
   }
 }
 
-function saveConfig(home, cfg) {
-  const file = configPath(home);
+/** Writes to the new location (legacy file is kept). Returns the path written. */
+function saveConfig(opts, cfg) {
+  const file = configPath(opts);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(cfg, null, 2));
   return file;
@@ -69,4 +100,4 @@ function validateConfig(cfg) {
   return errors;
 }
 
-module.exports = { THEMES, AUTH_METHODS, HQ_MODES, defaults, configPath, loadConfig, saveConfig, validateConfig };
+module.exports = { THEMES, AUTH_METHODS, HQ_MODES, defaults, configDir, configPath, legacyConfigPath, resolveReadPath, loadConfig, saveConfig, validateConfig };

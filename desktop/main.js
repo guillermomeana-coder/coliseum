@@ -104,7 +104,7 @@ function setWatcher(port) {
 }
 
 async function startForeman(cfg) {
-  const conf = cfg || config.loadConfig(os.homedir());
+  const conf = cfg || config.loadConfig();
   const errors = config.validateConfig(conf);
   if (errors.length) return { ok: false, errors };
   logs.clear();
@@ -116,8 +116,8 @@ async function startForeman(cfg) {
 
 function registerIpc() {
   ipcMain.handle('config:load', () => {
-    const cfg = config.loadConfig(os.homedir());
-    const exists = fs.existsSync(config.configPath(os.homedir()));
+    const cfg = config.loadConfig();
+    const exists = fs.existsSync(config.resolveReadPath());
     return {
       config: cfg,
       valid: exists && config.validateConfig(cfg).length === 0,
@@ -130,7 +130,7 @@ function registerIpc() {
   ipcMain.handle('config:save', (_e, cfg) => {
     const errors = config.validateConfig(cfg);
     if (errors.length) return { ok: false, errors };
-    return { ok: true, path: config.saveConfig(os.homedir(), cfg) };
+    return { ok: true, path: config.saveConfig(undefined, cfg) };
   });
 
   ipcMain.handle('dialog:pickRepo', async () => {
