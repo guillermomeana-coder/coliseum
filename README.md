@@ -15,6 +15,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the version history.
 - [The Bridge (CLI Integration)](#the-bridge-cli-integration)
 - [Office Themes](#office-themes)
 - [Coliseum CLI](#coliseum-cli)
+- [Desktop app](#desktop-app)
 - [Requirements](#requirements)
 - [Project Structure](#project-structure)
 - [Configuration](#configuration)
@@ -235,6 +236,10 @@ into `mods/` (replacing older `agentcraft-*.jar`) and downloads Fabric API. Othe
 - **Linux:** install `temurin-25-jdk` (Adoptium repo) or `jdk25-openjdk`; folder is `~/.minecraft`.
 
 Run the Minecraft launcher once first so the folder exists, or pass `--minecraft-dir`.
+
+## Desktop app
+
+An Electron app in `desktop/` wraps the setup wizard, Foreman launch and a tray status icon, and builds to a single Windows `coliseum.exe` (`cd desktop && npm install && npm run dist`). See [docs/desktop.md](docs/desktop.md).
 
 ## Requirements
 

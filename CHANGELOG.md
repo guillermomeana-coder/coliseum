@@ -8,6 +8,11 @@ All notable changes to this project are documented here, in the style of
 > correspond to published tags. `t<N>` refers to the internal task numbers used
 > in commit messages.
 
+## [Unreleased]
+
+### Added
+- Desktop app packaging: electron-builder config producing `coliseum.exe` (portable) and an NSIS installer, resource preparation script and `docs/desktop.md` (t52).
+
 ## [Foreman 1.0.0]
 
 ### Changed

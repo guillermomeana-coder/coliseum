@@ -9,12 +9,88 @@
   "type": "commonjs",
   "scripts": {
     "start": "electron .",
-    "test": "node --test"
+    "test": "node --test",
+    "prepack": "node scripts/prepare-resources.mjs",
+    "predist": "node scripts/prepare-resources.mjs",
+    "dist": "electron-builder --win portable nsis",
+    "pack": "electron-builder --win --dir"
   },
   "dependencies": {
     "ws": "^8.22.0"
   },
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^44.9.0",
+    "electron-builder": "^26.17.0"
+  },
+  "build": {
+    "appId": "space.orionblue.coliseum",
+    "productName": "Coliseum",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**",
+      "renderer/**",
+      "assets/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../foreman",
+        "to": "app-root/foreman",
+        "filter": [
+          "src/**",
+          "package.json",
+          "!**/test/**",
+          "!**/*.log",
+          "!**/*.log.*"
+        ]
+      },
+      {
+        "from": "../tools",
+        "to": "app-root/tools",
+        "filter": [
+          "bridge.mjs",
+          "setup.mjs",
+          "package.json",
+          "lib/**",
+          "!**/test/**",
+          "!**/*.log",
+          "!**/*.log.*"
+        ]
+      },
+      {
+        "from": "../foreman/node_modules",
+        "to": "app-root/foreman/node_modules",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../tools/node_modules",
+        "to": "app-root/tools/node_modules",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        "portable",
+        "nsis"
+      ],
+      "artifactName": "coliseum.exe"
+    },
+    "portable": {
+      "artifactName": "coliseum.exe"
+    },
+    "nsis": {
+      "artifactName": "coliseum-setup-${version}.exe",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
