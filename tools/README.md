@@ -114,6 +114,7 @@ Screenshot QA (scene format, anchor contract, judging): [docs/QA.md](../docs/QA.
 | file | |
 | --- | --- |
 | `launch.ps1`, `stop.ps1`, `launch.cmd`, `stop.cmd` | launcher |
+| `coliseum.mjs` | `coliseum` CLI: dispatches to `setup`, `launch`, `doctor`, `bridge`, `arena` (`npm link` from the repo root; see the root README) |
 | `lib/procs.ps1` | shared PowerShell helpers (run files, process identity, Ctrl+Break, ports) |
 | `lib/bgrun.mjs` | background runner: owns the log files and the hidden console of a background process |
 | `devcli.mjs`, `lib/devclient.mjs` | DevBridge client |

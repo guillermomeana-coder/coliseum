@@ -14,6 +14,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the version history.
 - [Screenshots](#screenshots)
 - [The Bridge (CLI Integration)](#the-bridge-cli-integration)
 - [Office Themes](#office-themes)
+- [Coliseum CLI](#coliseum-cli)
 - [Requirements](#requirements)
 - [Project Structure](#project-structure)
 - [Configuration](#configuration)
@@ -184,6 +185,24 @@ Set with `node tools/setup.mjs --theme executive` (or run the wizard).
 | `coliseum_ice` | Ice Coliseum -- the same arena in a frozen ice palette |
 
 Switch in-game: `/agentcraft hq <id>` (`coliseum`, `coliseum_nether`, `coliseum_ice`, or `openclaw` to go back to the office)
+
+## Coliseum CLI
+
+One `coliseum` command wraps the scripts in `tools/`. Install it from the repo root with `npm link` (the tools still need `cd tools && npm install` once):
+
+```bash
+npm link
+```
+
+| command | runs |
+| --- | --- |
+| `coliseum setup` | interactive setup wizard (`tools/setup.mjs`) |
+| `coliseum launch` | start the team (`tools/launch.mjs`) |
+| `coliseum doctor` | check your install and config (`tools/doctor.mjs`) |
+| `coliseum bridge <args>` | CLI bridge (`tools/bridge.mjs`) |
+| `coliseum arena <args>` | arena bridge (`tools/arena-bridge.mjs`) |
+
+`coliseum` with no arguments prints help; `coliseum <cmd> --help` shows help for that command. Without linking, `node tools/coliseum.mjs <cmd> ...` works the same.
 
 ## npm Scripts
 
