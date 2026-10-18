@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Component;
  * The {@code /agentcraft} command root. Features add their own sub-commands with
  * {@link #sub(Consumer)} from their {@code init()}, so nobody has to edit this file:
  * <pre>
- * AgentCraftCommands.sub(root -> root.then(Commands.literal("hq").executes(ctx -> ...)));
+ * AgentCraftCommands.sub(root -> root.then(Commands.literal("elevyte").executes(ctx -> ...)));
  * </pre>
  * Built in: {@code /agentcraft anchors} lists the published anchors.
  */
