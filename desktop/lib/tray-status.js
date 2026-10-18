@@ -82,7 +82,7 @@ class StatusWatcher extends EventEmitter {
    */
   constructor(opts = {}) {
     super();
-    this.port = opts.port ?? Number(process.env.AGENTCRAFT_PORT || 7878);
+    this.port = opts.port ?? Number(process.env.COLISEUM_PORT || 7878);
     this.host = opts.host ?? '127.0.0.1';
     this.WebSocket = opts.WebSocket || null;
     this.backoff = opts.backoff || null;

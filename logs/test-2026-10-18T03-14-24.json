@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-10-18T03:14:48.946Z",
+  "platform": "win32",
+  "nodeVersion": "v24.14.1",
+  "javaVersion": "25.0.4.1",
+  "results": [
+    {
+      "name": "mod compileJava",
+      "status": "PASS",
+      "elapsed": "5.95",
+      "detail": "To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.\r\nDaemon will be stopped at the end of the build \r\nReusing configuration cache.\r\n> Task :compileJava UP-TO-DATE\r\n\r\nBUILD SUCCESSFUL in 5s\r\n1 actionable task: 1 up-to-date\r\nConfiguration cache entry reused."
+    },
+    {
+      "name": "mod compileClientJava",
+      "status": "PASS",
+      "elapsed": "6.26",
+      "detail": "To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.\r\nDaemon will be stopped at the end of the build \r\nReusing configuration cache.\r\n> Task :processResources UP-TO-DATE\r\n> Task :compileJava UP-TO-DATE\r\n> Task :classes UP-TO-DATE\r\n> Task :compileClientJava UP-TO-DATE\r\n\r\nBUILD SUCCESSFUL in 5s\r\n3 actionable tasks: 3 up-to-date\r\nConfiguration cache entry reused."
+    },
+    {
+      "name": "mod build jar",
+      "status": "PASS",
+      "elapsed": "12.31",
+      "detail": "To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.\r\nDaemon will be stopped at the end of the build \r\nCalculating task graph as no cached configuration is available for tasks: jar\r\n\r\n> Configure project :\r\nFabric Loom: 1.18.2\r\n\r\n> Task :processClientResources UP-TO-DATE\r\n> Task :processResources UP-TO-DATE\r\n> Task :compileJava UP-TO-DATE\r\n> Task :classes UP-TO-DATE\r\n> Task :processIncludeJars\r\n> Task :compileClientJava UP-TO-DATE\r\n> Task :jar\r\n\r\nBUILD SUCCESSFUL in 12s\r\n6 actionable tasks: 2 executed, 4 up-to-date\r\nConfiguration cache entry stored."
+    }
+  ],
+  "totals": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "errors": 0
+  }
+}

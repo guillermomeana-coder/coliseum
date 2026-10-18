@@ -107,7 +107,7 @@ test('log lines emitted with source; reuses a live foreman', async () => {
   l.on('log', (line, src) => logs.push([line, src]));
   await l.start({ config: {} });
   assert.strictEqual(spawn.calls.length, 1);
-  assert.strictEqual(spawn.calls[0].opts.env.AGENTCRAFT_PORT, '9999');
+  assert.strictEqual(spawn.calls[0].opts.env.COLISEUM_PORT, '9999');
   spawn.calls[0].child.stdout.emit('data', Buffer.from('hello\nwor'));
   spawn.calls[0].child.stdout.emit('data', Buffer.from('ld\n'));
   assert.deepStrictEqual(logs.slice(-2), [['hello', 'bridge'], ['world', 'bridge']]);

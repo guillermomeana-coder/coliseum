@@ -21,17 +21,17 @@ shoots one camera every N ms and logs agent posture/family/bubble/particles, fps
 to artifacts/logs/<prefix>live.jsonl.
 
 Options:
-  --port N            DevBridge port (default AGENTCRAFT_DEV_PORT or 7879)
+  --port N            DevBridge port (default COLISEUM_DEV_PORT or 7879)
   --seconds S         observe for S seconds (default 60)
   --prefix P          shot/log prefix (default agents_live/)
   --goal "text"       submit this goal first
   --camera C          anchor name (cam_room), x,y,z,lx,ly,lz, or keep (default cam_room)
   --every MS          sample interval (default 2500)
-  --foreman PORT      Foreman port (default AGENTCRAFT_PORT or 7878); used with --answer-after
+  --foreman PORT      Foreman port (default COLISEUM_PORT or 7878); used with --answer-after
   --answer-after S    answer every decision with its first option after S seconds
   -h, --help          show this help
 
-Env: AGENTCRAFT_DEV_PORT, AGENTCRAFT_PORT
+Env: COLISEUM_DEV_PORT, COLISEUM_PORT
 Example: node tools/agents-live.mjs --port 7902 --seconds 60 --goal "Add #tags"
 Requires a running game.`;
 handleHelp(USAGE);
@@ -40,7 +40,7 @@ handleHelp(USAGE);
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1]]] : acc), []),
 );
-const port = Number(args.port ?? process.env.AGENTCRAFT_DEV_PORT ?? 7879);
+const port = Number(args.port ?? process.env.COLISEUM_DEV_PORT ?? 7879);
 const seconds = Number(args.seconds ?? 60);
 const prefix = args.prefix ?? 'agents_live/';
 const cam = args.camera ?? 'cam_room';
@@ -51,7 +51,7 @@ const log = fs.createWriteStream(path.join(root, 'artifacts', 'logs', `${prefix.
 
 const dev = await DevClient.connect({ port });
 const answerAfter = args['answer-after'] != null ? Number(args['answer-after']) * 1000 : null;
-const fm = answerAfter != null ? await ForemanClient.connect({ port: Number(args.foreman ?? process.env.AGENTCRAFT_PORT ?? 7878) }) : null;
+const fm = answerAfter != null ? await ForemanClient.connect({ port: Number(args.foreman ?? process.env.COLISEUM_PORT ?? 7878) }) : null;
 const seen = new Map();
 if (args.goal) {
   const r = await dev.request('dev.foreman.send', { message: { type: 'goal.submit', text: args.goal } });

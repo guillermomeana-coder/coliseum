@@ -3,7 +3,7 @@
 //
 // What the agent may do is decided the same way as for Claude agents:
 // - approvalPolicy "untrusted": Codex asks before every command it does not consider trivially safe;
-//   each ask goes through AgentCraft's policy (policy.ts) and, if needed, an in-game prompt
+//   each ask goes through Coliseum's policy (policy.ts) and, if needed, an in-game prompt
 // - sandbox: workers write only their worktree (+ its git dir, for commits), the lead nothing; no
 //   network inside the sandbox (a command that needs it asks again, through the same policy)
 // - the team tools (send_message, ask_user, update_task...) are dynamic tools answered here
@@ -46,16 +46,16 @@ const OFF_FEATURES = [
   'tool_suggest',
 ];
 
-const CLIENT_INFO = { name: 'agentcraft', title: 'AgentCraft', version: '0.1.0' };
+const CLIENT_INFO = { name: 'coliseum', title: 'Coliseum', version: '0.1.0' };
 
 function notes(role: Role, tools: AgentTool[]): string {
   return [
     '',
-    '# Working in AgentCraft (Codex)',
-    `- The AgentCraft team tools (${tools.map((t) => t.name).join(', ')}) are function tools: call them directly. They are how the team and ${userName()} see your work; plain text only shows on your monitor.`,
+    '# Working in Coliseum (Codex)',
+    `- The Coliseum team tools (${tools.map((t) => t.name).join(', ')}) are function tools: call them directly. They are how the team and ${userName()} see your work; plain text only shows on your monitor.`,
     '- Where these instructions mention Read, Grep or Glob, read and search files with your shell (e.g. rg). Edit files with apply_patch.',
     process.platform === 'win32' ? '- In PowerShell, use npm.cmd and npx.cmd for npm/npx commands. Their .ps1 launchers can fail under the Windows sandbox even when the .cmd launchers work.' : '',
-    `- Every command is checked against AgentCraft's policy, and anything it cannot allow by itself is shown to ${userName()}, who may deny it. Never work around a denial: find another way or use ask_user.`,
+    `- Every command is checked against Coliseum's policy, and anything it cannot allow by itself is shown to ${userName()}, who may deny it. Never work around a denial: find another way or use ask_user.`,
     `- Do not spawn sub-agents, do not search the web, and ask questions only with ask_user (not request_user_input).`,
     role === 'lead' ? '- You are read-only: never modify files or run commands that change anything.' : '',
   ]
@@ -223,9 +223,9 @@ export class CodexEngine implements Engine {
         });
       }
       if (!started) {
-        started = await server.request<any>('thread/start', { ...thread, serviceName: 'agentcraft' }, 60_000);
+        started = await server.request<any>('thread/start', { ...thread, serviceName: 'coliseum' }, 60_000);
         const task = this.fm.agent(agentId)?.taskId;
-        server.request('thread/name/set', { threadId: started.thread.id, name: `AgentCraft · ${this.fm.nameOf(agentId)}${task ? ` · ${task}` : ''}` }, 10_000).catch(() => undefined);
+        server.request('thread/name/set', { threadId: started.thread.id, name: `Coliseum · ${this.fm.nameOf(agentId)}${task ? ` · ${task}` : ''}` }, 10_000).catch(() => undefined);
       }
       threadId = started.thread.id as string;
       mapper.stats.sessionId = threadId;
@@ -280,16 +280,16 @@ export class CodexEngine implements Engine {
         return reply(res.content.map((c) => c.text).join('\n'), !res.isError);
       }
       case 'item/tool/requestUserInput': {
-        const msg = `(Not available in AgentCraft: ask ${userName()} with the ask_user tool instead.)`;
+        const msg = `(Not available in Coliseum: ask ${userName()} with the ask_user tool instead.)`;
         return { answers: Object.fromEntries(((params?.questions ?? []) as Array<{ id: string }>).map((q) => [q.id, { answers: [msg] }])) };
       }
       case 'mcpServer/elicitation/request':
         return { action: 'decline', content: null, _meta: null };
       case 'execCommandApproval':
       case 'applyPatchApproval':
-        return { decision: { denied: { rejection: 'AgentCraft answers approvals through the v2 API only' } } };
+        return { decision: { denied: { rejection: 'Coliseum answers approvals through the v2 API only' } } };
       default:
-        throw new Error(`AgentCraft does not handle ${method}`);
+        throw new Error(`Coliseum does not handle ${method}`);
     }
   }
 }

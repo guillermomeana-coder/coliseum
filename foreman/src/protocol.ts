@@ -1,4 +1,4 @@
-// AgentCraft wire protocol, version 1.
+// Coliseum wire protocol, version 1.
 //
 // This file is the single source of truth. docs/protocol.md is GENERATED from it
 // (`npm run gen:protocol-doc`) and the Java mod mirrors it. Every message is one JSON object per
@@ -84,7 +84,7 @@ export const Agent = z.object({
   title: z.string().optional().describe('short descriptive role from cast.json, e.g. "Backend tinkerer"'),
   color: HexColor.describe('agent color (scarf/badge/nameplate)'),
   accent: HexColor.optional(),
-  skin: z.string().describe('skin id -> assets/agentcraft/textures/entity/agent/<skin>.png'),
+  skin: z.string().describe('skin id -> assets/coliseum/textures/entity/agent/<skin>.png'),
   state: AgentState,
   activity: z.string().describe('one short line for the nameplate, e.g. "editing src/cli.ts" (<= 48 chars)'),
   station: Station,
@@ -115,8 +115,8 @@ export const Task = z.object({
   repoId: Id.optional(),
   goalId: Id.optional(),
   priority: z.number().int().describe('higher = sooner; default 0'),
-  branch: z.string().optional().describe('git branch, e.g. "agentcraft/kit/t2-tag-parser"'),
-  startBranch: z.string().optional().describe('the worker\'s branch starts from this branch instead of the base, e.g. a fetched pull request "agentcraft/pr-12"'),
+  branch: z.string().optional().describe('git branch, e.g. "coliseum/kit/t2-tag-parser"'),
+  startBranch: z.string().optional().describe('the worker\'s branch starts from this branch instead of the base, e.g. a fetched pull request "coliseum/pr-12"'),
   worktree: Id.optional(),
   ci: CiStatus,
   blockedReason: z.string().optional(),

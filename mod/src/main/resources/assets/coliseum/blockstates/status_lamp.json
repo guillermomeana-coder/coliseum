@@ -1,0 +1,25 @@
+{
+  "variants": {
+    "status=off": {
+      "model": "coliseum:block/status_lamp_off"
+    },
+    "status=idle": {
+      "model": "coliseum:block/status_lamp_idle"
+    },
+    "status=thinking": {
+      "model": "coliseum:block/status_lamp_thinking"
+    },
+    "status=working": {
+      "model": "coliseum:block/status_lamp_working"
+    },
+    "status=waiting": {
+      "model": "coliseum:block/status_lamp_waiting"
+    },
+    "status=error": {
+      "model": "coliseum:block/status_lamp_error"
+    },
+    "status=done": {
+      "model": "coliseum:block/status_lamp_done"
+    }
+  }
+}

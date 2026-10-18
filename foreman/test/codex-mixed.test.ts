@@ -87,7 +87,7 @@ describe('engine config', () => {
     expect(load(['--backend', 'codex']).engines).toEqual({ lead: 'codex', worker: 'codex', byAgent: {} });
     expect(load(['--backend', 'codex']).profile).toBe('codex');
     expect(load(['--worker-engine', 'codex', '--engines', 'wren=claude,Tove=codex']).engines).toEqual({ lead: 'claude', worker: 'codex', byAgent: { wren: 'claude', tove: 'codex' } });
-    expect(load([], { AGENTCRAFT_LEAD_ENGINE: 'codex' }).engines.lead).toBe('codex');
+    expect(load([], { COLISEUM_LEAD_ENGINE: 'codex' }).engines.lead).toBe('codex');
     expect(load(['--codex-model', 'gpt-x', '--codex-lead-model', 'gpt-y', '--codex-effort', 'high']).codex).toMatchObject({ leadModel: 'gpt-y', workerModel: 'gpt-x', effort: 'high', leadEffort: 'high' });
     expect(() => load(['--worker-engine', 'gemini'])).toThrow(/unknown worker engine "gemini"/);
     expect(() => load(['--engines', 'kit'])).toThrow(/engine for kit/);

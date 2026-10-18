@@ -1,4 +1,4 @@
-// Configuration: defaults < <AGENTCRAFT_HOME>/config.json < environment < CLI flags.
+// Configuration: defaults < <COLISEUM_HOME>/config.json < environment < CLI flags.
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,7 +9,7 @@ import type { EffortLevel } from '@anthropic-ai/claude-agent-sdk';
 
 export const FOREMAN_VERSION = '0.1.0';
 
-/** Repo root of the AgentCraft project (foreman/src/config.ts -> ../..). */
+/** Repo root of the Coliseum project (foreman/src/config.ts -> ../..). */
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 export interface ClaudeConfig {
@@ -245,17 +245,17 @@ function checkArgs(flags: Flags, positional: string[]): void {
 export function loadConfig(argv: string[], env: NodeJS.ProcessEnv = process.env): Config {
   const { flags, positional } = parseFlags(argv);
   checkArgs(flags, positional);
-  const home = path.resolve(str(flags.home) ?? env.AGENTCRAFT_HOME ?? path.join(os.homedir(), '.agentcraft'));
+  const home = path.resolve(str(flags.home) ?? env.COLISEUM_HOME ?? path.join(os.homedir(), '.coliseum'));
   const file = readJson<Record<string, unknown>>(path.join(home, 'config.json')) ?? {};
   const fileClaude = (file.claude ?? {}) as Record<string, unknown>;
   const fileSim = (file.sim ?? {}) as Record<string, unknown>;
   const fileCodex = (file.codex ?? {}) as Record<string, unknown>;
   const pick = (k: string, envKey?: string): unknown => flags[k] ?? (envKey ? env[envKey] : undefined) ?? file[k];
 
-  const backendRaw = String(pick('backend', 'AGENTCRAFT_BACKEND') ?? 'claude');
+  const backendRaw = String(pick('backend', 'COLISEUM_BACKEND') ?? 'claude');
   if (backendRaw !== 'sim' && backendRaw !== 'claude' && backendRaw !== 'codex') throw new Error(`unknown backend "${backendRaw}" (use sim, claude or codex)`);
   const backend = backendRaw as BackendName;
-  const profile = str(pick('profile', 'AGENTCRAFT_PROFILE')) ?? backend;
+  const profile = str(pick('profile', 'COLISEUM_PROFILE')) ?? backend;
   if (!/^[a-zA-Z0-9_-]+$/.test(profile)) throw new Error(`bad profile name "${profile}"`);
 
   const repoFlag = flags.repo;
@@ -263,7 +263,7 @@ export function loadConfig(argv: string[], env: NodeJS.ProcessEnv = process.env)
   if (typeof repoFlag === 'string') repos.push(...repoFlag.split(',').map((s) => s.trim()).filter(Boolean));
   else if (Array.isArray(file.repos)) repos.push(...(file.repos as string[]));
 
-  const workersRaw = str(flags.workers) ?? env.AGENTCRAFT_WORKERS ?? (fileClaude.workers as string[] | string | undefined);
+  const workersRaw = str(flags.workers) ?? env.COLISEUM_WORKERS ?? (fileClaude.workers as string[] | string | undefined);
   const workers = Array.isArray(workersRaw)
     ? workersRaw
     : typeof workersRaw === 'string'
@@ -275,29 +275,29 @@ export function loadConfig(argv: string[], env: NodeJS.ProcessEnv = process.env)
   const model = str(flags.model);
   const cfg: Config = {
     backend,
-    userName: (str(pick('user-name', 'AGENTCRAFT_USER_NAME')) ?? str(file.userName))?.trim().slice(0, 40) || defaultUserName(),
+    userName: (str(pick('user-name', 'COLISEUM_USER_NAME')) ?? str(file.userName))?.trim().slice(0, 40) || defaultUserName(),
     home,
     profile,
     dataDir: path.join(home, profile),
     host: '127.0.0.1',
-    port: num(pick('port', 'AGENTCRAFT_PORT'), 7878),
+    port: num(pick('port', 'COLISEUM_PORT'), 7878),
     repos,
     goal: str(flags.goal),
     autostart: bool(flags.autostart, false) || !!str(flags.goal),
     reset: bool(flags.reset, false),
-    notify: bool(pick('notify', 'AGENTCRAFT_NOTIFY'), backend !== 'sim'),
-    toastSilent: bool(pick('toast-silent', 'AGENTCRAFT_TOAST_SILENT'), false),
-    debug: bool(pick('debug', 'AGENTCRAFT_DEBUG'), false),
+    notify: bool(pick('notify', 'COLISEUM_NOTIFY'), backend !== 'sim'),
+    toastSilent: bool(pick('toast-silent', 'COLISEUM_TOAST_SILENT'), false),
+    debug: bool(pick('debug', 'COLISEUM_DEBUG'), false),
     quiet: bool(flags.quiet, false),
     projectRoot: PROJECT_ROOT,
     allowBrowserOrigins: bool(pick('allow-browser-origins'), false),
     repoPollMs: Math.max(500, num(pick('repo-poll-ms'), 10_000)),
-    mergeStyle: mergeStyle(pick('merge-style', 'AGENTCRAFT_MERGE_STYLE')),
+    mergeStyle: mergeStyle(pick('merge-style', 'COLISEUM_MERGE_STYLE')),
     // the sim answers merges unattended (screenshot QA, --auto-answer): never sign there
-    signMerges: bool(pick('sign-merges', 'AGENTCRAFT_SIGN_MERGES'), backend !== 'sim'),
+    signMerges: bool(pick('sign-merges', 'COLISEUM_SIGN_MERGES'), backend !== 'sim'),
     claude: {
-      leadModel: str(flags['lead-model']) ?? model ?? str(env.AGENTCRAFT_LEAD_MODEL) ?? str(fileClaude.leadModel) ?? 'opus',
-      workerModel: str(flags['worker-model']) ?? model ?? str(env.AGENTCRAFT_WORKER_MODEL) ?? str(fileClaude.workerModel) ?? 'sonnet',
+      leadModel: str(flags['lead-model']) ?? model ?? str(env.COLISEUM_LEAD_MODEL) ?? str(fileClaude.leadModel) ?? 'opus',
+      workerModel: str(flags['worker-model']) ?? model ?? str(env.COLISEUM_WORKER_MODEL) ?? str(fileClaude.workerModel) ?? 'sonnet',
       effort: effort(flags.effort ?? fileClaude.effort, 'medium'),
       leadEffort: effort(flags['lead-effort'] ?? flags.effort ?? fileClaude.leadEffort, 'medium'),
       maxTurnsLead: num(flags['max-turns-lead'] ?? flags['max-turns'] ?? fileClaude.maxTurnsLead, 40),
@@ -308,23 +308,23 @@ export function loadConfig(argv: string[], env: NodeJS.ProcessEnv = process.env)
       maxBudgetUsdPerTurn: flags['max-budget'] !== undefined ? num(flags['max-budget'], 0) || undefined : (fileClaude.maxBudgetUsdPerTurn as number | undefined),
       resumeOnStart: bool(flags.resume ?? fileClaude.resumeOnStart, true),
       leadReview: bool(flags['lead-review'] ?? fileClaude.leadReview, true),
-      useClaudeLogin: bool(flags['use-claude-login'] ?? env.AGENTCRAFT_USE_CLAUDE_LOGIN ?? fileClaude.useClaudeLogin, false),
-      leadReadCommands: readCommands(flags['lead-read-commands'] ?? env.AGENTCRAFT_LEAD_READ_COMMANDS ?? fileClaude.leadReadCommands),
+      useClaudeLogin: bool(flags['use-claude-login'] ?? env.COLISEUM_USE_CLAUDE_LOGIN ?? fileClaude.useClaudeLogin, false),
+      leadReadCommands: readCommands(flags['lead-read-commands'] ?? env.COLISEUM_LEAD_READ_COMMANDS ?? fileClaude.leadReadCommands),
     },
     codex: {
-      path: str(flags['codex-path']) ?? str(env.AGENTCRAFT_CODEX_PATH) ?? str(fileCodex.path),
+      path: str(flags['codex-path']) ?? str(env.COLISEUM_CODEX_PATH) ?? str(fileCodex.path),
       leadModel: str(flags['codex-lead-model']) ?? str(flags['codex-model']) ?? str(fileCodex.leadModel) ?? str(fileCodex.model),
       workerModel: str(flags['codex-worker-model']) ?? str(flags['codex-model']) ?? str(fileCodex.workerModel) ?? str(fileCodex.model),
       effort: str(flags['codex-effort']) ?? str(fileCodex.effort),
       leadEffort: str(flags['codex-lead-effort']) ?? str(flags['codex-effort']) ?? str(fileCodex.leadEffort) ?? str(fileCodex.effort),
     },
     engines: {
-      lead: engineName(pick('lead-engine', 'AGENTCRAFT_LEAD_ENGINE') ?? (file.engines as Record<string, unknown> | undefined)?.lead, backend === 'codex' ? 'codex' : 'claude', 'lead engine'),
-      worker: engineName(pick('worker-engine', 'AGENTCRAFT_WORKER_ENGINE') ?? (file.engines as Record<string, unknown> | undefined)?.worker, backend === 'codex' ? 'codex' : 'claude', 'worker engine'),
-      byAgent: engineMap(flags.engines ?? env.AGENTCRAFT_ENGINES ?? (file.engines as Record<string, unknown> | undefined)?.byAgent),
+      lead: engineName(pick('lead-engine', 'COLISEUM_LEAD_ENGINE') ?? (file.engines as Record<string, unknown> | undefined)?.lead, backend === 'codex' ? 'codex' : 'claude', 'lead engine'),
+      worker: engineName(pick('worker-engine', 'COLISEUM_WORKER_ENGINE') ?? (file.engines as Record<string, unknown> | undefined)?.worker, backend === 'codex' ? 'codex' : 'claude', 'worker engine'),
+      byAgent: engineMap(flags.engines ?? env.COLISEUM_ENGINES ?? (file.engines as Record<string, unknown> | undefined)?.byAgent),
     },
     sim: {
-      speed: Math.max(0.05, num(flags.speed ?? env.AGENTCRAFT_SIM_SPEED ?? fileSim.speed, 1)),
+      speed: Math.max(0.05, num(flags.speed ?? env.COLISEUM_SIM_SPEED ?? fileSim.speed, 1)),
       seed: num(flags.seed ?? fileSim.seed, 7),
       showcase: bool(flags.showcase, false),
       showcaseAt: flags.showcase === 'late' ? 'showcase-late' : 'showcase',
@@ -336,17 +336,17 @@ export function loadConfig(argv: string[], env: NodeJS.ProcessEnv = process.env)
   return cfg;
 }
 
-export const HELP = `AgentCraft Foreman ${FOREMAN_VERSION}
+export const HELP = `Coliseum Foreman ${FOREMAN_VERSION}
 
 usage: npm run start -- [options]
 
   --backend sim|claude|codex  agent backend (default: claude; codex = an all-Codex team)
   --repo <path>[,<path>]   register local git repo(s) at start (sim: defaults to a fresh sandbox/sim-demo)
   --goal "<text>"          submit a goal right away
-  --port <n>               WebSocket port (default 7878, env AGENTCRAFT_PORT)
-  --home <dir>             state root (default ~/.agentcraft, env AGENTCRAFT_HOME)
+  --port <n>               WebSocket port (default 7878, env COLISEUM_PORT)
+  --home <dir>             state root (default ~/.coliseum, env COLISEUM_HOME)
   --user-name <name>       your name, as the agents address you (default: your OS user name,
-                           env AGENTCRAFT_USER_NAME, config.json "userName")
+                           env COLISEUM_USER_NAME, config.json "userName")
   --profile <name>         state profile under home (default: backend name)
   --reset                  wipe this profile's state first (sim: also recreates the demo repo)
   --notify / --no-notify   desktop notification when a decision waits (default: on for claude, off for sim)
@@ -370,7 +370,7 @@ usage: npm run start -- [options]
  claude backend
   auth: ANTHROPIC_API_KEY, or a cloud provider (CLAUDE_CODE_USE_BEDROCK / _VERTEX / _FOUNDRY)
   --use-claude-login       use your local \`claude\` CLI login instead (personal use only; env
-                           AGENTCRAFT_USE_CLAUDE_LOGIN=1, config.json claude.useClaudeLogin)
+                           COLISEUM_USE_CLAUDE_LOGIN=1, config.json claude.useClaudeLogin)
   --model <m>              model for lead and workers (default lead: opus, workers: sonnet)
   --lead-model <m> / --worker-model <m>
   --effort low|medium|high|xhigh|max   (default medium)
@@ -381,7 +381,7 @@ usage: npm run start -- [options]
   --ci "<cmd>"             test command run after each task (default: detected, e.g. npm test)
   --lead-read-commands "<cmd>,..."
                            read commands the lead runs without asking, by prefix, e.g.
-                           "bd show,gh issue view" (env AGENTCRAFT_LEAD_READ_COMMANDS)
+                           "bd show,gh issue view" (env COLISEUM_LEAD_READ_COMMANDS)
   --no-lead-review         skip the lead's review turn before merge decisions
   --no-resume              do not resume interrupted sessions on start
 
@@ -389,7 +389,7 @@ usage: npm run start -- [options]
   auth: your Codex login (\`codex login\`: ChatGPT or an OpenAI API key)
   --lead-engine claude|codex / --worker-engine claude|codex
                            mix engines (default: the backend's), e.g. a Claude lead with Codex workers
-  --engines <agent=engine,...>  per agent, e.g. kit=codex,wren=claude (env AGENTCRAFT_ENGINES)
+  --engines <agent=engine,...>  per agent, e.g. kit=codex,wren=claude (env COLISEUM_ENGINES)
   --codex-path <path>      the codex CLI (default: on PATH, else the Codex desktop app's)
   --codex-model <m>        model for Codex agents (default: your Codex config's model)
   --codex-lead-model <m> / --codex-worker-model <m>

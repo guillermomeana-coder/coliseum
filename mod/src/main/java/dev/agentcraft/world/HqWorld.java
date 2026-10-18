@@ -15,13 +15,13 @@ import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.storage.LevelResource;
 
 /**
- * The "AgentCraft HQ" world: identity + rules. The client creates/loads it automatically
+ * The "Coliseum HQ" world: identity + rules. The client creates/loads it automatically
  * (see client AutoWorld); this class makes sure that whenever the HQ world runs, its rules are
  * the calm, building-friendly ones the HQ needs. Other worlds are never touched.
  */
 public final class HqWorld {
 	/** Folder name and level name of the HQ world. */
-	public static final String LEVEL_NAME = "AgentCraft HQ";
+	public static final String LEVEL_NAME = "Coliseum HQ";
 	/** Surface Y of the superflat meadow: grass top is at y=64, so you stand at y=65. */
 	public static final int SURFACE_Y = 64;
 	/** Golden-hour-ish day time set once when the world is created. */

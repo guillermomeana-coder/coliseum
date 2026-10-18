@@ -126,13 +126,13 @@ function enumLine(name: string, s: AnySchema): string {
 
 function build(): string {
   const out: string[] = [];
-  out.push(`# AgentCraft protocol v${P.PROTOCOL_VERSION}`);
+  out.push(`# Coliseum protocol v${P.PROTOCOL_VERSION}`);
   out.push('');
   out.push('> GENERATED from `foreman/src/protocol.ts` and `foreman/src/protocol-examples.ts` by `npm run gen:protocol-doc` (in `foreman/`). Do not edit by hand. The Java mod mirrors these shapes.');
   out.push('');
   out.push('## Transport');
   out.push('');
-  out.push(`- The Foreman listens on \`ws://127.0.0.1:\${AGENTCRAFT_PORT:-7878}\`. Clients (the mod, CLI tools) connect, send \`hello\`, and receive a full \`snapshot\` followed by incremental messages. Multiple clients may be connected; every client receives every broadcast.`);
+  out.push(`- The Foreman listens on \`ws://127.0.0.1:\${COLISEUM_PORT:-7878}\`. Clients (the mod, CLI tools) connect, send \`hello\`, and receive a full \`snapshot\` followed by incremental messages. Multiple clients may be connected; every client receives every broadcast.`);
   out.push('- One JSON object per WebSocket **text** frame. Envelope: `{ "v": 1, "type": "<type>", "id"?: "<correlation id>", ...payload }`.');
   out.push('- Client messages that carry an `id` are answered with `ack { re: id, ok, error?, result? }`. Invalid messages get `error` (and a failed `ack` if they had an id).');
   out.push('- Timestamps are integer epoch milliseconds. Colors are `"#RRGGBB"`. Optional fields are omitted, never `null`. Receivers must ignore unknown fields.');

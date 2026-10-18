@@ -19,7 +19,7 @@
 import WebSocket from 'ws';
 import { execSync } from 'node:child_process';
 
-const PORT = parseInt(process.env.AGENTCRAFT_PORT || '7878');
+const PORT = parseInt(process.env.COLISEUM_PORT || '7878');
 const TIMEOUT = 30000;
 
 /**
@@ -254,7 +254,7 @@ if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h' || args.includes(
   console.log(`Coliseum Arena — Battle Royale Bridge
 
 Usage: node tools/arena-bridge.mjs <command> [args]   (-h, --help, help)
-Env: AGENTCRAFT_PORT (default 7878)
+Env: COLISEUM_PORT (default 7878)
 Example: node tools/arena-bridge.mjs simulate
 
 Commands:

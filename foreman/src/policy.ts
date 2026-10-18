@@ -72,15 +72,15 @@ const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 const ALWAYS_OK = new Set(['TodoWrite', 'TodoRead', 'BashOutput', 'KillShell', 'KillBash', 'ExitPlanMode', 'TaskOutput', 'TaskStop']);
 const NETWORK_TOOLS = new Set(['WebFetch', 'WebSearch']);
 const DENIED_TOOLS: Record<string, string> = {
-  Task: 'Subagents are disabled in AgentCraft; do the work directly.',
-  Agent: 'Subagents are disabled in AgentCraft; do the work directly.',
-  AskUserQuestion: 'Use the mcp__agentcraft__ask_user tool to ask the user.',
-  Skill: 'Skills are disabled for AgentCraft agents.',
+  Task: 'Subagents are disabled in Coliseum; do the work directly.',
+  Agent: 'Subagents are disabled in Coliseum; do the work directly.',
+  AskUserQuestion: 'Use the mcp__coliseum__ask_user tool to ask the user.',
+  Skill: 'Skills are disabled for Coliseum agents.',
   EnterWorktree: 'You already work in a dedicated git worktree.',
 };
 
-const PUSH_DENY = 'git push is never allowed in AgentCraft (the user pushes; agents only work in local worktrees)';
-const TAMPER_DENY = "that would change AgentCraft's git safety settings (pushes and git network access are disabled for agents)";
+const PUSH_DENY = 'git push is never allowed in Coliseum (the user pushes; agents only work in local worktrees)';
+const TAMPER_DENY = "that would change Coliseum's git safety settings (pushes and git network access are disabled for agents)";
 const DYNAMIC_PUSH_DENY = 'a git subcommand that comes from a variable or substitution cannot be checked and could be a push';
 
 function pathArg(input: Record<string, unknown>): string | undefined {
@@ -2061,8 +2061,8 @@ function askVerdict(reason: string, key: string): Verdict {
 }
 
 export function classifyToolUse(toolName: string, input: Record<string, unknown>, ctx: PolicyContext): Verdict {
-  const server = ctx.mcpServer ?? 'agentcraft';
-  if (toolName.startsWith(`mcp__${server}__`)) return { action: 'allow', reason: 'AgentCraft tool' };
+  const server = ctx.mcpServer ?? 'coliseum';
+  if (toolName.startsWith(`mcp__${server}__`)) return { action: 'allow', reason: 'Coliseum tool' };
   if (toolName in DENIED_TOOLS) return { action: 'deny', reason: DENIED_TOOLS[toolName]! };
   if (ALWAYS_OK.has(toolName)) return { action: 'allow', reason: toolName };
 

@@ -123,7 +123,7 @@ function logEvent(type, data) {
 }
 
 // Connect
-const port = parseInt(process.env.AGENTCRAFT_PORT || '7878');
+const port = parseInt(process.env.COLISEUM_PORT || '7878');
 const fm = new ForemanClient(`ws://127.0.0.1:${port}`);
 
 try {

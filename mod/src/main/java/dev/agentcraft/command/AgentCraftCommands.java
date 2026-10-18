@@ -13,12 +13,12 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
 /**
- * The {@code /agentcraft} command root. Features add their own sub-commands with
+ * The {@code /warp} command root. Features add their own sub-commands with
  * {@link #sub(Consumer)} from their {@code init()}, so nobody has to edit this file:
  * <pre>
  * AgentCraftCommands.sub(root -> root.then(Commands.literal("elevyte").executes(ctx -> ...)));
  * </pre>
- * Built in: {@code /agentcraft anchors} lists the published anchors.
+ * Built in: {@code /warp anchors} lists the published anchors.
  */
 public final class AgentCraftCommands {
 	private static final List<Consumer<LiteralArgumentBuilder<CommandSourceStack>>> SUBS = new CopyOnWriteArrayList<>();
@@ -42,7 +42,7 @@ public final class AgentCraftCommands {
 			return layout.anchors().size();
 		})));
 		CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, selection) -> {
-			LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("agentcraft").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS));
+			LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("warp").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS));
 			for (var s : SUBS) {
 				s.accept(root);
 			}

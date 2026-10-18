@@ -78,8 +78,8 @@ public final class ForemanLink {
 		this.clientThread = clientThread;
 		this.status = new LinkStatus(enabled ? Phase.WAITING_RETRY : Phase.DISABLED, uri.toString(), 0, null,
 			System.currentTimeMillis(), System.currentTimeMillis(), false);
-		this.sched = Executors.newSingleThreadScheduledExecutor(r -> daemon(r, "AgentCraft-ForemanLink"));
-		this.io = Executors.newCachedThreadPool(r -> daemon(r, "AgentCraft-ForemanLink-io"));
+		this.sched = Executors.newSingleThreadScheduledExecutor(r -> daemon(r, "Coliseum-ForemanLink"));
+		this.io = Executors.newCachedThreadPool(r -> daemon(r, "Coliseum-ForemanLink-io"));
 		this.http = HttpClient.newBuilder().executor(io).connectTimeout(Duration.ofSeconds(3)).build();
 	}
 

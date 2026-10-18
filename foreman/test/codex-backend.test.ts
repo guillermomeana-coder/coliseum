@@ -69,8 +69,8 @@ const gitRoots = (repo: string, worktreeId: string, agent: string) => [
   path.join(repo, '.git', 'objects'),
   path.join(repo, '.git', 'worktrees', worktreeId),
   os.tmpdir(),
-  path.join(repo, '.git', 'refs', 'heads', 'agentcraft', agent),
-  path.join(repo, '.git', 'logs', 'refs', 'heads', 'agentcraft', agent),
+  path.join(repo, '.git', 'refs', 'heads', 'coliseum', agent),
+  path.join(repo, '.git', 'logs', 'refs', 'heads', 'coliseum', agent),
 ];
 
 let h: Harness;
@@ -160,12 +160,12 @@ describe('codex engine (fake app-server)', () => {
     expect(worker.config.web_search).toBe('disabled');
     expect(worker.config.notify).toEqual([]);
     const set = worker.config.shell_environment_policy.set as Record<string, string>;
-    expect(set.GIT_AUTHOR_NAME).toBe('AgentCraft Kit');
+    expect(set.GIT_AUTHOR_NAME).toBe('Coliseum Kit');
     const gitCfg = Object.fromEntries(Array.from({ length: Number(set.GIT_CONFIG_COUNT) }, (_x, i) => [set[`GIT_CONFIG_KEY_${i}`], set[`GIT_CONFIG_VALUE_${i}`]]));
     expect(gitCfg['protocol.allow']).toBe('never');
     expect(worker.config.sandbox_workspace_write.writable_roots).toEqual(gitRoots(repoPath, 'kit-t1', 'kit'));
     expect(lead.config.sandbox_workspace_write.writable_roots).toEqual([]);
-    expect(worker.developerInstructions).toContain('Working in AgentCraft (Codex)');
+    expect(worker.developerInstructions).toContain('Working in Coliseum (Codex)');
     expect(worker.developerInstructions.includes('use npm.cmd and npx.cmd')).toBe(process.platform === 'win32');
     expect(worker.dynamicTools.map((t: { name: string }) => t.name).sort()).toEqual(['ask_user', 'list_tasks', 'read_memory', 'report_status', 'send_message', 'update_task', 'write_memory']);
     expect(worker.dynamicTools.find((t: { name: string }) => t.name === 'update_task').inputSchema.properties.status.enum).toContain('review');

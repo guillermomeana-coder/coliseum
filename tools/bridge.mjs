@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Coliseum Bridge — Claude Code ↔ AgentCraft Foreman
+ * Coliseum Bridge — Claude Code ↔ Coliseum Foreman
  *
  * Lets Claude Code send goals, monitor progress, answer decisions,
- * and get diffs from AgentCraft workers without opening Minecraft.
+ * and get diffs from Coliseum workers without opening Minecraft.
  *
  * Usage:
  *   node bridge.mjs status                        # show team state
@@ -21,8 +21,8 @@
  *   node bridge.mjs agents                        # list agents and their state
  *
  * Env:
- *   AGENTCRAFT_PORT        Foreman WebSocket port (default 7878)
- *   AGENTCRAFT_TIMEOUT_MS  RPC timeout in ms (default 15000)
+ *   COLISEUM_PORT        Foreman WebSocket port (default 7878)
+ *   COLISEUM_TIMEOUT_MS  RPC timeout in ms (default 15000)
  *
  * Connection: retries with exponential backoff (1s,2s,4s,8s,16s, max 30s), logged to stderr.
  * One-shot commands give up after 5 attempts; watch/autopilot/run retry forever and
@@ -32,16 +32,16 @@
 import WebSocket from 'ws';
 import { createBackoff, retryWithBackoff } from './lib/backoff.mjs';
 
-const PORT = parseInt(process.env.AGENTCRAFT_PORT || '7878');
-const TIMEOUT = parseInt(process.env.AGENTCRAFT_TIMEOUT_MS || '15000');
+const PORT = parseInt(process.env.COLISEUM_PORT || '7878');
+const TIMEOUT = parseInt(process.env.COLISEUM_TIMEOUT_MS || '15000');
 // Test hook: shrink the first backoff step (default 1s -> 2s -> 4s ... max 30s).
-const BACKOFF_BASE_MS = parseInt(process.env.AGENTCRAFT_BACKOFF_BASE_MS || '1000');
+const BACKOFF_BASE_MS = parseInt(process.env.COLISEUM_BACKOFF_BASE_MS || '1000');
 
 const fmtSecs = (ms) => `${+(ms / 1000).toFixed(3)}s`;
 const reasonOf = (e) => (e && (e.message || e.code)) || String(e || 'unknown');
 
 /**
- * Client for the AgentCraft Foreman WebSocket protocol.
+ * Client for the Coliseum Foreman WebSocket protocol.
  *
  * Owns a socket, mirrors the Foreman's snapshot/upsert stream into
  * `this.state`, and exposes request/response helpers (goals, decisions,
@@ -327,10 +327,10 @@ class ForemanBridge {
 const [cmd, ...args] = process.argv.slice(2);
 
 if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h' || args.includes('--help') || args.includes('-h')) {
-  console.log(`OpenClaw Bridge — Claude Code ↔ AgentCraft
+  console.log(`OpenClaw Bridge — Claude Code ↔ Coliseum
 
 Usage: node tools/bridge.mjs <command> [args]   (-h, --help, help)
-Env: AGENTCRAFT_PORT (default 7878), AGENTCRAFT_TIMEOUT_MS (RPC timeout, default 15000)
+Env: COLISEUM_PORT (default 7878), COLISEUM_TIMEOUT_MS (RPC timeout, default 15000)
 Example: node tools/bridge.mjs status
 
 Commands:
@@ -367,7 +367,7 @@ try {
       const doneTasks = fm.state.tasks.filter(t => t.status === 'done').length;
       const totalTasks = fm.state.tasks.length;
       const activeGoal = fm.state.goals.find(g => g.status === 'active' || g.status === 'planning');
-      console.log(`=== OpenClaw × AgentCraft ===`);
+      console.log(`=== OpenClaw × Coliseum ===`);
       console.log(`Backend: ${f.backend} | Auth: ${f.auth}`);
       console.log(`Cost: $${(f.costUsd || 0).toFixed(4)}`);
       console.log(`Agents: ${onShift}/${fm.state.agents.length} on shift`);
@@ -741,6 +741,6 @@ try {
 
   if (cmd !== 'watch') fm.close();
 } catch (e) {
-  console.error(`Connection failed: ${e.message}\nIs the Foreman running? Launch AgentCraft first.`);
+  console.error(`Connection failed: ${e.message}\nIs the Foreman running? Launch Coliseum first.`);
   process.exit(1);
 }

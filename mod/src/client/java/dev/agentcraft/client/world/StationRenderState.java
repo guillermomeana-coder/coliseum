@@ -3,7 +3,7 @@ package dev.agentcraft.client.world;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.core.Direction;
 
-/** Common render state of every AgentCraft station BER (see {@link StationRenderer}). Extend it per feature. */
+/** Common render state of every Coliseum station BER (see {@link StationRenderer}). Extend it per feature. */
 public class StationRenderState extends BlockEntityRenderState {
 	/** The block entity's binding ("kit", "agent:kit", "shared", ...; empty = default). */
 	public String binding = "";

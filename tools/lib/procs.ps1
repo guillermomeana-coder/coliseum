@@ -136,7 +136,7 @@ $script:CtrlBreakHelper = @'
 $src = @"
 using System;
 using System.Runtime.InteropServices;
-public static class AgentCraftCtrl {
+public static class ColiseumCtrl {
   public delegate bool Handler(uint ctrlType);
   static Handler keep = delegate (uint t) { return true; };
   [DllImport("kernel32.dll", SetLastError=true)] static extern bool AttachConsole(uint pid);
@@ -155,7 +155,7 @@ public static class AgentCraftCtrl {
 }
 "@
 Add-Type -TypeDefinition $src
-exit [AgentCraftCtrl]::Send([uint32]__PID__)
+exit [ColiseumCtrl]::Send([uint32]__PID__)
 '@
 
 function Send-CtrlBreak([int]$ProcessId) {
@@ -251,7 +251,7 @@ function Get-AcLayout([string]$Root) {
         # and ignores them when matching daemons. -XX:ErrorFile is harmless (where a JVM crash log
         # would go, relative to the daemon's directory), is on the command line and is matched,
         # so every checkout gets its own daemon and stop.ps1 -StopDaemon can find exactly ours.
-        Marker     = 'agentcraft-' + (Get-ShortHash $Root) + '-hs_err.log'
+        Marker     = 'coliseum-' + (Get-ShortHash $Root) + '-hs_err.log'
     }
     return $h
 }

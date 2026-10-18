@@ -60,7 +60,6 @@ public final class HqFeature {
 		});
 		ColiseumPortcullis.register();
 		ColiseumAmbience.init();
-		AgentCraftCommands.sub(root -> root.then(Commands.literal("godmode").executes(SpectateToggle::toggle)));
 		AgentCraftCommands.sub(root -> root.then(Commands.literal("elevyte")
 			.executes(ctx -> build(ctx, HqBuilders.defaultId(), false))
 			.then(Commands.literal("force").executes(ctx -> build(ctx, HqBuilders.defaultId(), true)))
@@ -106,34 +105,34 @@ public final class HqFeature {
 	}
 
 	private static boolean autoBuild() {
-		String v = System.getProperty("agentcraft.hq.autobuild");
+		String v = System.getProperty("coliseum.hq.autobuild");
 		if (v == null) {
-			v = System.getenv("AGENTCRAFT_HQ_AUTOBUILD");
+			v = System.getenv("COLISEUM_HQ_AUTOBUILD");
 		}
 		return v == null || !(v.trim().equals("0") || v.trim().equalsIgnoreCase("false") || v.trim().equalsIgnoreCase("off"));
 	}
 
 	/**
 	 * Building rewrites a large area of terrain and moves the world spawn, so it only runs in the
-	 * AgentCraft HQ world unless AGENTCRAFT_HQ_ANYWORLD=1 (-Dagentcraft.hq.anyworld=1) opts in, and
+	 * Coliseum HQ world unless COLISEUM_HQ_ANYWORLD=1 (-Dcoliseum.hq.anyworld=1) opts in, and
 	 * never in a Hardcore world.
 	 */
 	private static @Nullable String refusal(CommandSourceStack source) {
 		var server = source.getServer();
 		if (server.getWorldData().isHardcore()) {
-			return "/agentcraft hq never builds in a Hardcore world (it rewrites terrain and moves the spawn)";
+			return "/warp hq never builds in a Hardcore world (it rewrites terrain and moves the spawn)";
 		}
 		if (!HqWorld.isHq(server) && !anyWorld()) {
-			return "/agentcraft hq only builds in the \"" + HqWorld.LEVEL_NAME + "\" world; to build into this world on purpose,"
-				+ " back it up and start the game with -Dagentcraft.hq.anyworld=1";
+			return "/warp hq only builds in the \"" + HqWorld.LEVEL_NAME + "\" world; to build into this world on purpose,"
+				+ " back it up and start the game with -Dcoliseum.hq.anyworld=1";
 		}
 		return null;
 	}
 
 	private static boolean anyWorld() {
-		String v = System.getProperty("agentcraft.hq.anyworld");
+		String v = System.getProperty("coliseum.hq.anyworld");
 		if (v == null) {
-			v = System.getenv("AGENTCRAFT_HQ_ANYWORLD");
+			v = System.getenv("COLISEUM_HQ_ANYWORLD");
 		}
 		return v != null && (v.trim().equals("1") || v.trim().equalsIgnoreCase("true") || v.trim().equalsIgnoreCase("on"));
 	}

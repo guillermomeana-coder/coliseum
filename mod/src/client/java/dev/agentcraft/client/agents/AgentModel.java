@@ -7,7 +7,7 @@ import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.util.Mth;
 
 /**
- * The vanilla player model plus AgentCraft postures: after the vanilla setup (walk swing, head
+ * The vanilla player model plus Coliseum postures: after the vanilla setup (walk swing, head
  * look, arm bob) the pose channels of {@link AgentLife} replace the arm and leg rotations (blended
  * by their weights, so walking keeps the vanilla swing) and lean the upper body forward around the
  * hips (head, arms and torso pivot together, the legs stay planted). The skin overlay parts are

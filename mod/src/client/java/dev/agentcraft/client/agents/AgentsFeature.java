@@ -218,7 +218,7 @@ public final class AgentsFeature {
 					return o;
 				});
 			});
-		if (dev.agentcraft.client.ClientEnv.flag("AGENTCRAFT_DEV_TEST", false)) {
+		if (dev.agentcraft.client.ClientEnv.flag("COLISEUM_DEV_TEST", false)) {
 			DevBridge.register("dev.agents.keys", 30_000,
 				"{keys: 'm,hello world,return'} - TEST ONLY: press keys as SDL reports a keyboard (SDL events queued for the game window,"
 					+ " through Minecraft's SDL event loop; printable keys also type text only while SDL text input is on), one every 3 frames;"

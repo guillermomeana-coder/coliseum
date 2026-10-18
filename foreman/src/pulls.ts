@@ -1,6 +1,6 @@
 // Pull request intake: a goal that mentions "#12" (or "PR 12") on a repository whose origin is on
 // GitHub gets those pull requests fetched by the Foreman before the lead plans. Each PR's head
-// lands on a local branch `agentcraft/pr-<n>`; the lead turns PRs into tasks that start from that
+// lands on a local branch `coliseum/pr-<n>`; the lead turns PRs into tasks that start from that
 // branch, so workers review the contributor's commits, fix on top, and an approved merge brings
 // the contributor's commits into the base branch (GitHub marks the PR merged once the user pushes).
 //
@@ -36,12 +36,12 @@ export function prRefs(text: string): number[] {
   return [...out];
 }
 
-export const prBranch = (n: number): string => `agentcraft/pr-${n}`;
-export const isPrBranch = (b: string): boolean => /^agentcraft\/pr-\d+$/.test(b);
+export const prBranch = (n: number): string => `coliseum/pr-${n}`;
+export const isPrBranch = (b: string): boolean => /^coliseum\/pr-\d+$/.test(b);
 
 export type Runner = (cmd: string, args: string[], opts: { cwd: string; env: NodeJS.ProcessEnv; timeoutMs: number }) => Promise<RunResult>;
 
-const NO_HOOKS_DIR = path.join(os.tmpdir(), 'agentcraft-no-hooks-7f3e9c');
+const NO_HOOKS_DIR = path.join(os.tmpdir(), 'coliseum-no-hooks-7f3e9c');
 
 function env(): NodeJS.ProcessEnv {
   const e: NodeJS.ProcessEnv = { ...process.env, GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never', LC_ALL: 'C' };
@@ -58,7 +58,7 @@ export async function githubOrigin(repoPath: string, runner: Runner = run): Prom
 
 /**
  * Fetch the given PRs: metadata through `gh pr view` (the user's own gh login) and the head commits
- * into `agentcraft/pr-<n>` (repository hooks disabled). Returns the PRs that could be fetched and
+ * into `coliseum/pr-<n>` (repository hooks disabled). Returns the PRs that could be fetched and
  * an error line for each that could not.
  */
 export async function fetchPulls(repoPath: string, numbers: number[], runner: Runner = run): Promise<{ pulls: PullRequest[]; errors: string[] }> {

@@ -15,11 +15,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Common (both sides) entrypoint: registries (blocks, block entities, items + creative tab, the agent
- * entity type), the HQ world rules, the anchor registry and the {@code /agentcraft} command. Client
+ * entity type), the HQ world rules, the anchor registry and the {@code /warp} command. Client
  * features are wired in {@code dev.agentcraft.client.ClientFeatures}.
  */
 public class AgentCraft implements ModInitializer {
-	public static final String MOD_ID = "agentcraft";
+	public static final String MOD_ID = "coliseum";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	@Override
@@ -32,7 +32,7 @@ public class AgentCraft implements ModInitializer {
 		Anchors.init();
 		AgentCraftCommands.init();
 		HqFeature.init();
-		LOGGER.info("AgentCraft common init done ({} blocks, cast {})", ModBlocks.all().size(), Cast.ids());
+		LOGGER.info("Coliseum common init done ({} blocks, cast {})", ModBlocks.all().size(), Cast.ids());
 	}
 
 	public static Identifier id(String path) {

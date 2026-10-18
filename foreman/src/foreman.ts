@@ -400,7 +400,7 @@ export class Foreman {
       } catch (e) {
         if (e instanceof RepoError && e.code === 'empty' && task && d.repoId && d.worktree) {
           // nothing to merge (a report or investigation): the task is simply done
-          await this.repos.abandon(d.repoId, d.worktree, `agentcraft: ${task.id} (no changes)`).catch((err) => this.log.warn(`abandon: ${(err as Error).message}`));
+          await this.repos.abandon(d.repoId, d.worktree, `coliseum: ${task.id} (no changes)`).catch((err) => this.log.warn(`abandon: ${(err as Error).message}`));
           this.tasks.setStatus(task.id, 'done', { force: true });
           this.bus.feed('merge', `Nothing to merge for ${task.id} (no file changes): closed as done`, { agentId: d.agentId });
           this.notify('info', `${task.id} had no changes: closed as done`);

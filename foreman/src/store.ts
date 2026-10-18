@@ -1,5 +1,5 @@
 // Durable state. Everything the Foreman knows lives under `dir` (a profile directory inside
-// AGENTCRAFT_HOME) and survives restarts:
+// COLISEUM_HOME) and survives restarts:
 //
 //   <dir>/state.json            agents, tasks, decisions, repos, goals, feed, messages, sessions...
 //   <dir>/logs/<agentId>.jsonl  append-only agent logs (the snapshot carries a tail); rotated at

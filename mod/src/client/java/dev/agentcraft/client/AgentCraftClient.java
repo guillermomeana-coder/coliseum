@@ -22,7 +22,7 @@ public class AgentCraftClient implements ClientModInitializer {
 				logPauseOrigin(client);
 			}
 		});
-		AgentCraft.LOGGER.info("AgentCraft client init (devPort={}, mute={}, takeFocus={}, autoWorld={})",
+		AgentCraft.LOGGER.info("Coliseum client init (devPort={}, mute={}, takeFocus={}, autoWorld={})",
 			ClientEnv.DEV_PORT, ClientEnv.MUTE, ClientEnv.TAKE_FOCUS, ClientEnv.AUTO_WORLD);
 	}
 
@@ -45,7 +45,7 @@ public class AgentCraftClient implements ClientModInitializer {
 			// Runs before the first client tick, so no sound/music ever plays.
 			mc.options.getSoundSourceOptionInstance(SoundSource.MASTER).set(0.0);
 			mc.options.getSoundSourceOptionInstance(SoundSource.MUSIC).set(0.0);
-			AgentCraft.LOGGER.info("Muted (AGENTCRAFT_MUTE=1; set AGENTCRAFT_MUTE=0 to keep your volume)");
+			AgentCraft.LOGGER.info("Muted (COLISEUM_MUTE=1; set COLISEUM_MUTE=0 to keep your volume)");
 		}
 		if (ClientEnv.DEV_RUN) {
 			// Dev runs never pause because the window is in the background (also enforced via the

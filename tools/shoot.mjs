@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // Scene screenshot runner: drives the DevBridge through a list of shots and writes PNGs to
-// artifacts/shots/ (or AGENTCRAFT_SHOTS_DIR). The game must be running (tools\launch.ps1 or
+// artifacts/shots/ (or COLISEUM_SHOTS_DIR). The game must be running (tools\launch.ps1 or
 // gradlew runClient). Scene format: docs/QA.md ("Scene format"); runner: tools/lib/scene.mjs.
 //
 //   node tools/shoot.mjs tools/scenes/phase1.json [--only a,b] [--port N] [--manifest out.json]
 //        [--prefix qa/run1/] [--foreman [PORT]] [--anchors anchors.json] [--release] [--strict] [--verbose]
 //
 //   --prefix P      shot names are prefixed (names may contain '/', e.g. qa/<runId>/)
-//   --foreman [N]   connect to the Foreman (default AGENTCRAFT_PORT or 7878) for scenes that send
+//   --foreman [N]   connect to the Foreman (default COLISEUM_PORT or 7878) for scenes that send
 //                   Foreman messages or use {{merge.repoId}}-style templates; also implied when the
 //                   scene has "foreman": {"connect": true}
 //   --anchors F     JSON {name:{x,y,z,yaw,pitch}} that wins over the mod's dev.anchors
@@ -26,21 +26,21 @@ import { handleHelp } from './lib/help.mjs';
 const USAGE = `Usage: node tools/shoot.mjs <scene.json> [--only a,b] [--port N] [--manifest out.json] [--prefix p/] [--foreman [N]] [--anchors f.json] [--release] [--strict] [--verbose]
 
 Scene screenshot runner: drives the DevBridge through a list of shots and writes PNGs to
-artifacts/shots/ (or AGENTCRAFT_SHOTS_DIR). The game must be running.
+artifacts/shots/ (or COLISEUM_SHOTS_DIR). The game must be running.
 
 Options:
   --only a,b        run only these shots
-  --port N          DevBridge port (default AGENTCRAFT_DEV_PORT or 7879)
+  --port N          DevBridge port (default COLISEUM_DEV_PORT or 7879)
   --manifest F      write the JSON summary to F
   --prefix P        prefix shot names (may contain '/')
-  --foreman [N]     connect to the Foreman (default AGENTCRAFT_PORT or 7878)
+  --foreman [N]     connect to the Foreman (default COLISEUM_PORT or 7878)
   --anchors F       JSON {name:{x,y,z,yaw,pitch}} overriding dev.anchors
   --release         hand the view back at the end
   --strict          skipped shots count as failures
   --verbose         extra logging
   -h, --help        show this help
 
-Env: AGENTCRAFT_DEV_PORT, AGENTCRAFT_PORT, AGENTCRAFT_SHOTS_DIR
+Env: COLISEUM_DEV_PORT, COLISEUM_PORT, COLISEUM_SHOTS_DIR
 Example: node tools/shoot.mjs tools/scenes/phase1.json --only a,b --port 7902
 Exit code 1 if a shot failed.`;
 handleHelp(USAGE);

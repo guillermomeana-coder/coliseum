@@ -30,9 +30,9 @@ import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 
 /**
- * Boots straight into the "AgentCraft HQ" world without any clicks: the first time the title
+ * Boots straight into the "Coliseum HQ" world without any clicks: the first time the title
  * screen appears, the world is loaded if it exists, or created (creative, peaceful, superflat
- * grass meadow with no structures/decoration) if it does not. Disable with AGENTCRAFT_AUTOWORLD=0.
+ * grass meadow with no structures/decoration) if it does not. Disable with COLISEUM_AUTOWORLD=0.
  */
 public final class AutoWorld {
 	private static boolean attempted;
@@ -44,7 +44,7 @@ public final class AutoWorld {
 
 	public static void init() {
 		if (!ClientEnv.AUTO_WORLD) {
-			AgentCraft.LOGGER.info("AutoWorld disabled (AGENTCRAFT_AUTOWORLD=0)");
+			AgentCraft.LOGGER.info("AutoWorld disabled (COLISEUM_AUTOWORLD=0)");
 			return;
 		}
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> openingHq = false);

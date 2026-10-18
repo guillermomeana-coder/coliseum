@@ -52,7 +52,7 @@ async function until(pred, timeoutMs, what) {
 
 test('watch: reconnects with backoff after the server drops the socket, sends hello again', async () => {
   const { wss, seen, port } = await fakeForeman();
-  const { child, out } = run(['watch'], { AGENTCRAFT_PORT: String(port) });
+  const { child, out } = run(['watch'], { COLISEUM_PORT: String(port) });
   try {
     await until(() => seen.hellos === 1, 5000, 'first hello');
     seen.sockets[0].terminate();
@@ -70,7 +70,7 @@ test('watch: reconnects with backoff after the server drops the socket, sends he
 
 test('status against a closed port retries 5 times total, then exits 1', async () => {
   const port = await closedPort();
-  const { child, out } = run(['status'], { AGENTCRAFT_PORT: String(port), AGENTCRAFT_BACKOFF_BASE_MS: '10' });
+  const { child, out } = run(['status'], { COLISEUM_PORT: String(port), COLISEUM_BACKOFF_BASE_MS: '10' });
   try {
     const code = await new Promise((resolve) => child.once('exit', resolve));
     assert.equal(code, 1);

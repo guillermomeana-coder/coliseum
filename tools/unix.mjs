@@ -20,7 +20,7 @@ const saveJson = (file, value) => {
 const runFile = (kind, profile) => path.join(runDir, `unix-${kind}-${profile}.json`);
 
 function usage(code = 0) {
-  console.log(`Usage: AgentCraft launcher (macOS, Linux)
+  console.log(`Usage: Coliseum launcher (macOS, Linux)
   node tools/unix.mjs launch [--backend sim|claude|codex] [--repo PATH] [--use-claude-login]
                             [--home PATH] [--profile NAME] [--port N] [--dev-port N]
                             [--dev] [--showcase busy|late] [--reset]
@@ -29,10 +29,10 @@ function usage(code = 0) {
                             [--foreman-arg VALUE] (repeatable)
   node tools/unix.mjs stop [--game] [--foreman] [--profile NAME] [--stop-daemon]
 
-Default: Claude backend, ~/.agentcraft, ports 7878/7879. --dev mutes the game,
+Default: Claude backend, ~/.coliseum, ports 7878/7879. --dev mutes the game,
 keeps it from taking focus, and disables desktop notifications.
 
-Env: AGENTCRAFT_BACKEND, AGENTCRAFT_HOME, AGENTCRAFT_PORT, AGENTCRAFT_DEV_PORT, JAVA_HOME, GRADLE_USER_HOME
+Env: COLISEUM_BACKEND, COLISEUM_HOME, COLISEUM_PORT, COLISEUM_DEV_PORT, JAVA_HOME, GRADLE_USER_HOME
 Examples:
   node tools/unix.mjs launch --backend sim --no-game
   node tools/unix.mjs stop --game --foreman
@@ -57,7 +57,7 @@ function options(argv) {
     else throw new Error(`unknown option: --${key}`);
   }
   if (!['launch', 'stop'].includes(out.action)) usage(out.action ? 2 : 0);
-  out.backend ??= process.env.AGENTCRAFT_BACKEND || 'claude';
+  out.backend ??= process.env.COLISEUM_BACKEND || 'claude';
   if (out.showcase) {
     if (!['busy', 'late'].includes(out.showcase)) throw new Error('showcase must be busy or late');
     out.backend = 'sim';
@@ -66,9 +66,9 @@ function options(argv) {
   if (!['sim', 'claude', 'codex'].includes(out.backend)) throw new Error('backend must be sim, claude or codex');
   out.profile ??= out.backend;
   if (!/^[\w-]+$/.test(out.profile)) throw new Error('profile must contain only letters, digits, _ or -');
-  out.home = path.resolve(out.home ?? process.env.AGENTCRAFT_HOME ?? path.join(os.homedir(), '.agentcraft'));
-  out.port = Number(out.port ?? process.env.AGENTCRAFT_PORT ?? 7878);
-  out['dev-port'] = Number(out['dev-port'] ?? process.env.AGENTCRAFT_DEV_PORT ?? 7879);
+  out.home = path.resolve(out.home ?? process.env.COLISEUM_HOME ?? path.join(os.homedir(), '.coliseum'));
+  out.port = Number(out.port ?? process.env.COLISEUM_PORT ?? 7878);
+  out['dev-port'] = Number(out['dev-port'] ?? process.env.COLISEUM_DEV_PORT ?? 7879);
   for (const port of [out.port, out['dev-port']]) {
     if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(`invalid port: ${port}`);
   }
@@ -242,9 +242,9 @@ async function launch(opt, summary) {
   const gradleHome = process.env.GRADLE_USER_HOME || path.join(root, '.gradle-home');
   const env = {
     JAVA_HOME: javaHome(), GRADLE_USER_HOME: gradleHome,
-    AGENTCRAFT_PORT: String(fmPort), AGENTCRAFT_DEV_PORT: String(opt['dev-port']),
-    AGENTCRAFT_HOME: opt.home, AGENTCRAFT_PROFILE: opt.profile,
-    AGENTCRAFT_MUTE: opt.dev ? '1' : '0', AGENTCRAFT_FOCUS: opt.dev ? '0' : '1',
+    COLISEUM_PORT: String(fmPort), COLISEUM_DEV_PORT: String(opt['dev-port']),
+    COLISEUM_HOME: opt.home, COLISEUM_PROFILE: opt.profile,
+    COLISEUM_MUTE: opt.dev ? '1' : '0', COLISEUM_FOCUS: opt.dev ? '0' : '1',
   };
   game = { ...start('/bin/sh', [path.join(root, 'mod', 'gradlew'), 'runClient', '--console=plain'], path.join(root, 'mod'), path.join(logDir, 'unix-game.log'), env), devPort: opt['dev-port'], foremanPort: fmPort };
   saveJson(gameFile, game);
@@ -301,6 +301,6 @@ try {
     finally { if (opt['summary-json']) saveJson(path.resolve(opt['summary-json']), summary); }
   } else await stop(opt);
 } catch (error) {
-  console.error(`AgentCraft: ${error.message}`);
+  console.error(`Coliseum: ${error.message}`);
   process.exitCode = 1;
 }

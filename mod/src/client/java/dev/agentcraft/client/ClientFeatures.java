@@ -29,7 +29,7 @@ public final class ClientFeatures {
 	public static void init() {
 		ForemanFeature.init();   // link + state model (dev.foreman, dev.state.foreman)
 		AnchorsDev.init();       // dev.anchors, dev.camera {anchor}
-		ItemsDev.init();         // dev.screen creative_agentcraft
+		ItemsDev.init();         // dev.screen creative_coliseum
 		AgentsFeature.init();    // agent NPCs, nameplates, dev.agents
 		HudFeature.init();       // connection banner (+ Phase 3: goal boss bar, toasts)
 		HqClientFeature.init();  // lamps / podium / atrium driven by state (Phase 3)
@@ -40,6 +40,6 @@ public final class ClientFeatures {
 		DiffFeature.init();
 		LibraryFeature.init();
 		PermissionsFeature.init();
-		AgentCraft.LOGGER.info("AgentCraft client features initialised");
+		AgentCraft.LOGGER.info("Coliseum client features initialised");
 	}
 }

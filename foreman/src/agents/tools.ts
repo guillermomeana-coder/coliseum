@@ -1,5 +1,5 @@
-// The AgentCraft team tools, shared by every engine (Claude: an in-process MCP server named
-// "agentcraft", see claude/tools.ts; Codex: app-server dynamic tools, see codex/engine.ts):
+// The Coliseum team tools, shared by every engine (Claude: an in-process MCP server named
+// "coliseum", see claude/tools.ts; Codex: app-server dynamic tools, see codex/engine.ts):
 //   send_message, ask_user, write_memory, read_memory, update_task, report_status, list_tasks
 //   lead only: create_task, request_merge
 // Every tool result carries any unread messages for the agent (so mid-turn messages arrive).
@@ -65,7 +65,7 @@ export async function closeIfNoChanges(fm: Foreman, taskId: string): Promise<boo
   await fm.repos.refresh(t.repoId);
   const wt = fm.repos.findWorktree(t.repoId, t.worktree);
   if (!wt || wt.status !== 'active' || wt.files > 0) return false;
-  await fm.repos.abandon(t.repoId, wt.id, `agentcraft: ${t.id} (no changes)`);
+  await fm.repos.abandon(t.repoId, wt.id, `coliseum: ${t.id} (no changes)`);
   fm.tasks.setStatus(t.id, 'done', { force: true, summary: t.summary ?? 'no changes' });
   fm.bus.feed('task', `${t.id} changed no files (report only): closed as done, nothing to merge`, { agentId: t.assignee ?? 'marlow' });
   if (t.assignee && fm.agent(t.assignee)?.taskId === t.id) fm.setAgent(t.assignee, { state: 'idle', station: 'lounge', activity: `${t.id} done`, taskId: null, worktree: null });
@@ -245,11 +245,11 @@ export function agentTools(fm: Foreman, agentId: string, role: 'lead' | 'worker'
           deps: z.array(z.string()).optional(),
           assignee: z.string().optional().describe('worker id/name'),
           priority: z.number().int().optional(),
-          start_branch: z.string().optional().describe('only for a fetched pull request: its branch, e.g. "agentcraft/pr-12"; the worker starts from the contributor\'s commits'),
+          start_branch: z.string().optional().describe('only for a fetched pull request: its branch, e.g. "coliseum/pr-12"; the worker starts from the contributor\'s commits'),
         },
         async ({ title, description, deps, assignee, priority, start_branch }) => {
           const goal = fm.currentGoal();
-          if (start_branch && !isPrBranch(start_branch)) return fail(`start_branch must be a fetched pull request branch (agentcraft/pr-<n>), not ${start_branch}`);
+          if (start_branch && !isPrBranch(start_branch)) return fail(`start_branch must be a fetched pull request branch (coliseum/pr-<n>), not ${start_branch}`);
           let who: string | undefined;
           if (assignee) {
             who = fm.resolveAgentId(assignee);

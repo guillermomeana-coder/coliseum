@@ -53,7 +53,7 @@ if ($AgentHome) { $AgentHome = Resolve-FullPath $AgentHome }
 $failures = 0
 $stoppedAny = $false
 Write-Host ''
-Write-Host 'AgentCraft stop' -ForegroundColor Cyan
+Write-Host 'Coliseum stop' -ForegroundColor Cyan
 
 # --- game ------------------------------------------------------------------------------------------
 if ($doGame) {

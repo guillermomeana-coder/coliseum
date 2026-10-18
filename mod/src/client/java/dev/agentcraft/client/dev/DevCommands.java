@@ -167,7 +167,7 @@ final class DevCommands {
 				+ " server thread and the JVM is halted (exit code 3) after forceAfterMs",
 			DevCommands::quit);
 
-		if (ClientEnv.flag("AGENTCRAFT_DEV_TEST", false)) {
+		if (ClientEnv.flag("COLISEUM_DEV_TEST", false)) {
 			// Test hook (only with AGENTCRAFT_DEV_TEST=1): block the render thread to simulate a hung game,
 			// so the stall detection and the dev.quit watchdog can be verified for real.
 			DevBridge.register("dev.test.stall", 5_000, "{ms: 1-600000} - TEST ONLY: block the render thread for ms", (req, mc) -> {
@@ -647,7 +647,7 @@ final class DevCommands {
 				stopRan.set(true);
 				mc.stop();
 			}));
-			Thread watchdog = new Thread(() -> quitWatchdog(mc, stopRan, 250 + forceAfterMs), "AgentCraft quit watchdog");
+			Thread watchdog = new Thread(() -> quitWatchdog(mc, stopRan, 250 + forceAfterMs), "Coliseum quit watchdog");
 			watchdog.setDaemon(true); // dies with the JVM on a normal exit
 			watchdog.start();
 			AgentCraft.LOGGER.info("dev.quit: stopping (render thread {}; forced exit if the stop has not run after {} ms)",

@@ -15,10 +15,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
-/** One block item per AgentCraft block, plus the "AgentCraft" creative tab (itemGroup.agentcraft). */
+/** One block item per Coliseum block, plus the "Coliseum" creative tab (itemGroup.coliseum). */
 public final class ModItems {
 	private static final List<Item> ITEMS = new ArrayList<>();
-	public static final ResourceKey<CreativeModeTab> TAB = ResourceKey.create(Registries.CREATIVE_MODE_TAB, AgentCraft.id("agentcraft"));
+	public static final ResourceKey<CreativeModeTab> TAB = ResourceKey.create(Registries.CREATIVE_MODE_TAB, AgentCraft.id("coliseum"));
 
 	private ModItems() {
 	}

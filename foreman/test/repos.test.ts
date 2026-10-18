@@ -361,7 +361,7 @@ describe('approved merges are made as the user', () => {
     expect(raw.includes('gpgsig')).toBe(false);
     expect((await gitOut(repo, ['rev-list', '--parents', '-n', '1', 'HEAD'])).split(' ')).toHaveLength(2); // one parent
     expect(await gitOut(repo, ['log', '-1', '--format=%an'])).toBe('Demo Author');
-    expect(raw).toMatch(/Co-authored-by: AgentCraft Kit <kit@agentcraft\.local>/);
+    expect(raw).toMatch(/Co-authored-by: Coliseum Kit <kit@coliseum\.local>/);
     expect(fs.readFileSync(path.join(repo, 'CHANGELOG.md'), 'utf8').replace(/\r\n/g, '\n')).toBe('# 0.2.0\n');
   });
 });
@@ -451,7 +451,7 @@ describe('worktree .git tampering and a moved HEAD', () => {
     expect(tip).not.toBe(own);
     expect(await gitOut(repo, ['rev-parse', `${tip}^`])).toBe(own);
     expect(await gitOut(repo, ['show', `${tip}:WORK.md`])).toBe('moved head');
-    expect(await gitOut(repo, ['log', '-1', '--format=%an <%ae>', tip])).toBe('AgentCraft Kit <kit@agentcraft.local>');
+    expect(await gitOut(repo, ['log', '-1', '--format=%an <%ae>', tip])).toBe('Coliseum Kit <kit@coliseum.local>');
     expect(await userState()).toEqual(before);
     // nothing new: no second commit
     expect(await h3.fm.repos.commitAll('demo-app', wt.id, 'again')).toBe(false);

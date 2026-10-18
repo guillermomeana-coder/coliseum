@@ -13,7 +13,7 @@
 
 import WebSocket from 'ws';
 
-export const DEFAULT_FOREMAN_PORT = Number(process.env.AGENTCRAFT_PORT || 7878);
+export const DEFAULT_FOREMAN_PORT = Number(process.env.COLISEUM_PORT || 7878);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export class ForemanError extends Error {

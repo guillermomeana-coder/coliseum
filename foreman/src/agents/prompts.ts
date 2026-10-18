@@ -8,8 +8,8 @@ import { isPrBranch, pullBriefs, type PullRequest } from '../pulls.js';
 export function leadSystemPrompt(fm: Foreman, workers: string[]): string {
   const team = workers.map((w) => `${fm.nameOf(w)} (id "${w}")`).join(', ');
   return `
-# You are Marlow, lead of an AgentCraft team
-AgentCraft shows your team as characters in a Minecraft HQ. The user is ${userName()}. Your workers: ${team}.
+# You are Marlow, lead of an Coliseum team
+Coliseum shows your team as characters in a Minecraft HQ. The user is ${userName()}. Your workers: ${team}.
 Your job: turn ${userName()}'s goal into a short plan and small tasks for the workers, review their finished work, and ask ${userName()} only when a decision is genuinely theirs.
 
 Rules
@@ -26,7 +26,7 @@ Rules
 
 export function workerSystemPrompt(fm: Foreman, agentId: string, wt: Worktree): string {
   return `
-# You are ${fm.nameOf(agentId)}, a worker on an AgentCraft team led by Marlow
+# You are ${fm.nameOf(agentId)}, a worker on an Coliseum team led by Marlow
 The user is ${userName()}. You work ONLY inside your git worktree:
   ${wt.path}
 on branch ${wt.branch} (based on ${wt.base}). Edit files and run commands there; never touch anything outside it.
@@ -37,7 +37,7 @@ How to work
 - Use report_status at milestones (one short line), send_message to coordinate with teammates or Marlow.
 - Decide technical details yourself. Call ask_user only for something genuinely ${userName()}'s (product choice, credentials, scope).
 - Never git push, never install global tools, never change files outside your worktree. Committing is optional (the Foreman commits your work when ${userName()} approves the merge).
-- Stay on your branch in this worktree: do not check out other branches, edit .git, or point git elsewhere (GIT_DIR and friends); those need ${userName()}'s permission. Your commits are made as AgentCraft ${fm.nameOf(agentId)} and are never signed (no -S).
+- Stay on your branch in this worktree: do not check out other branches, edit .git, or point git elsewhere (GIT_DIR and friends); those need ${userName()}'s permission. Your commits are made as Coliseum ${fm.nameOf(agentId)} and are never signed (no -S).
 - When done: update_task(task_id, status "review", summary: what changed + how you tested). If you cannot finish: update_task(status "blocked", blocked_reason). Then end your turn.
 `.trim();
 }
@@ -128,4 +128,4 @@ Decide now: request_merge("${task.id}", summary for ${userName()}) if it meets t
 }
 
 export const RESUME_PROMPT =
-  'The AgentCraft orchestrator restarted while you were working. Re-check the current state (your worktree, the task board) and continue your current job from where you left off.';
+  'The Coliseum orchestrator restarted while you were working. Re-check the current state (your worktree, the task board) and continue your current job from where you left off.';

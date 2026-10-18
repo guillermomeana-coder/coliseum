@@ -11,7 +11,7 @@
 
 import WebSocket from 'ws';
 
-export const DEFAULT_PORT = Number(process.env.AGENTCRAFT_DEV_PORT || 7879);
+export const DEFAULT_PORT = Number(process.env.COLISEUM_DEV_PORT || 7879);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

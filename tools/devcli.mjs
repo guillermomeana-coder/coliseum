@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// DevBridge CLI. Talks to the running game (mod DevBridge, ws://127.0.0.1:${AGENTCRAFT_DEV_PORT:-7879}).
+// DevBridge CLI. Talks to the running game (mod DevBridge, ws://127.0.0.1:${COLISEUM_DEV_PORT:-7879}).
 //
 //   node tools/devcli.mjs wait                      wait for bridge + world (default 300s)
 //   node tools/devcli.mjs state
@@ -33,7 +33,7 @@ function usage(code = 2) {
   raw '<json>'                  send an arbitrary request
   quit                          save and quit the game
 options: --port N (default ${DEFAULT_PORT}), --timeout SECONDS (connect timeout), -h/--help
-env: AGENTCRAFT_DEV_PORT
+env: COLISEUM_DEV_PORT
 example: node tools/devcli.mjs state --port 7902`);
   process.exit(code);
 }

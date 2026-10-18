@@ -32,7 +32,7 @@ const task: Task = {
   repoId: 'demo-app',
   goalId: 'g1',
   priority: 2,
-  branch: 'agentcraft/kit/t2-tag-parser-module',
+  branch: 'coliseum/kit/t2-tag-parser-module',
   worktree: 'kit-t2',
   ci: 'fail',
   createdBy: 'marlow',
@@ -44,7 +44,7 @@ const decision: Decision = {
   id: 'd2',
   agentId: 'marlow',
   kind: 'merge',
-  question: 'Merge t2 "Tag parser module (src/tags.ts)" (agentcraft/kit/t2-tag-parser-module) into main?',
+  question: 'Merge t2 "Tag parser module (src/tags.ts)" (coliseum/kit/t2-tag-parser-module) into main?',
   options: ['Merge', 'Request changes', 'Reject'],
   context: '2 files, +45 -0 | tests: pass',
   status: 'open',
@@ -57,7 +57,7 @@ const decision: Decision = {
 const repo: Repo = {
   id: 'demo-app',
   name: 'demo-app',
-  path: 'C:\\Projects\\agentcraft\\sandbox\\demo-app',
+  path: 'C:\\Projects\\coliseum\\sandbox\\demo-app',
   branch: 'main',
   head: 'a6cbf49',
   dirty: false,
@@ -67,9 +67,9 @@ const repo: Repo = {
       id: 'kit-t2',
       agentId: 'kit',
       taskId: 't2',
-      branch: 'agentcraft/kit/t2-tag-parser-module',
+      branch: 'coliseum/kit/t2-tag-parser-module',
       base: 'main',
-      path: 'C:\\Users\\you\\.agentcraft\\claude\\worktrees\\demo-app\\kit-t2',
+      path: 'C:\\Users\\you\\.coliseum\\claude\\worktrees\\demo-app\\kit-t2',
       status: 'active',
       ahead: 1,
       files: 2,
@@ -122,7 +122,7 @@ export const SERVER_EXAMPLES: Ex<ServerMessage> = {
   'repo.upsert': { v: 1, type: 'repo.upsert', repo },
   'memory.upsert': { v: 1, type: 'memory.upsert', entry: memory },
   'goal.upsert': { v: 1, type: 'goal.upsert', goal: { id: 'g1', text: 'Add #tags to pocket-notes', progress: 0.56, status: 'active', repoId: 'demo-app', createdAt: ts, updatedAt: ts + 200_000 } },
-  'feed.add': { v: 1, type: 'feed.add', item: { ts: ts + 210_000, kind: 'merge', text: 'Merged agentcraft/kit/t2-tag-parser-module into main (7cf1999, 2 files)', agentId: 'marlow' } },
+  'feed.add': { v: 1, type: 'feed.add', item: { ts: ts + 210_000, kind: 'merge', text: 'Merged coliseum/kit/t2-tag-parser-module into main (7cf1999, 2 files)', agentId: 'marlow' } },
   diff: {
     v: 1,
     type: 'diff',
@@ -130,7 +130,7 @@ export const SERVER_EXAMPLES: Ex<ServerMessage> = {
     repoId: 'demo-app',
     worktree: 'kit-t2',
     base: 'main',
-    branch: 'agentcraft/kit/t2-tag-parser-module',
+    branch: 'coliseum/kit/t2-tag-parser-module',
     files: [
       {
         path: 'src/tags.ts',
@@ -192,5 +192,5 @@ export const CLIENT_EXAMPLES: Ex<ClientMessage> = {
   'task.action': { v: 1, type: 'task.action', id: 'c15', taskId: 't5', action: 'reassign', arg: 'wren' },
   'agent.action': { v: 1, type: 'agent.action', id: 'c16', agentId: 'juniper', action: 'pause' },
   'diff.request': { v: 1, type: 'diff.request', id: 'c17', requestId: 'r7', repoId: 'demo-app', worktree: 'kit-t2' },
-  'repo.add': { v: 1, type: 'repo.add', id: 'c18', path: 'C:\\Projects\\agentcraft\\sandbox\\demo-app' },
+  'repo.add': { v: 1, type: 'repo.add', id: 'c18', path: 'C:\\Projects\\coliseum\\sandbox\\demo-app' },
 };

@@ -189,7 +189,7 @@ public final class DevBridge extends WebSocketServer {
 	public ServerHandshakeBuilder onWebsocketHandshakeReceivedAsServer(WebSocket conn, Draft draft, ClientHandshake request) throws InvalidDataException {
 		// Browsers always send Origin; local tools (node ws, curl) don't. Refusing browser
 		// origins stops a web page from driving the game through ws://127.0.0.1.
-		if (request.hasFieldValue("Origin") && !ClientEnv.flag("AGENTCRAFT_DEV_ALLOW_ORIGIN", false)) {
+		if (request.hasFieldValue("Origin") && !ClientEnv.flag("COLISEUM_DEV_ALLOW_ORIGIN", false)) {
 			throw new InvalidDataException(CloseFrame.POLICY_VALIDATION, "DevBridge refuses browser origins");
 		}
 		return super.onWebsocketHandshakeReceivedAsServer(conn, draft, request);

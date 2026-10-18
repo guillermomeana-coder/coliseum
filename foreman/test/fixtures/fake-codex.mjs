@@ -6,7 +6,7 @@
 // Steps: { cmd, foreign?, output? }  run a shell command (asks for approval; foreign: from another thread)
 //        { write: { file, content } } edit a file in the worktree (no approval: inside the sandbox)
 //        { editOutside: path }        an edit outside the sandbox (asks for file-change approval)
-//        { tool, args }               call a dynamic tool (the AgentCraft team tools)
+//        { tool, args }               call a dynamic tool (the Coliseum team tools)
 //        { say }                      final answer text
 //        { wait }                     sleep ms (to be interrupted)
 import fs from 'node:fs';

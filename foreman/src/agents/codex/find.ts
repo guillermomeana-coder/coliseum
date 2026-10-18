@@ -1,4 +1,4 @@
-// Where is the Codex CLI? An explicit path (--codex-path / AGENTCRAFT_CODEX_PATH), then `codex` on
+// Where is the Codex CLI? An explicit path (--codex-path / COLISEUM_CODEX_PATH), then `codex` on
 // PATH (npm i -g @openai/codex, Homebrew...), then the CLI bundled with the Codex desktop app.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';

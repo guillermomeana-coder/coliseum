@@ -41,14 +41,14 @@ for (let i = 0; i < argv.length; i++) {
 if (opt.help || argv.includes('-h')) {
   const lines = fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split(/\r?\n/).slice(1);
   const text = lines.slice(0, lines.findIndex((l) => !l.startsWith('//'))).map((l) => l.replace(/^\/\/ ?/, '')).join('\n');
-  console.log(`Usage:${text.replace(/^\s*node/, ' node')}\n\n  -h, --help      show this help\nEnv: AGENTCRAFT_PORT, AGENTCRAFT_DEV_PORT`);
+  console.log(`Usage:${text.replace(/^\s*node/, ' node')}\n\n  -h, --help      show this help\nEnv: COLISEUM_PORT, COLISEUM_DEV_PORT`);
   process.exit(0);
 }
 
 function git(args, cwd = ROOT) {
   try { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { return null; }
 }
-// QA state never goes to ~/.agentcraft: default to the main checkout's .agentcraft-home
+// QA state never goes to ~/.coliseum: default to the main checkout's .coliseum-home
 function mainCheckout() {
   const common = git(['rev-parse', '--path-format=absolute', '--git-common-dir']);
   if (common && path.basename(common) === '.git') return path.dirname(path.resolve(common));
@@ -57,9 +57,9 @@ function mainCheckout() {
 
 const showcase = opt.showcase === 'late' ? 'late' : 'busy';
 const scenePath = path.resolve(opt.scene ?? path.join(TOOLS, 'scenes', 'qa.json'));
-const port = Number(opt.port ?? process.env.AGENTCRAFT_PORT ?? 7878);
-const devPort = Number(opt['dev-port'] ?? process.env.AGENTCRAFT_DEV_PORT ?? 7879);
-const home = path.resolve(opt.home ?? path.join(mainCheckout(), '.agentcraft-home'));
+const port = Number(opt.port ?? process.env.COLISEUM_PORT ?? 7878);
+const devPort = Number(opt['dev-port'] ?? process.env.COLISEUM_DEV_PORT ?? 7879);
+const home = path.resolve(opt.home ?? path.join(mainCheckout(), '.coliseum-home'));
 const profile = opt.profile ?? (showcase === 'late' ? 'showcase-late' : 'showcase');
 const stamp = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
 const runId = opt['run-id'] ?? stamp;
@@ -232,7 +232,7 @@ if (summary) {
   const c = summary.counts;
   sheet = contactSheet({
     out: path.join(outDir, 'contact_sheet.png'),
-    title: `AgentCraft QA ${runId}`,
+    title: `Coliseum QA ${runId}`,
     subtitle: `${gitInfo.branch ?? '?'}@${gitInfo.sha ?? '?'}${gitInfo.dirty ? '+dirty' : ''}  showcase ${showcase}  ok ${c.ok}  skipped ${c.skipped}  failed ${c.failed}  anchors ${summary.anchors.available ? summary.anchors.names.length : 'n/a'}`,
     tiles,
     columns: Number(opt.columns ?? 3),

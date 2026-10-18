@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "coliseum:block/console_terminal"
+    },
+    "facing=east": {
+      "model": "coliseum:block/console_terminal",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "coliseum:block/console_terminal",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "coliseum:block/console_terminal",
+      "y": 270
+    }
+  }
+}

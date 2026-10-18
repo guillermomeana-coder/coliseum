@@ -1,6 +1,6 @@
 // The person the team works for. Used in agent prompts ("ask <name>"), feed lines and the sim's
 // dialogue, and sent to the mod in foreman.status so the UI can say it too.
-// Config: --user-name / AGENTCRAFT_USER_NAME / config.json "userName"; default: the OS user name.
+// Config: --user-name / COLISEUM_USER_NAME / config.json "userName"; default: the OS user name.
 import os from 'node:os';
 
 let current: string | undefined;
@@ -24,5 +24,5 @@ export function setUserName(name: string | undefined): void {
 }
 
 export function userName(): string {
-  return current ?? (process.env.AGENTCRAFT_USER_NAME?.trim() || defaultUserName());
+  return current ?? (process.env.COLISEUM_USER_NAME?.trim() || defaultUserName());
 }

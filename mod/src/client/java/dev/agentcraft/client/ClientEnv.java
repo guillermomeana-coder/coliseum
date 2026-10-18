@@ -8,15 +8,15 @@ import net.minecraft.client.Minecraft;
 
 /**
  * Environment switches for the client. All are read from environment variables (or the
- * equivalent -D system property, e.g. -Dagentcraft.mute=0) once at startup.
+ * equivalent -D system property, e.g. -Dcoliseum.mute=0) once at startup.
  *
  * <pre>
- * AGENTCRAFT_DEV_PORT   DevBridge port (default 7879), 127.0.0.1 only
- * AGENTCRAFT_DEV        1 enables the DevBridge, 0 disables it
- * AGENTCRAFT_MUTE       1 forces master+music volume to 0 at startup; 0 keeps your volume
- * AGENTCRAFT_FOCUS      0 = the window opens WITHOUT taking focus; 1 = normal focus
- * AGENTCRAFT_AUTOWORLD  1 = create/load the "AgentCraft HQ" world on startup; 0 = title screen
- * AGENTCRAFT_SHOTS_DIR  where dev.screenshot writes PNGs (default &lt;repo&gt;/artifacts/shots)
+ * COLISEUM_DEV_PORT     DevBridge port (default 7879), 127.0.0.1 only
+ * COLISEUM_DEV          1 enables the DevBridge, 0 disables it
+ * COLISEUM_MUTE         1 forces master+music volume to 0 at startup; 0 keeps your volume
+ * COLISEUM_FOCUS        0 = the window opens WITHOUT taking focus; 1 = normal focus
+ * COLISEUM_AUTOWORLD    1 = create/load the "Coliseum HQ" world on startup; 0 = title screen
+ * COLISEUM_SHOTS_DIR    where dev.screenshot writes PNGs (default &lt;repo&gt;/artifacts/shots)
  * </pre>
  *
  * Defaults depend on how the game runs. In a development run ({@code gradlew runClient}) the
@@ -32,11 +32,11 @@ public final class ClientEnv {
 	/** True in {@code gradlew runClient}; false for a jar in a normal launcher. */
 	public static final boolean DEV_RUN = FabricLoader.getInstance().isDevelopmentEnvironment();
 
-	public static final int DEV_PORT = intValue("AGENTCRAFT_DEV_PORT", 7879);
-	public static final boolean DEV_BRIDGE = flag("AGENTCRAFT_DEV", DEV_RUN);
-	public static final boolean MUTE = flag("AGENTCRAFT_MUTE", DEV_RUN);
-	public static final boolean TAKE_FOCUS = flag("AGENTCRAFT_FOCUS", !DEV_RUN);
-	public static final boolean AUTO_WORLD = flag("AGENTCRAFT_AUTOWORLD", DEV_RUN);
+	public static final int DEV_PORT = intValue("COLISEUM_DEV_PORT", 7879);
+	public static final boolean DEV_BRIDGE = flag("COLISEUM_DEV", DEV_RUN);
+	public static final boolean MUTE = flag("COLISEUM_MUTE", DEV_RUN);
+	public static final boolean TAKE_FOCUS = flag("COLISEUM_FOCUS", !DEV_RUN);
+	public static final boolean AUTO_WORLD = flag("COLISEUM_AUTOWORLD", DEV_RUN);
 
 	public static String raw(String envName) {
 		String prop = System.getProperty(envName.toLowerCase(Locale.ROOT).replace('_', '.'));
@@ -76,7 +76,7 @@ public final class ClientEnv {
 	 * &lt;repo&gt;/mod/run, so the default is &lt;repo&gt;/artifacts/shots.
 	 */
 	public static Path shotsDir() {
-		String override = raw("AGENTCRAFT_SHOTS_DIR");
+		String override = raw("COLISEUM_SHOTS_DIR");
 		if (override != null) {
 			return Path.of(override).toAbsolutePath().normalize();
 		}
@@ -85,6 +85,6 @@ public final class ClientEnv {
 		if (repo != null && Files.isDirectory(repo.resolve("mod")) && Files.isDirectory(repo.resolve("docs"))) {
 			return repo.resolve("artifacts").resolve("shots");
 		}
-		return gameDir.resolve("agentcraft-shots");
+		return gameDir.resolve("coliseum-shots");
 	}
 }

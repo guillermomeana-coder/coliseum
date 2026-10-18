@@ -30,8 +30,8 @@ public final class ForemanFeature {
 	}
 
 	public static void init() {
-		int port = ClientEnv.intValue("AGENTCRAFT_PORT", 7878);
-		boolean enabled = ClientEnv.flag("AGENTCRAFT_FOREMAN", true);
+		int port = ClientEnv.intValue("COLISEUM_PORT", 7878);
+		boolean enabled = ClientEnv.flag("COLISEUM_FOREMAN", true);
 		URI uri = URI.create("ws://127.0.0.1:" + port);
 		String modVersion = FabricLoader.getInstance().getModContainer(AgentCraft.MOD_ID)
 			.map(c -> c.getMetadata().getVersion().getFriendlyString()).orElse("0");
@@ -53,7 +53,7 @@ public final class ForemanFeature {
 				}
 				return DevBridge.onClient(mc, ForemanFeature::stateJson);
 			});
-		if (ClientEnv.flag("AGENTCRAFT_DEV_TEST", false)) {
+		if (ClientEnv.flag("COLISEUM_DEV_TEST", false)) {
 			// TEST ONLY: feed a Foreman message into the state model as if the Foreman sent it (UI states
 			// that are hard to reach for real, e.g. a failed claude login banner).
 			DevBridge.register("dev.test.foremanMessage", 5_000, "{message:{type, ...}} - TEST ONLY: apply as if received from the Foreman",

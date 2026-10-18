@@ -2,7 +2,7 @@
 //
 // Safety contract
 //  - never pushes (there is no code path that runs `git push`)
-//  - worktrees live under <profile>/worktrees, on branches agentcraft/<agent>/<task-slug>
+//  - worktrees live under <profile>/worktrees, on branches coliseum/<agent>/<task-slug>
 //  - the user's checkout is only ever modified by merge(), which requires an answered `merge`
 //    decision whose option is "Merge" and refuses if the merge would conflict or if the checkout
 //    that has the base branch checked out has uncommitted tracked changes
@@ -83,7 +83,7 @@ export function parseTestOutput(text: string): { failures: string[]; summary?: s
   return { failures: [...new Set(failures)].slice(0, 20), ...(nums.length ? { summary: nums.join(', ') } : {}) };
 }
 
-export const BRANCH_PREFIX = 'agentcraft/';
+export const BRANCH_PREFIX = 'coliseum/';
 
 const STOP_WORDS = new Set(['a', 'an', 'the', 'and', 'or', 'for', 'of', 'to', 'in', 'on', 'with', 'by', 'at', 'from']);
 
@@ -103,7 +103,7 @@ export function branchSlug(title: string, max = 24): string {
 }
 
 const agentIdentity = agentGitIdentity;
-const TAMPERED = 'AgentCraft will not run git in worktree';
+const TAMPERED = 'Coliseum will not run git in worktree';
 
 /** Real path (8.3 names, links, case) when it exists, else the resolved path. */
 function realPath(p: string): string {
@@ -130,12 +130,12 @@ export interface RepoOptions {
   signMerges?: boolean;
 }
 
-/** the user's git identity as their own git sees it in that repo (falls back to AgentCraft). */
+/** the user's git identity as their own git sees it in that repo (falls back to Coliseum). */
 async function userIdentity(repoPath: string): Promise<{ env: NodeJS.ProcessEnv; who: string }> {
   const name = await gitConfigGet(repoPath, 'user.name');
   const email = await gitConfigGet(repoPath, 'user.email');
   if (name && email) return { env: identityEnv(name, email), who: `${name} <${email}>` };
-  return { env: agentIdentity('user'), who: 'AgentCraft <user@agentcraft.local>' };
+  return { env: agentIdentity('user'), who: 'Coliseum <user@coliseum.local>' };
 }
 
 export class RepoManager {
@@ -428,7 +428,7 @@ export class RepoManager {
    */
   private async rawWorkingDiff(_r: Repo, w: Worktree, extra: string[]): Promise<string> {
     const mb = await gitOut(w.path, ['merge-base', w.base, 'HEAD']);
-    const tmpIndex = path.join(os.tmpdir(), `agentcraft-index-${process.pid}-${Math.random().toString(36).slice(2)}`);
+    const tmpIndex = path.join(os.tmpdir(), `coliseum-index-${process.pid}-${Math.random().toString(36).slice(2)}`);
     const env = { GIT_INDEX_FILE: tmpIndex };
     try {
       await git(w.path, ['read-tree', 'HEAD'], { env });
@@ -488,7 +488,7 @@ export class RepoManager {
 
   /**
    * Commit everything in the worktree (agent identity) on the agent's own branch. Returns true if
-   * a commit was made. Only ever moves refs/heads/agentcraft/...: if the agent left HEAD on
+   * a commit was made. Only ever moves refs/heads/coliseum/...: if the agent left HEAD on
    * another branch or a detached commit, the working tree is snapshotted onto its own branch
    * without touching HEAD's branch. Refuses if the worktree's .git link was tampered with.
    */
@@ -496,7 +496,7 @@ export class RepoManager {
     const r = this.require(repoId);
     const w = this.requireWorktree(repoId, worktreeId);
     if (w.status !== 'active') return false;
-    if (!w.branch.startsWith(BRANCH_PREFIX)) throw new RepoError(`refusing to commit on ${w.branch}: not an AgentCraft branch`, 'refused');
+    if (!w.branch.startsWith(BRANCH_PREFIX)) throw new RepoError(`refusing to commit on ${w.branch}: not an Coliseum branch`, 'refused');
     const v = await this.verifyWorktreeGit(r, w);
     if (!v.ok) throw new RepoError(`${TAMPERED} ${w.id}: ${v.reason}`, 'refused');
     const ref = `refs/heads/${w.branch}`;
@@ -510,7 +510,7 @@ export class RepoManager {
     }
     // HEAD is elsewhere: commit a snapshot of the working tree onto the agent's branch
     this.ctx.log.warn(`worktree ${w.id} is on ${v.head || 'a detached HEAD'}, not ${w.branch}: committing a snapshot onto ${w.branch}`);
-    const tmpIndex = path.join(os.tmpdir(), `agentcraft-index-${process.pid}-${Math.random().toString(36).slice(2)}`);
+    const tmpIndex = path.join(os.tmpdir(), `coliseum-index-${process.pid}-${Math.random().toString(36).slice(2)}`);
     const env = { GIT_INDEX_FILE: tmpIndex };
     try {
       await git(w.path, ['read-tree', ref], { env });
@@ -572,7 +572,7 @@ export class RepoManager {
     if (w.status !== 'active') throw new RepoError(`worktree ${w.id} is ${w.status}`, 'refused');
 
     // 1. make sure the agent's work is committed on its branch
-    await this.commitAll(r.id, w.id, commitMessage ?? `agentcraft: ${w.taskId ?? w.id}`);
+    await this.commitAll(r.id, w.id, commitMessage ?? `coliseum: ${w.taskId ?? w.id}`);
     const ahead = Number(await gitOut(r.path, ['rev-list', '--count', `${w.base}..${w.branch}`]));
     if (!ahead) throw new RepoError(`${w.branch} has no changes to merge`, 'empty');
 
@@ -585,12 +585,12 @@ export class RepoManager {
     const baseSha = await gitOut(r.path, ['rev-parse', `refs/heads/${w.base}`]);
     const branchSha = await gitOut(r.path, ['rev-parse', `refs/heads/${w.branch}`]);
     const tree = (await gitOut(r.path, ['merge-tree', '--write-tree', '--no-messages', w.base, w.branch])).split('\n')[0]!.trim();
-    const approved = `Approved in AgentCraft (decision ${decision.id}${w.taskId ? `, task ${w.taskId}` : ''}).`;
+    const approved = `Approved in Coliseum (decision ${decision.id}${w.taskId ? `, task ${w.taskId}` : ''}).`;
     const squash = this.opts.mergeStyle === 'squash';
     let msg: string;
     if (squash) {
       const authors = [...new Set((await gitOut(r.path, ['log', '--format=%an <%ae>', `${baseSha}..${branchSha}`])).split('\n').filter(Boolean))];
-      msg = `${(commitMessage ?? `agentcraft: ${w.taskId ?? w.id}`).trim()}\n\nSquashed from ${w.branch}. ${approved}${authors.length ? `\n\n${authors.map((a) => `Co-authored-by: ${a}`).join('\n')}` : ''}`;
+      msg = `${(commitMessage ?? `coliseum: ${w.taskId ?? w.id}`).trim()}\n\nSquashed from ${w.branch}. ${approved}${authors.length ? `\n\n${authors.map((a) => `Co-authored-by: ${a}`).join('\n')}` : ''}`;
     } else msg = `Merge ${w.branch} into ${w.base}\n\n${approved}`;
     const sign = !!this.opts.signMerges && (await gitConfigGet(r.path, 'commit.gpgsign', 'bool')) === 'true';
     const { env } = await userIdentity(r.path);
@@ -641,7 +641,7 @@ export class RepoManager {
     const w = this.requireWorktree(repoId, worktreeId);
     if (w.status !== 'active') return;
     let tampered = false;
-    await this.commitAll(r.id, w.id, message ?? `agentcraft: ${w.taskId ?? w.id} (abandoned)`).catch((e: Error) => {
+    await this.commitAll(r.id, w.id, message ?? `coliseum: ${w.taskId ?? w.id} (abandoned)`).catch((e: Error) => {
       tampered = e instanceof RepoError && e.message.startsWith(TAMPERED);
       this.ctx.log.warn(`abandon ${w.id}: could not commit its work: ${e.message}`);
       return false;

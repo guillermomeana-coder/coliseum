@@ -1,0 +1,116 @@
+{
+  "timestamp": "2026-10-18T03:15:49.422Z",
+  "platform": "win32",
+  "nodeVersion": "v24.14.1",
+  "javaVersion": "25.0.4.1",
+  "results": [
+    {
+      "name": "coliseum --help",
+      "status": "PASS",
+      "elapsed": "0.10",
+      "detail": "Usage: coliseum <command> [args...]\n\nCommands:\n  setup   Configure theme, auth and HQ mode\n  launch  Launch Minecraft and the Foreman\n  doctor  Diagnose your install and environment\n  bridge  Run the agent <-> Minecraft bridge\n  arena   Run the arena bridge\n\nRun \"coliseum <command> --help\" for command-specific help.\n\nExamples:\n  coliseum setup --show\n  coliseum launch\n  coliseum doctor --help\n  coliseum bridge --help"
+    },
+    {
+      "name": "coliseum doctor",
+      "status": "PASS",
+      "elapsed": "0.26",
+      "detail": "Coliseum doctor\n\n  ✓ Java 25+: Java 25.0.4.1 (C:\\Program Files\\Zulu\\zulu-25\\bin\\java.exe)\n  ✓ Node 22+: Node 24.14.1\n  ✓ git: git 2.53.0.windows.2\n  ✓ Minecraft Java Edition: found C:\\Users\\topgs\\AppData\\Roaming\\.minecraft\n\nAll dependencies OK."
+    },
+    {
+      "name": "coliseum setup --show",
+      "status": "PASS",
+      "elapsed": "0.16",
+      "detail": "{\n  \"theme\": \"warm_studio\",\n  \"auth\": \"claude-login\",\n  \"apiKey\": \"\",\n  \"repos\": [],\n  \"hqMode\": \"coliseum_office\"\n}\nConfig: C:\\Users\\topgs\\AppData\\Roaming\\Coliseum\\config.json"
+    },
+    {
+      "name": "bridge --help",
+      "status": "PASS",
+      "elapsed": "0.12",
+      "detail": "OpenClaw Bridge — Claude Code ↔ AgentCraft\n\nUsage: node tools/bridge.mjs <command> [args]   (-h, --help, help)\nEnv: AGENTCRAFT_PORT (default 7878), AGENTCRAFT_TIMEOUT_MS (RPC timeout, default 15000)\nExample: node tools/bridge.mjs status\n\nCommands:\n  status                        Team state overview (agents, tasks, cost)\n  agents                        List agents and what they're doing\n  goal \"<text>\" [--repo <name>] Submit a goal (optionally target a specific repo)\n  tasks [goalId]                List tasks\n  decisions                     List open decisions\n  decide <id> <option> [text]   Answer a decision\n  merge <id>                    Approve a merge decision\n  diff <worktree>               Get diff for a worktree\n  msg <agent|all> \"<text>\"      Message an agent\n  repos                         List all registered repos (id, name, path, branch, dirty)\n  cost                          Show total API cost so far\n  repo-add <path>               Register a new repo\n  watch                         Live event stream\n  autopilot                     Auto-approve all permissions + merges (full autonomy)\n  autopilot --no-merge          Auto-approve permissions only, pause on merges for review\n  run \"<goal>\" [--autopilot]    Submit goal + watch + auto-approve in one command"
+    },
+    {
+      "name": "arena --help",
+      "status": "PASS",
+      "elapsed": "0.12",
+      "detail": "Coliseum Arena — Battle Royale Bridge\n\nUsage: node tools/arena-bridge.mjs <command> [args]   (-h, --help, help)\nEnv: AGENTCRAFT_PORT (default 7878)\nExample: node tools/arena-bridge.mjs simulate\n\nCommands:\n  start \"<topic>\" [--agents N]    Start a battle royale (default: 16 agents)\n  simulate [\"topic\"]              Run a fake battle royale for visual testing (no AI needed)\n  status                          Show arena state\n  scoreboard                      Current rankings\n  spectate                        Live commentary feed\n  eliminate <id>                  Manually eliminate a combatant\n  crown <id>                     Declare the champion"
+    },
+    {
+      "name": "autopilot-daemon status (no Foreman)",
+      "status": "PASS",
+      "elapsed": "0.09",
+      "detail": "❌ Autopilot NOT running."
+    },
+    {
+      "name": "syntax check all .mjs files",
+      "status": "PASS",
+      "elapsed": "2.12",
+      "detail": ""
+    },
+    {
+      "name": "mod compileJava",
+      "status": "PASS",
+      "elapsed": "6.10",
+      "detail": "To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.\r\nDaemon will be stopped at the end of the build \r\nReusing configuration cache.\r\n> Task :compileJava UP-TO-DATE\r\n\r\nBUILD SUCCESSFUL in 5s\r\n1 actionable task: 1 up-to-date\r\nConfiguration cache entry reused."
+    },
+    {
+      "name": "mod compileClientJava",
+      "status": "PASS",
+      "elapsed": "6.57",
+      "detail": "To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.\r\nDaemon will be stopped at the end of the build \r\nReusing configuration cache.\r\n> Task :processResources UP-TO-DATE\r\n> Task :compileJava UP-TO-DATE\r\n> Task :classes UP-TO-DATE\r\n> Task :compileClientJava UP-TO-DATE\r\n\r\nBUILD SUCCESSFUL in 6s\r\n3 actionable tasks: 3 up-to-date\r\nConfiguration cache entry reused."
+    },
+    {
+      "name": "mod build jar",
+      "status": "PASS",
+      "elapsed": "6.83",
+      "detail": "To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.7.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.\r\nDaemon will be stopped at the end of the build \r\nReusing configuration cache.\r\n> Task :processClientResources UP-TO-DATE\r\n> Task :processIncludeJars UP-TO-DATE\r\n> Task :processResources UP-TO-DATE\r\n> Task :compileJava UP-TO-DATE\r\n> Task :classes UP-TO-DATE\r\n> Task :compileClientJava UP-TO-DATE\r\n> Task :jar UP-TO-DATE\r\n\r\nBUILD SUCCESSFUL in 6s\r\n6 actionable tasks: 6 up-to-date\r\nConfiguration cache entry reused."
+    },
+    {
+      "name": "desktop package.json valid",
+      "status": "PASS",
+      "elapsed": "0.09",
+      "detail": "coliseum-desktop 0.1.0"
+    },
+    {
+      "name": "desktop npm install",
+      "status": "PASS",
+      "elapsed": "2.25",
+      "detail": "up to date, audited 285 packages in 2s\n\n47 packages are looking for funding\n  run `npm fund` for details\n\n8 moderate severity vulnerabilities\n\nTo address issues that do not require attention, run:\n  npm audit fix\n\nTo address all issues (including breaking changes), run:\n  npm audit fix --force\n\nRun `npm audit` for details."
+    },
+    {
+      "name": "desktop main.js syntax",
+      "status": "PASS",
+      "elapsed": "0.11",
+      "detail": ""
+    },
+    {
+      "name": "desktop preload.js syntax",
+      "status": "PASS",
+      "elapsed": "0.11",
+      "detail": ""
+    },
+    {
+      "name": "desktop lib modules syntax",
+      "status": "PASS",
+      "elapsed": "0.32",
+      "detail": ""
+    },
+    {
+      "name": "bridge connects (expects ECONNREFUSED if no Foreman)",
+      "status": "PASS",
+      "elapsed": "15.22",
+      "detail": "[bridge] connection failed (connect ECONNREFUSED 127.0.0.1:7878) — retry #1 in 1s\n[bridge] connection failed (connect ECONNREFUSED 127.0.0.1:7878) — retry #2 in 2s\n[bridge] connection failed (connect ECONNREFUSED 127.0.0.1:7878) — retry #3 in 4s\n[bridge] connection failed (connect ECONNREFUSED 127.0.0.1:7878) — retry #4 in 8s\nConnection failed: connect ECONNREFUSED 127.0.0.1:7878\nIs the Foreman running? Launch AgentCraft first."
+    },
+    {
+      "name": "foremancli status",
+      "status": "PASS",
+      "elapsed": "15.52",
+      "detail": "[foremancli] waiting for the Foreman on :7878 (10s)...\n{\n  \"ok\": false,\n  \"error\": \"Foreman not reachable on ws://127.0.0.1:7878 after 15s (connect ECONNREFUSED 127.0.0.1:7878)\"\n}"
+    }
+  ],
+  "totals": {
+    "total": 17,
+    "passed": 17,
+    "failed": 0,
+    "errors": 0
+  }
+}

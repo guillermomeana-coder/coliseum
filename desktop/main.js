@@ -109,7 +109,7 @@ async function startForeman(cfg) {
   if (errors.length) return { ok: false, errors };
   logs.clear();
   await getLauncher().start({ config: conf });
-  setWatcher(Number(conf.port || process.env.AGENTCRAFT_PORT || 7878));
+  setWatcher(Number(conf.port || process.env.COLISEUM_PORT || 7878));
   updateTray();
   return { ok: true };
 }

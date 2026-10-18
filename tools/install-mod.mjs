@@ -2,7 +2,7 @@
 /**
  * Coliseum — install the Fabric mod into a real Minecraft install.
  * Finds Java 25 and Minecraft, installs Fabric loader if needed, builds the mod, copies the jar
- * into mods/ (replacing older agentcraft-*.jar) and installs Fabric API.
+ * into mods/ (replacing older coliseum-*.jar) and installs Fabric API.
  */
 import fs from 'node:fs';
 import path from 'node:path';

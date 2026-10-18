@@ -22,7 +22,7 @@ import type { Agent, Decision, DiffFile, FeedItem, Goal, MemoryEntry, Repo, Serv
 import { parseFlags } from '../src/config.js';
 
 const { flags } = parseFlags(process.argv.slice(2));
-const port = Number(flags.port ?? process.env.AGENTCRAFT_PORT ?? 7878);
+const port = Number(flags.port ?? process.env.COLISEUM_PORT ?? 7878);
 const url = `ws://127.0.0.1:${port}`;
 const useColor = flags.color !== false && !process.env.NO_COLOR;
 const quietLogs = flags['quiet-logs'] === true;

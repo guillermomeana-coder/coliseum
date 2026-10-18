@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "coliseum:block/memory_archive"
+    },
+    "facing=east": {
+      "model": "coliseum:block/memory_archive",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "coliseum:block/memory_archive",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "coliseum:block/memory_archive",
+      "y": 270
+    }
+  }
+}

@@ -9,7 +9,7 @@
 //   node tools/foremancli.mjs send <type> '<json payload>'       any client message; prints the ack
 //   node tools/foremancli.mjs send user.message to=kit "text=hello there"   (same, key=value form)
 //
-// Options: --port N (default AGENTCRAFT_PORT or 7878), --timeout SECONDS (connect, default 15),
+// Options: --port N (default COLISEUM_PORT or 7878), --timeout SECONDS (connect, default 15),
 // --full (diff: print every file/hunk instead of a summary). Exit 0 when ok, 1 on error.
 
 import { ForemanClient, DEFAULT_FOREMAN_PORT } from './lib/foremanclient.mjs';
@@ -40,9 +40,9 @@ Commands:
   send <type> '<json payload>'     send any client message; prints the ack
   send user.message to=kit "text=hello"   (same, key=value form)
 
-Options: --port N (default AGENTCRAFT_PORT or 7878), --timeout S (connect, default 15),
+Options: --port N (default COLISEUM_PORT or 7878), --timeout S (connect, default 15),
   --full (diff: every file/hunk), -h/--help
-Env: AGENTCRAFT_PORT
+Env: COLISEUM_PORT
 Example: node tools/foremancli.mjs status --port 7902
 Exit 0 when ok, 1 on error.`;
   if (!cmd && !flags.help && !argv.includes('-h')) { console.error(help); process.exit(2); }

@@ -176,13 +176,13 @@ describe('claude backend orchestration (fake SDK)', () => {
     // each agent's CLI env: its own git identity, no signing, git cannot walk up out of its cwd
     const kitTurn = calls.find((c) => /Your task/.test(c.prompt) && c.cwd.includes('kit-'))!;
     const env = kitTurn.env!;
-    expect(env.GIT_AUTHOR_NAME).toBe('AgentCraft Kit');
-    expect(env.GIT_COMMITTER_EMAIL).toBe('kit@agentcraft.local');
+    expect(env.GIT_AUTHOR_NAME).toBe('Coliseum Kit');
+    expect(env.GIT_COMMITTER_EMAIL).toBe('kit@coliseum.local');
     expect(env.GIT_CEILING_DIRECTORIES!.split(process.platform === 'win32' ? ';' : ':')[0]).toBe(path.dirname(kitTurn.cwd));
     const cfg = Object.fromEntries(Array.from({ length: Number(env.GIT_CONFIG_COUNT) }, (_x, i) => [env[`GIT_CONFIG_KEY_${i}`], env[`GIT_CONFIG_VALUE_${i}`]]));
     expect(cfg['commit.gpgsign']).toBe('false');
     expect(cfg['protocol.allow']).toBe('never');
-    expect(calls.find((c) => c.prompt.startsWith('New goal'))!.env!.GIT_AUTHOR_NAME).toBe('AgentCraft Marlow');
+    expect(calls.find((c) => c.prompt.startsWith('New goal'))!.env!.GIT_AUTHOR_NAME).toBe('Coliseum Marlow');
   });
 });
 

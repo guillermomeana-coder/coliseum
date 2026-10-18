@@ -30,7 +30,7 @@ describe('loadConfig argument checking', () => {
     home = tempDir();
     const read = (args: string[], env = {}) => loadConfig(['--home', home!, ...args], env).claude.leadReadCommands;
     expect(read(['--lead-read-commands', 'bd show, bd list,'])).toEqual(['bd show', 'bd list']);
-    expect(read([], { AGENTCRAFT_LEAD_READ_COMMANDS: 'bd show' })).toEqual(['bd show']);
+    expect(read([], { COLISEUM_LEAD_READ_COMMANDS: 'bd show' })).toEqual(['bd show']);
     fs.writeFileSync(path.join(home, 'config.json'), JSON.stringify({ claude: { leadReadCommands: ['bd show'] } }));
     expect(read([])).toEqual(['bd show']);
   });
@@ -65,13 +65,13 @@ describe('loadConfig argument checking', () => {
 });
 
 describe('user name', () => {
-  it('comes from --user-name, then AGENTCRAFT_USER_NAME, then config.json, else the OS account', async () => {
+  it('comes from --user-name, then COLISEUM_USER_NAME, then config.json, else the OS account', async () => {
     const fs = await import('node:fs');
     const path = await import('node:path');
     const { defaultUserName } = await import('../src/user.js');
     expect(load(['--user-name', 'Sam']).userName).toBe('Sam');
     home = tempDir();
-    expect(loadConfig(['--home', home], { AGENTCRAFT_USER_NAME: 'Robin' }).userName).toBe('Robin');
+    expect(loadConfig(['--home', home], { COLISEUM_USER_NAME: 'Robin' }).userName).toBe('Robin');
     fs.writeFileSync(path.join(home, 'config.json'), JSON.stringify({ userName: 'Kai' }));
     expect(loadConfig(['--home', home], {}).userName).toBe('Kai');
     rmrf(home);

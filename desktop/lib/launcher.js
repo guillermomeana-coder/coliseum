@@ -68,7 +68,7 @@ class Launcher extends EventEmitter {
     this.spawn = spawn;
     this.platform = platform;
     this.checkRunning = checkRunning;
-    this.home = home || process.env.AGENTCRAFT_HOME || path.join(os.homedir(), '.agentcraft');
+    this.home = home || process.env.COLISEUM_HOME || path.join(os.homedir(), '.coliseum');
     this.children = new Map(); // source -> child
     this.status = 'stopped';
     this.stopping = false;
@@ -120,13 +120,13 @@ class Launcher extends EventEmitter {
     const env = { ...process.env };
     delete env.ANTHROPIC_API_KEY;
     if (config.auth === 'api-key' && config.apiKey) env.ANTHROPIC_API_KEY = config.apiKey; // never logged
-    if (config.theme) env.AGENTCRAFT_THEME = String(config.theme);
-    if (config.port) env.AGENTCRAFT_PORT = String(config.port);
+    if (config.theme) env.COLISEUM_THEME = String(config.theme);
+    if (config.port) env.COLISEUM_PORT = String(config.port);
 
     const existing = await this.checkRunning(this.home);
     if (existing) {
       this.emit('log', `reusing running Foreman (pid ${existing.pid}, port ${existing.port})`, 'foreman');
-      env.AGENTCRAFT_PORT = String(existing.port);
+      env.COLISEUM_PORT = String(existing.port);
     } else {
       this._spawn('foreman', this.paths.foremanEntry, foremanArgs(config), this.paths.foremanDir, env);
     }

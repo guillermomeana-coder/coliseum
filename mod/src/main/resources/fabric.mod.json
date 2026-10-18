@@ -1,14 +1,14 @@
 {
 	"schemaVersion": 1,
-	"id": "agentcraft",
+	"id": "coliseum",
 	"version": "${version}",
-	"name": "AgentCraft",
+	"name": "Coliseum",
 	"description": "Minecraft as a spatial UI for real multi-agent Claude work.",
 	"authors": [
 		"Blendi"
 	],
 	"license": "MIT",
-	"icon": "assets/agentcraft/icon.png",
+	"icon": "assets/coliseum/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
@@ -19,9 +19,9 @@
 		]
 	},
 	"mixins": [
-		"agentcraft.mixins.json",
+		"coliseum.mixins.json",
 		{
-			"config": "agentcraft.client.mixins.json",
+			"config": "coliseum.client.mixins.json",
 			"environment": "client"
 		}
 	],

@@ -5,7 +5,7 @@
 //  - console bell on the Foreman's terminal (only when stdout is a TTY)
 //  - rate-limited and coalesced: at most one toast per `minIntervalMs`; decisions that arrive
 //    inside the window are summarised in the next toast
-//  - disabled with config.notify=false / AGENTCRAFT_NOTIFY=0; tests inject a fake `spawnToast`
+//  - disabled with config.notify=false / COLISEUM_NOTIFY=0; tests inject a fake `spawnToast`
 import { spawn } from 'node:child_process';
 import type { Logger } from './context.js';
 import { truncate } from './util/text.js';
@@ -42,8 +42,8 @@ export function showWindowsToast(title: string, body: string, silent: boolean): 
     '$doc = New-Object Windows.Data.Xml.Dom.XmlDocument',
     '$doc.LoadXml($xml)',
     '$toast = New-Object Windows.UI.Notifications.ToastNotification $doc',
-    '$toast.Tag = "agentcraft"',
-    '$toast.Group = "agentcraft"',
+    '$toast.Tag = "coliseum"',
+    '$toast.Group = "coliseum"',
     `[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("${POWERSHELL_AUMID}").Show($toast)`,
   ].join('; ');
   const encoded = Buffer.from(script, 'utf16le').toString('base64');
@@ -78,7 +78,7 @@ export function showMacNotification(title: string, body: string, silent: boolean
 /** Desktop notification through the freedesktop notification daemon (notify-send from libnotify). */
 export function showLinuxNotification(title: string, body: string, silent: boolean): Promise<boolean> {
   if (process.platform !== 'linux') return Promise.resolve(false);
-  const args = ['--app-name=AgentCraft', '--urgency=normal', ...(silent ? ['--hint=boolean:suppress-sound:true'] : ['--hint=string:sound-name:message-new-instant']), '--', title, body];
+  const args = ['--app-name=Coliseum', '--urgency=normal', ...(silent ? ['--hint=boolean:suppress-sound:true'] : ['--hint=string:sound-name:message-new-instant']), '--', title, body];
   return runNotifier('notify-send', args);
 }
 
@@ -131,7 +131,7 @@ export class Notifier {
   async flush(): Promise<void> {
     if (!this.pending.length) return;
     const items = this.pending.splice(0);
-    const title = items.length === 1 ? 'AgentCraft needs you' : `AgentCraft: ${items.length} decisions waiting`;
+    const title = items.length === 1 ? 'Coliseum needs you' : `Coliseum: ${items.length} decisions waiting`;
     const body = items.length === 1 ? items[0]! : items.slice(-3).map((t) => `• ${t}`).join('\n');
     this.lastShown = this.now();
     this.sent.push({ title, body, ts: this.lastShown });

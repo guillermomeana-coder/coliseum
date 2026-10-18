@@ -64,7 +64,7 @@ public final class ConnectionBanner implements HudElement {
 		if (link.phase() == Phase.DISABLED) {
 			dot = "idle";
 			title = "Foreman link off";
-			detail = "AGENTCRAFT_FOREMAN=0";
+			detail = "COLISEUM_FOREMAN=0";
 		} else if (link.synced()) {
 			dot = fs != null && fs.auth() == AuthStatus.FAILED ? "error" : fs != null && fs.auth() == AuthStatus.CHECKING ? "thinking" : "working";
 			title = "Foreman · " + backendLabel(fs);

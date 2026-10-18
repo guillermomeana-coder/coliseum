@@ -69,7 +69,7 @@ export async function main(argv: string[]): Promise<void> {
   } catch (e) {
     const code = (e as NodeJS.ErrnoException).code;
     if (code === 'EADDRINUSE') {
-      log.error(`port ${cfg.port} is already in use - is another Foreman running? (see ${homeRunFile(cfg.home)} and <home>/<profile>/foreman.json) Use --port or AGENTCRAFT_PORT.`);
+      log.error(`port ${cfg.port} is already in use - is another Foreman running? (see ${homeRunFile(cfg.home)} and <home>/<profile>/foreman.json) Use --port or COLISEUM_PORT.`);
     } else log.error(`could not listen on ${cfg.host}:${cfg.port}: ${(e as Error).message}`);
     await foreman.close();
     process.exitCode = 1;
@@ -78,7 +78,7 @@ export async function main(argv: string[]): Promise<void> {
 
   await claimRunFiles(cfg.home, cfg.dataDir, { pid: process.pid, port: server.port, host: cfg.host, backend: cfg.backend, profile: cfg.profile, version: FOREMAN_VERSION, startedAt: new Date().toISOString() });
 
-  log.info(`AgentCraft Foreman ${FOREMAN_VERSION} | backend ${cfg.backend} | ws://${cfg.host}:${server.port} | state ${cfg.dataDir}`);
+  log.info(`Coliseum Foreman ${FOREMAN_VERSION} | backend ${cfg.backend} | ws://${cfg.host}:${server.port} | state ${cfg.dataDir}`);
 
   let shuttingDown = false;
   const shutdown = async (sig: string) => {

@@ -18,7 +18,7 @@ loom {
 	splitEnvironmentSourceSets()
 
 	mods {
-		"agentcraft" {
+		"coliseum" {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}
@@ -26,10 +26,10 @@ loom {
 
 	runs {
 		client {
-			// Dev run: offline player named after you (AGENTCRAFT_PLAYER, else the OS user name), 1080p
+			// Dev run: offline player named after you (COLISEUM_PLAYER, else the OS user name), 1080p
 			// window. World auto-load/creation, mute and focus behaviour are handled by the mod itself
 			// (see mod/DEV.md).
-			def player = (System.getenv("AGENTCRAFT_PLAYER") ?: System.getProperty("user.name") ?: "Player").replaceAll(/[^A-Za-z0-9_]/, "").take(16) ?: "Player"
+			def player = (System.getenv("COLISEUM_PLAYER") ?: System.getProperty("user.name") ?: "Player").replaceAll(/[^A-Za-z0-9_]/, "").take(16) ?: "Player"
 			programArgs "--username", player, "--width", "1920", "--height", "1080"
 			// FFM (java.lang.foreign) is used by the DevBridge for a read-only OS focus check.
 			vmArgs "-Xmx4G", "--enable-native-access=ALL-UNNAMED"
@@ -93,7 +93,7 @@ tasks.matching { it.name == "runClient" }.configureEach {
 // (`gradlew mcSources`, then search mod/build/mcsrc/net/minecraft/...). Minecraft 26.x is
 // unobfuscated, so these are Mojang's real names.
 tasks.register("mcSources", Sync) {
-	group = "agentcraft"
+	group = "coliseum"
 	description = "Decompile (genSources) and unpack Minecraft sources into build/mcsrc"
 	dependsOn("genSources")
 	notCompatibleWithConfigurationCache("reads Loom's cache directory at execution time")

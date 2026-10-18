@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Keyboard-path check for the agent card's message line (agents feature). Needs a game started with
-// AGENTCRAFT_DEV_TEST=1 (for dev.agents.keys): keys are queued as SDL key events for the game window and
+// COLISEUM_DEV_TEST=1 (for dev.agents.keys): keys are queued as SDL key events for the game window and
 // go through Minecraft's SDL event loop; printable keys also produce SDL text events only while SDL text
 // input is on, as with a real keyboard (dev.type calls charTyped directly and would pass even when real
 // typing is broken, which is what happened to the card's first message line).
@@ -17,16 +17,16 @@ import { handleHelp } from './lib/help.mjs';
 const USAGE = `Usage: node tools/agents-typing.mjs [--port N] [--agent NAME] [--prefix P] [--send]
 
 Keyboard-path check for the agent card's message line. Needs a game started with
-AGENTCRAFT_DEV_TEST=1 (for dev.agents.keys).
+COLISEUM_DEV_TEST=1 (for dev.agents.keys).
 
 Options:
-  --port N        DevBridge port (default AGENTCRAFT_DEV_PORT or 7879)
+  --port N        DevBridge port (default COLISEUM_DEV_PORT or 7879)
   --agent NAME    agent whose card is used (default kit)
   --prefix P      screenshot prefix (default agents_typing/)
   --send          also send a message (M + text + Enter)
   -h, --help      show this help
 
-Env: AGENTCRAFT_DEV_PORT
+Env: COLISEUM_DEV_PORT
 Example: node tools/agents-typing.mjs --port 7902 --agent kit --send`;
 handleHelp(USAGE);
 
@@ -34,7 +34,7 @@ handleHelp(USAGE);
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] && !all[i + 1].startsWith('--') ? all[i + 1] : true]] : acc), []),
 );
-const port = Number(args.port ?? process.env.AGENTCRAFT_DEV_PORT ?? 7879);
+const port = Number(args.port ?? process.env.COLISEUM_DEV_PORT ?? 7879);
 const agent = args.agent ?? 'kit';
 const prefix = args.prefix ?? 'agents_typing/';
 const dev = await DevClient.connect({ port });

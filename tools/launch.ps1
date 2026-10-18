@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  AgentCraft one-command launcher: starts (or reuses) the Foreman, then builds and starts Minecraft.
+  Coliseum one-command launcher: starts (or reuses) the Foreman, then builds and starts Minecraft.
 
 .DESCRIPTION
   1. First run: installs foreman/ and tools/ npm dependencies if node_modules is missing (the
@@ -14,14 +14,14 @@
   Stop everything with tools\stop.ps1 (only what this script started).
 
 .EXAMPLE
-  tools\launch.ps1                                     # claude backend (needs ANTHROPIC_API_KEY), ~/.agentcraft, ports 7878/7879
+  tools\launch.ps1                                     # claude backend (needs ANTHROPIC_API_KEY), ~/.coliseum, ports 7878/7879
   tools\launch.ps1 -Repo C:\code\life-tracker          # register a repo with the Foreman
   tools\launch.ps1 -UseClaudeLogin                     # personal use: your `claude` CLI login instead of an API key
   tools\launch.ps1 -Backend codex                      # an all-Codex team on your Codex login (`codex login`)
   tools\launch.ps1 -ForemanArgs '--worker-engine','codex'   # mixed: Claude lead, Codex workers
   tools\launch.ps1 -Backend sim                        # scripted demo team, no API calls
   tools\launch.ps1 -Showcase late                      # static showcase state (sim)
-  tools\launch.ps1 -Dev -Showcase busy -Home C:\Projects\agentcraft\.agentcraft-home -Port 27878 -DevPort 7889
+  tools\launch.ps1 -Dev -Showcase busy -Home C:\Projects\coliseum\.coliseum-home -Port 27878 -DevPort 7889
 #>
 [CmdletBinding(PositionalBinding = $false)]
 param(
@@ -86,21 +86,21 @@ if ($showcaseOn) {
     $Backend = 'sim'
     if (-not $ShowcaseAt) { $ShowcaseAt = 'busy' }
 }
-if (-not $Backend) { if ($env:AGENTCRAFT_BACKEND) { $Backend = $env:AGENTCRAFT_BACKEND } else { $Backend = 'claude' } }
+if (-not $Backend) { if ($env:COLISEUM_BACKEND) { $Backend = $env:COLISEUM_BACKEND } else { $Backend = 'claude' } }
 if (-not $ForemanProfile) {
     if ($showcaseOn) { if ($ShowcaseAt -eq 'late') { $ForemanProfile = 'showcase-late' } else { $ForemanProfile = 'showcase' } }
     else { $ForemanProfile = $Backend }
 }
 if ($ForemanProfile -notmatch '^[A-Za-z0-9_-]+$') { Fail "bad profile name '$ForemanProfile' (letters, digits, - and _)" }
 $portGiven = [bool]$Port
-if (-not $Port) { if ($env:AGENTCRAFT_PORT) { $Port = [int]$env:AGENTCRAFT_PORT } else { $Port = 7878 } }
-if (-not $DevPort) { if ($env:AGENTCRAFT_DEV_PORT) { $DevPort = [int]$env:AGENTCRAFT_DEV_PORT } else { $DevPort = 7879 } }
+if (-not $Port) { if ($env:COLISEUM_PORT) { $Port = [int]$env:COLISEUM_PORT } else { $Port = 7878 } }
+if (-not $DevPort) { if ($env:COLISEUM_DEV_PORT) { $DevPort = [int]$env:COLISEUM_DEV_PORT } else { $DevPort = 7879 } }
 if ($Port -eq $DevPort) { Fail "-Port and -DevPort must differ (both $Port)" }
 foreach ($p in @($Port, $DevPort)) { if (@(3000, 5173, 8080) -contains $p) { Fail "port $p is reserved for other dev servers; pick another" } }
 if (-not $AgentHome) {
-    if ($env:AGENTCRAFT_HOME) { $AgentHome = $env:AGENTCRAFT_HOME }
-    elseif ($Dev) { $AgentHome = Join-Path $Main '.agentcraft-home' }   # unattended runs never touch ~/.agentcraft
-    else { $AgentHome = Join-Path $env:USERPROFILE '.agentcraft' }
+    if ($env:COLISEUM_HOME) { $AgentHome = $env:COLISEUM_HOME }
+    elseif ($Dev) { $AgentHome = Join-Path $Main '.coliseum-home' }   # unattended runs never touch ~/.coliseum
+    else { $AgentHome = Join-Path $env:USERPROFILE '.coliseum' }
 }
 $AgentHome = Resolve-FullPath $AgentHome
 if (-not $GradleHome) {
@@ -120,7 +120,7 @@ foreach ($r in @($Repo | Where-Object { $_ })) {
 New-Item -ItemType Directory -Force $L.Logs, $L.Run | Out-Null
 
 Write-Host ''
-Write-Host 'AgentCraft' -ForegroundColor Cyan -NoNewline
+Write-Host 'Coliseum' -ForegroundColor Cyan -NoNewline
 if ($Dev) { Write-Host '  (dev: muted, no focus, no toasts)' -ForegroundColor DarkGray } else { Write-Host '' }
 Write-Kv 'checkout' $Root
 Write-Kv 'home' "$AgentHome  (profile $ForemanProfile)"
@@ -334,12 +334,12 @@ if ($liveGame) {
     # passed to gradlew; the Gradle daemon hands the client's environment to the game JVM
     $gameEnv = @{
         GRADLE_USER_HOME    = $GradleHome
-        AGENTCRAFT_PORT     = [string]$fmPort
-        AGENTCRAFT_DEV_PORT = [string]$DevPort
-        AGENTCRAFT_HOME     = $AgentHome
-        AGENTCRAFT_PROFILE  = $ForemanProfile
-        AGENTCRAFT_MUTE     = $(if ($Dev) { '1' } else { '0' })
-        AGENTCRAFT_FOCUS    = $(if ($Dev) { '0' } else { '1' })
+        COLISEUM_PORT     = [string]$fmPort
+        COLISEUM_DEV_PORT = [string]$DevPort
+        COLISEUM_HOME     = $AgentHome
+        COLISEUM_PROFILE  = $ForemanProfile
+        COLISEUM_MUTE     = $(if ($Dev) { '1' } else { '0' })
+        COLISEUM_FOCUS    = $(if ($Dev) { '0' } else { '1' })
     }
     # cmd.exe /s /c "<gradlew.bat> args": a .bat cannot be spawned directly; the arguments are fixed
     # (no user text), quoted per argument and passed verbatim

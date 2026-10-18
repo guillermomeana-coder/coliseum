@@ -22,7 +22,7 @@ for (const script of scripts) {
         encoding: 'utf8',
         timeout: 5000,
         // Unreachable ports and an empty HOME: help must not touch either.
-        env: { ...process.env, AGENTCRAFT_PORT: '1', AGENTCRAFT_DEV_PORT: '1', HOME: TOOLS, USERPROFILE: TOOLS },
+        env: { ...process.env, COLISEUM_PORT: '1', COLISEUM_DEV_PORT: '1', HOME: TOOLS, USERPROFILE: TOOLS },
         stdin: 'ignore',
       });
       assert.equal(r.error, undefined, String(r.error));

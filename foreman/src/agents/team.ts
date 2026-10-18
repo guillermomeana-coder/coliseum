@@ -44,7 +44,7 @@ import { modelLabel } from './models.js';
 import { userName } from '../user.js';
 
 // policy: our own team tools are trusted (the Claude engine exposes them as this MCP server)
-const TEAM_MCP_SERVER = 'agentcraft';
+const TEAM_MCP_SERVER = 'coliseum';
 
 type JobKind = 'plan' | 'work' | 'review' | 'followup';
 type AbortReason = 'pause' | 'stop' | 'shutdown' | 'cancel' | 'timeout';
@@ -107,7 +107,7 @@ const LEAD = 'marlow';
 /**
  * Environment for an agent's CLI process (and every command it runs): git refuses all
  * transports (no push, ever) and never signs; git does not walk up out of the agent's cwd; the
- * agent's commits carry its own placeholder identity ("AgentCraft Kit <kit@agentcraft.local>"),
+ * agent's commits carry its own placeholder identity ("Coliseum Kit <kit@coliseum.local>"),
  * never the user's; and each Bash call starts in the agent's own cwd, so a `cd` in one command
  * cannot carry the next one out of the worktree.
  */
@@ -115,7 +115,7 @@ export function agentEnv(base: NodeJS.ProcessEnv = process.env, who: { agentId?:
   return withGitSafety(
     base,
     {
-      CLAUDE_AGENT_SDK_CLIENT_APP: `agentcraft-foreman/${FOREMAN_VERSION}`,
+      CLAUDE_AGENT_SDK_CLIENT_APP: `coliseum-foreman/${FOREMAN_VERSION}`,
       CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR: '1',
       ...(who.agentId ? (agentGitIdentity(who.agentId) as Record<string, string>) : {}),
     },
@@ -473,7 +473,7 @@ export class TeamBackend implements Backend {
         const t = this.fm.tasks.get(taskId);
         const wt = t?.worktree && t.repoId ? this.fm.repos.findWorktree(t.repoId, t.worktree) : undefined;
         if (t && wt && wt.agentId === fromAgent && wt.status === 'active') {
-          await this.fm.repos.abandon(t.repoId!, wt.id, `agentcraft: ${t.id} work in progress (${why})`);
+          await this.fm.repos.abandon(t.repoId!, wt.id, `coliseum: ${t.id} work in progress (${why})`);
         }
       } catch (e) {
         this.fm.log.warn(`hand-off of ${taskId} from ${fromAgent}: ${(e as Error).message}`);
@@ -605,7 +605,7 @@ export class TeamBackend implements Backend {
       if (prev.status === 'active') {
         // nobody prepared the hand-off (e.g. reconciled after a restart): finish it here
         if (this.lastTurn.get(prev.agentId)?.job.taskId === t.id) await this.quiesce(prev.agentId);
-        await this.fm.repos.abandon(t.repoId!, prev.id, `agentcraft: ${t.id} work in progress (handed to ${this.fm.nameOf(agentId)})`).catch((e) => this.fm.log.warn(`abandon ${prev.id}: ${(e as Error).message}`));
+        await this.fm.repos.abandon(t.repoId!, prev.id, `coliseum: ${t.id} work in progress (handed to ${this.fm.nameOf(agentId)})`).catch((e) => this.fm.log.warn(`abandon ${prev.id}: ${(e as Error).message}`));
       }
       if ((await this.fm.repos.commitsAhead(t.repoId!, prev.branch, prev.base)) > 0) {
         startPoint = prev.branch;
@@ -730,7 +730,7 @@ export class TeamBackend implements Backend {
    * user's branches. Verified against the real Codex Windows sandbox: commit and `git merge`
    * work; writing .git/config, .git/hooks or refs/heads/main is denied.
    *  - objects/                        new commits, trees, blobs (content-addressed, harmless)
-   *  - refs/heads/<branch dir>/        this agent's branches only (agentcraft/<agent>/...)
+   *  - refs/heads/<branch dir>/        this agent's branches only (coliseum/<agent>/...)
    *  - logs/refs/heads/<branch dir>/   their reflogs
    *  - the worktree's own git dir      its HEAD, index, ORIG_HEAD, MERGE_HEAD (Codex protects the
    *                                    .git pointer's target unless it is granted exactly)
@@ -871,7 +871,7 @@ export class TeamBackend implements Backend {
 
   /**
    * Messages from the user to this agent that nobody has read yet (they arrived after its last
-   * agentcraft tool call, or while it was off shift): start a follow-up turn for them.
+   * coliseum tool call, or while it was off shift): start a follow-up turn for them.
    */
   private deliverPending(agentId: string): void {
     if (this.stopping || this.isStopped(agentId) || this.running.has(agentId) || this.pausedJobs.has(agentId) || (this.queues.get(agentId)?.length ?? 0) > 0) return;
@@ -1065,7 +1065,7 @@ export class TeamBackend implements Backend {
       this.fm.bus.send(id, 'user', `(${this.fm.nameOf(id)} is off shift - /resume @${id} to bring them back; your message is queued.)`);
       return;
     }
-    // in a turn: delivered with its next agentcraft tool result, or right after the turn ends
+    // in a turn: delivered with its next coliseum tool result, or right after the turn ends
     // (deliverPending). Paused mid-turn: delivered with the resumed job's prompt.
     if (this.running.has(id) || this.pausedJobs.has(id)) return;
     // every unread message from the user to this agent goes into one follow-up

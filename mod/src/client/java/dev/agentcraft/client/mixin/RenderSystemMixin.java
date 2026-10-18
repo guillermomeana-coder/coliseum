@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /**
  * Sets SDL hints before SDL is initialised (26.3 uses SDL3 for windowing/input, not GLFW).
  * By default the window is shown WITHOUT activating it, so a dev launch never steals focus.
- * Set AGENTCRAFT_FOCUS=1 to get the normal "come to front" behaviour.
+ * Set COLISEUM_FOCUS=1 to get the normal "come to front" behaviour.
  */
 @Mixin(RenderSystem.class)
 public abstract class RenderSystemMixin {
@@ -22,7 +22,7 @@ public abstract class RenderSystemMixin {
 			SDLHints.SDL_SetHint("SDL_WINDOW_ACTIVATE_WHEN_SHOWN", "0");
 			SDLHints.SDL_SetHint("SDL_WINDOW_ACTIVATE_WHEN_RAISED", "0");
 			SDLHints.SDL_SetHint("SDL_FORCE_RAISEWINDOW", "0");
-			AgentCraft.LOGGER.info("Window will open without taking focus (AGENTCRAFT_FOCUS=1 to change)");
+			AgentCraft.LOGGER.info("Window will open without taking focus (COLISEUM_FOCUS=1 to change)");
 		}
 	}
 }

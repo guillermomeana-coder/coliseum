@@ -33,7 +33,7 @@ export interface GitOptions {
 // could otherwise push or run arbitrary code with the Foreman's environment. core.hooksPath points at
 // a directory that never exists; protocol.allow=never + pushInsteadOf block every remote. The Foreman
 // needs no network: everything it does is local.
-const NO_HOOKS_DIR = path.join(os.tmpdir(), 'agentcraft-no-hooks-7f3e9c');
+const NO_HOOKS_DIR = path.join(os.tmpdir(), 'coliseum-no-hooks-7f3e9c');
 // The diff parser expects a/ b/ prefixes; the user's diff.mnemonicPrefix, diff.noprefix or
 // diff.srcPrefix/dstPrefix would otherwise turn src/cli.ts into i/src/cli.ts or cli.ts.
 const BASE_ARGS = [
@@ -56,7 +56,7 @@ function baseEnv(): NodeJS.ProcessEnv {
 }
 
 export async function git(cwd: string, args: string[], opts: GitOptions = {}): Promise<RunResult> {
-  const env = { ...baseEnv(), GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never', GIT_ALLOW_PROTOCOL: 'agentcraft-none', GIT_OPTIONAL_LOCKS: '0', LC_ALL: 'C', ...(opts.env ?? {}) };
+  const env = { ...baseEnv(), GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never', GIT_ALLOW_PROTOCOL: 'coliseum-none', GIT_OPTIONAL_LOCKS: '0', LC_ALL: 'C', ...(opts.env ?? {}) };
   const res = await run('git', [...BASE_ARGS, ...args], { cwd, env, input: opts.input, timeoutMs: opts.timeoutMs ?? 120_000 });
   if (res.code !== 0 && !opts.allowFail) {
     const msg = (res.stderr || res.stdout).trim().split('\n').slice(-3).join(' | ');
@@ -80,10 +80,10 @@ export async function gitConfigGet(cwd: string, key: string, type?: 'bool'): Pro
   return res.code === 0 && v ? v : undefined;
 }
 
-/** The placeholder git identity of an agent ("AgentCraft Kit <kit@agentcraft.local>"); 'user' -> "AgentCraft". */
+/** The placeholder git identity of an agent ("Coliseum Kit <kit@coliseum.local>"); 'user' -> "Coliseum". */
 export function agentGitIdentity(agentId: string): NodeJS.ProcessEnv {
-  const name = agentId === 'user' ? 'AgentCraft' : `AgentCraft ${agentId[0]!.toUpperCase()}${agentId.slice(1)}`;
-  return identityEnv(name, `${agentId}@agentcraft.local`);
+  const name = agentId === 'user' ? 'Coliseum' : `Coliseum ${agentId[0]!.toUpperCase()}${agentId.slice(1)}`;
+  return identityEnv(name, `${agentId}@coliseum.local`);
 }
 
 export function identityEnv(name: string, email: string): NodeJS.ProcessEnv {

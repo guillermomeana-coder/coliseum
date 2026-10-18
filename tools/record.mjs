@@ -31,7 +31,7 @@ Shot player for screen recording (OBS): sets up a shot and plays it in real time
 dev.play. The game must be running. Shot format: tools/shots/README.md.
 
 Options:
-  --port N        DevBridge port (default AGENTCRAFT_DEV_PORT or 7879)
+  --port N        DevBridge port (default COLISEUM_DEV_PORT or 7879)
   --hold MS       keep the first frame on screen for MS ms before playing (default 0)
   --stills T,...  also save stills at these times (seconds) during playback
   --window WxH    resize the game window first (e.g. 2560x1440)
@@ -39,7 +39,7 @@ Options:
   --verbose       extra logging
   -h, --help      show this help
 
-Env: AGENTCRAFT_DEV_PORT
+Env: COLISEUM_DEV_PORT
 Example: node tools/record.mjs tools/shots/hq_orbit.json --hold 5000
 Exit code 1 if a shot failed.`;
 handleHelp(USAGE);
