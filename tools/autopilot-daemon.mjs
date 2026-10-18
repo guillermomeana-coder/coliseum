@@ -16,7 +16,7 @@
  */
 
 import { spawn, execSync } from 'child_process';
-import { readFileSync, writeFileSync, unlinkSync, existsSync, createWriteStream } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync, existsSync, appendFileSync, openSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -58,12 +58,12 @@ switch (cmd) {
     console.log(`Starting autopilot: node bridge.mjs ${bridgeArgs.join(' ')}`);
     console.log(`Logs: ${LOG_FILE}`);
 
-    const logStream = createWriteStream(LOG_FILE, { flags: 'a' });
-    logStream.write(`\n${'='.repeat(60)}\n[${new Date().toISOString()}] Autopilot daemon started\nArgs: ${bridgeArgs.join(' ')}\n${'='.repeat(60)}\n`);
+    appendFileSync(LOG_FILE, `\n${'='.repeat(60)}\n[${new Date().toISOString()}] Autopilot daemon started\nArgs: ${bridgeArgs.join(' ')}\n${'='.repeat(60)}\n`);
+    const logFd = openSync(LOG_FILE, 'a');
 
     const child = spawn('node', [BRIDGE, ...bridgeArgs], {
       cwd: join(__dirname, '..'),
-      stdio: ['ignore', logStream, logStream],
+      stdio: ['ignore', logFd, logFd],
       detached: true,
       windowsHide: true,
     });
@@ -140,12 +140,12 @@ switch (cmd) {
       console.log(`Autopilot already running (PID ${existing}) — it will handle the goal.`);
     } else {
       const strict = args.includes('--strict') ? ['--strict'] : [];
-      const logStream = createWriteStream(LOG_FILE, { flags: 'a' });
-      logStream.write(`\n${'='.repeat(60)}\n[${new Date().toISOString()}] Autopilot started for goal: ${goalText}\n${'='.repeat(60)}\n`);
+      appendFileSync(LOG_FILE, `\n${'='.repeat(60)}\n[${new Date().toISOString()}] Autopilot started for goal: ${goalText}\n${'='.repeat(60)}\n`);
+      const runLogFd = openSync(LOG_FILE, 'a');
 
       const child = spawn('node', [BRIDGE, 'autopilot', ...strict], {
         cwd: join(__dirname, '..'),
-        stdio: ['ignore', logStream, logStream],
+        stdio: ['ignore', runLogFd, runLogFd],
         detached: true,
         windowsHide: true,
       });
