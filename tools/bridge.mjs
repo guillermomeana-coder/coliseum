@@ -627,8 +627,12 @@ try {
               console.log(`[${ts}] ✓ Permission ${d.id} → always allow`);
             }).catch(() => {});
           } else if (d.kind === 'merge' && autoMerge) {
-            const ok = await evaluateMerge(d);
-            if (ok) approved++;
+            try {
+              const ok = await evaluateMerge(d);
+              if (ok) approved++;
+            } catch (e) {
+              console.log(`[${ts}] ⚠ Merge ${d.id} failed: ${e.message} — skipping`);
+            }
           } else if (d.kind === 'merge' && !autoMerge) {
             console.log(`[${ts}] ⏸ MERGE: ${d.id} — ${d.question}`);
             console.log(`         node tools/bridge.mjs merge ${d.id}`);
@@ -655,8 +659,12 @@ try {
           console.log(`✓ Cleared permission ${d.id}`);
           approved++;
         } else if (d.kind === 'merge' && autoMerge) {
-          const ok = await evaluateMerge(d);
-          if (ok) approved++;
+          try {
+            const ok = await evaluateMerge(d);
+            if (ok) approved++;
+          } catch (e) {
+            console.log(`⚠ Merge ${d.id} failed on startup: ${e.message} — skipping`);
+          }
         }
       }
       if (approved > 0) console.log(`\nCleared ${approved} pending decisions.\n`);
