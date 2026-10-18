@@ -23,7 +23,7 @@ function createWindow() {
 
 function registerIpc() {
   ipcMain.handle('config:load', () => ({
-    config: config.loadConfig(os.homedir()),
+    config: config.loadConfig(),
     themes: config.THEMES,
     authMethods: config.AUTH_METHODS,
     hqModes: config.HQ_MODES,
@@ -32,7 +32,7 @@ function registerIpc() {
   ipcMain.handle('config:save', (_e, cfg) => {
     const errors = config.validateConfig(cfg);
     if (errors.length) return { ok: false, errors };
-    return { ok: true, path: config.saveConfig(os.homedir(), cfg) };
+    return { ok: true, path: config.saveConfig(undefined, cfg) };
   });
 
   ipcMain.handle('dialog:pickRepo', async () => {
