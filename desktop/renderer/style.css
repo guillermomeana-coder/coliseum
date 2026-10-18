@@ -28,3 +28,9 @@ button.big { display: block; margin: 24px auto 0; padding: 16px 48px; font-size:
 button:disabled { opacity: .4; cursor: default; }
 footer { display: flex; justify-content: space-between; padding: 14px 28px; border-top: 1px solid #333; }
 #error { color: #ff8080; padding: 0 28px; margin: 0; min-height: 1.4em; }
+
+[hidden] { display: none !important; }
+#log { background: #111; color: #ddd; padding: 8px; height: 360px; overflow: auto; font: 12px/1.4 monospace; white-space: pre-wrap; }
+#run-status[data-status="running"] { color: #3a3; }
+#run-status[data-status="crashed"] { color: #c33; }
+.row { display: flex; gap: 8px; margin-top: 8px; }
