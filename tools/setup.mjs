@@ -18,8 +18,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
+import { fileURLToPath } from 'node:url';
 import { handleHelp } from './lib/help.mjs';
 import { resolveReadPath, readConfigFile, writeConfigFile } from './lib/configpath.mjs';
+import { welcomeText, isFirstRun } from './lib/welcome.mjs';
+
+const isMain = (() => {
+  try { return fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url)); } catch { return false; }
+})();
 
 const USAGE = `Usage: node tools/setup.mjs [--show | --theme ID | --auth METHOD [--key KEY] | --hq-mode ID]
 
@@ -40,10 +46,7 @@ Env: COLISEUM_HOME (config dir override), APPDATA, XDG_CONFIG_HOME, HOME / USERP
 Examples:
   node tools/setup.mjs --theme executive
   node tools/setup.mjs --auth claude-login`;
-handleHelp(USAGE);
-
-
-
+if (isMain) handleHelp(USAGE);
 const THEMES = [
   { id: 'warm_studio', name: 'Warm Studio', desc: 'Original timber + copper + plaster (default)' },
   { id: 'modern_glass', name: 'Modern Glass', desc: 'Clean quartz + glass + iron — contemporary office' },
@@ -87,7 +90,7 @@ function ask(rl, question) {
   return new Promise(resolve => rl.question(question, resolve));
 }
 
-async function interactive() {
+export async function interactive() {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   const cfg = loadConfig();
 
@@ -137,29 +140,38 @@ async function interactive() {
   rl.close();
 }
 
-// CLI flags
-const args = process.argv.slice(2);
-if (args.includes('--show')) {
-  console.error(`Config: ${resolveReadPath()}`);
-  console.log(JSON.stringify(loadConfig(), null, 2));
-} else if (args.includes('--theme')) {
-  const cfg = loadConfig();
-  cfg.theme = args[args.indexOf('--theme') + 1];
-  saveConfig(cfg);
-} else if (args.includes('--hq-mode')) {
-  const mode = args[args.indexOf('--hq-mode') + 1];
-  if (!HQ_MODES.some(m => m.id === mode)) {
-    console.error(`Invalid --hq-mode "${mode}". Valid: ${HQ_MODES.map(m => m.id).join(', ')}`);
-    process.exit(1);
+if (isMain) {
+  // CLI flags
+  const args = process.argv.slice(2);
+  if (args.includes('--show')) {
+    console.error(`Config: ${resolveReadPath()}`);
+    console.log(JSON.stringify(loadConfig(), null, 2));
+  } else if (args.includes('--theme')) {
+    const cfg = loadConfig();
+    cfg.theme = args[args.indexOf('--theme') + 1];
+    saveConfig(cfg);
+  } else if (args.includes('--hq-mode')) {
+    const mode = args[args.indexOf('--hq-mode') + 1];
+    if (!HQ_MODES.some(m => m.id === mode)) {
+      console.error(`Invalid --hq-mode "${mode}". Valid: ${HQ_MODES.map(m => m.id).join(', ')}`);
+      process.exit(1);
+    }
+    const cfg = loadConfig();
+    cfg.hqMode = mode;
+    saveConfig(cfg);
+  } else if (args.includes('--auth')) {
+    const cfg = loadConfig();
+    cfg.auth = args[args.indexOf('--auth') + 1];
+    if (args.includes('--key')) cfg.apiKey = args[args.indexOf('--key') + 1];
+    saveConfig(cfg);
+  } else {
+    if (isFirstRun()) {
+      console.log(welcomeText());
+      if (!process.stdin.isTTY) {
+        console.error('Not an interactive terminal. Run: node tools/setup.mjs');
+        process.exit(1);
+      }
+    }
+    interactive();
   }
-  const cfg = loadConfig();
-  cfg.hqMode = mode;
-  saveConfig(cfg);
-} else if (args.includes('--auth')) {
-  const cfg = loadConfig();
-  cfg.auth = args[args.indexOf('--auth') + 1];
-  if (args.includes('--key')) cfg.apiKey = args[args.indexOf('--key') + 1];
-  saveConfig(cfg);
-} else {
-  interactive();
 }

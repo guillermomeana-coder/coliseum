@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * OpenClaw Office — Unified Launcher
+ * Coliseum — Unified Launcher
  *
  * Reads config.json from the platform config dir (see lib/configpath.mjs; created by setup.mjs)
  * and launches the Foreman with the right auth, theme, and repos.
@@ -16,6 +16,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { handleHelp } from './lib/help.mjs';
 import { readConfigFile } from './lib/configpath.mjs';
+import { welcomeText } from './lib/welcome.mjs';
+import { interactive } from './setup.mjs';
 
 const USAGE = `Usage: node tools/launch.mjs [--game] [--repo PATH]
 
@@ -38,15 +40,20 @@ handleHelp(USAGE);
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')), '..');
 
-function loadConfig() {
+async function loadConfig() {
   const cfg = readConfigFile();
   if (cfg) return cfg;
-  console.log('No config found. Run: node tools/setup.mjs');
-  process.exit(1);
+  console.log(welcomeText());
+  if (!process.stdin.isTTY) {
+    console.log('No config found. Run: node tools/setup.mjs');
+    process.exit(1);
+  }
+  await interactive();
+  return readConfigFile() || process.exit(1);
 }
 
 const args = process.argv.slice(2);
-const cfg = loadConfig();
+const cfg = await loadConfig();
 // Legacy 'openclaw' hqMode id maps to coliseum_office.
 if (cfg.hqMode === 'openclaw') cfg.hqMode = 'coliseum_office';
 const withGame = args.includes('--game');
@@ -54,7 +61,7 @@ const repoOverride = args.includes('--repo') ? args[args.indexOf('--repo') + 1] 
 const repos = repoOverride ? [repoOverride] : cfg.repos || [];
 
 console.log('╔══════════════════════════════════════╗');
-console.log('║     OpenClaw Office — Launching      ║');
+console.log('║       Coliseum — Launching           ║');
 console.log('╚══════════════════════════════════════╝');
 console.log(`  Auth:   ${cfg.auth}`);
 console.log(`  Theme:  ${cfg.theme}`);
