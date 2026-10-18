@@ -14,8 +14,16 @@
     </ol>
   </header>
   <main id="content"></main>
+  <section id="running" hidden>
+    <h2>Foreman: <span id="run-status">starting</span></h2>
+    <pre id="log"></pre>
+    <div class="row">
+      <button id="stop" class="secondary">Stop</button>
+      <button id="open-setup" class="secondary">Open setup</button>
+    </div>
+  </section>
   <p id="error" role="alert"></p>
-  <footer>
+  <footer id="nav">
     <button id="back" class="secondary">Back</button>
     <button id="next">Next</button>
   </footer>
