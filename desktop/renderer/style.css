@@ -1,0 +1,30 @@
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.4 system-ui, "Segoe UI", sans-serif; background: #1b1b22; color: #eee; display: flex; flex-direction: column; height: 100vh; }
+header { padding: 16px 28px 8px; }
+h1 { margin: 0 0 10px; font-size: 22px; letter-spacing: 1px; }
+#steps { display: flex; gap: 8px; list-style: none; padding: 0; margin: 0; }
+#steps li { flex: 1; padding: 6px 0; border-bottom: 3px solid #3a3a48; color: #888; font-size: 13px; }
+#steps li.active { border-color: #e0a030; color: #fff; }
+#steps li.done { border-color: #5a8a5a; color: #bbb; }
+main { flex: 1; overflow: auto; padding: 12px 28px; }
+h2 { margin-top: 4px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.card { background: #26262f; border: 2px solid #3a3a48; border-radius: 8px; padding: 12px 14px; cursor: pointer; }
+.card:hover { border-color: #666; }
+.card.selected { border-color: #e0a030; background: #2f2b22; }
+.card b { display: block; margin-bottom: 4px; }
+.card span { color: #aaa; font-size: 13px; }
+label { display: block; margin: 16px 0 6px; font-weight: 600; }
+input[type=password], input[type=text], select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #555; background: #14141a; color: #eee; font: inherit; }
+ul.repos { list-style: none; padding: 0; margin: 8px 0; }
+ul.repos li { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #26262f; padding: 6px 10px; margin-bottom: 6px; border-radius: 6px; word-break: break-all; }
+.muted { color: #999; }
+dl { display: grid; grid-template-columns: 120px 1fr; gap: 6px 12px; }
+dt { color: #999; }
+dd { margin: 0; word-break: break-all; white-space: pre-line; }
+button { padding: 8px 18px; border: 0; border-radius: 6px; background: #e0a030; color: #1b1b22; font: inherit; font-weight: 600; cursor: pointer; }
+button.secondary { background: #3a3a48; color: #eee; }
+button.big { display: block; margin: 24px auto 0; padding: 16px 48px; font-size: 20px; }
+button:disabled { opacity: .4; cursor: default; }
+footer { display: flex; justify-content: space-between; padding: 14px 28px; border-top: 1px solid #333; }
+#error { color: #ff8080; padding: 0 28px; margin: 0; min-height: 1.4em; }
