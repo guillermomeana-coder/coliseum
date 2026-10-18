@@ -34,8 +34,9 @@ public final class HqFeature {
 	}
 
 	public static void init() {
-		HqBuilders.register(new TestRoomBuilder());
-		HqBuilders.register(new StudioHqBuilder());
+		// TestRoom and Studio disabled — only office + coliseum variants active
+		// HqBuilders.register(new TestRoomBuilder());
+		// HqBuilders.register(new StudioHqBuilder());
 		HqBuilders.register(new ThemedHqBuilder());
 		HqBuilders.register(new ColiseumBuilder());
 		HqBuilders.register(NetherColiseum.create());
