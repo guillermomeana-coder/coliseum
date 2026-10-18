@@ -169,6 +169,11 @@ public final class AgentManager {
 			return;
 		}
 		Anchors.Layout layout = Anchors.current();
+		// Hide office agents when the coliseum arena is active (not coliseum_office)
+		if (dev.agentcraft.hq.HqFeature.isColiseum(layout.name())) {
+			removeAll();
+			return;
+		}
 		boolean relayout = layout.revision() != layoutRevision;
 		layoutRevision = layout.revision();
 		if (relayout) {

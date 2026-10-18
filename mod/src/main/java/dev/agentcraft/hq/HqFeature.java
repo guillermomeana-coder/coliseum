@@ -169,7 +169,7 @@ public final class HqFeature {
 	}
 
 	/** True for the plain coliseum and its themed variants ({@code coliseum_*}), but not the office HQ. */
-	static boolean isColiseum(String id) {
+	public static boolean isColiseum(String id) {
 		if (ThemedHqBuilder.ID.equals(id)) {
 			return false;
 		}
