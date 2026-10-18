@@ -14,16 +14,16 @@ export interface CastMember {
   description: string;
 }
 
-export const LEAD_ID = 'marlow';
-export const WORKER_IDS = ['juniper', 'kit', 'wren', 'rowan', 'tove'] as const;
+export const LEAD_ID = 'carlos';
+export const WORKER_IDS = ['lucia', 'mateo', 'vale', 'nico', 'sol'] as const;
 
 const PLACEHOLDER: CastMember[] = [
-  { id: 'marlow', name: 'Marlow', role: 'lead', title: 'Lead', color: '#D97757', accent: '#3B2A20', description: 'Plans the work, splits it into tasks, reviews and asks you when it matters.' },
-  { id: 'juniper', name: 'Juniper', role: 'worker', title: 'Worker', color: '#8FA98B', accent: '#F4EFE6', description: 'Careful generalist; likes CLIs and UX details.' },
-  { id: 'kit', name: 'Kit', role: 'worker', title: 'Worker', color: '#2FA3A0', accent: '#1F1E1D', description: 'Fast backend tinkerer; writes the tests first.' },
-  { id: 'wren', name: 'Wren', role: 'worker', title: 'Worker', color: '#C9A227', accent: '#3B2A20', description: 'Front-of-house polish: output, colors, docs.' },
-  { id: 'rowan', name: 'Rowan', role: 'worker', title: 'Worker', color: '#B4553A', accent: '#E9E1D3', description: 'Documentation and release hygiene.' },
-  { id: 'tove', name: 'Tove', role: 'worker', title: 'Worker', color: '#6F8FB5', accent: '#F4EFE6', description: 'Performance and tooling.' },
+  { id: 'carlos', name: 'Carlos', role: 'lead', title: 'Jefe', color: '#D97757', accent: '#3B2A20', description: 'Planifica el trabajo, divide en tareas, revisa y pregunta cuando importa.' },
+  { id: 'lucia', name: 'Lucia', role: 'worker', title: 'Dev', color: '#8FA98B', accent: '#F4EFE6', description: 'Generalista cuidadosa; le gustan los CLIs y detalles de UX.' },
+  { id: 'mateo', name: 'Mateo', role: 'worker', title: 'Dev', color: '#2FA3A0', accent: '#1F1E1D', description: 'Backend rapido; escribe los tests primero.' },
+  { id: 'vale', name: 'Vale', role: 'worker', title: 'Dev', color: '#C9A227', accent: '#3B2A20', description: 'Pulido visual: output, colores, docs.' },
+  { id: 'nico', name: 'Nico', role: 'worker', title: 'Dev', color: '#B4553A', accent: '#E9E1D3', description: 'Documentacion y release.' },
+  { id: 'sol', name: 'Sol', role: 'worker', title: 'Dev', color: '#6F8FB5', accent: '#F4EFE6', description: 'Performance y herramientas.' },
 ];
 
 const HEX = /^#[0-9A-Fa-f]{6}$/;
