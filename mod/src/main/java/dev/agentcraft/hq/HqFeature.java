@@ -137,7 +137,7 @@ public final class HqFeature {
 		return v != null && (v.trim().equals("1") || v.trim().equalsIgnoreCase("true") || v.trim().equalsIgnoreCase("on"));
 	}
 
-	private static int build(CommandContext<CommandSourceStack> ctx, String requestedId, boolean force) {
+	static int build(CommandContext<CommandSourceStack> ctx, String requestedId, boolean force) {
 		String id = ThemedHqBuilder.LEGACY_ID.equals(requestedId) ? ThemedHqBuilder.ID : requestedId;
 		String refused = refusal(ctx.getSource());
 		if (refused != null) {

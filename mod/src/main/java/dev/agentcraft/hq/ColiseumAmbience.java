@@ -44,7 +44,18 @@ final class ColiseumAmbience {
 
     static void init() {
         AgentCraftCommands.sub(root -> root.then(Commands.literal("coliseum")
+            .executes(ColiseumAmbience::teleportToColiseum)
             .then(Commands.literal("fanfare").executes(ColiseumAmbience::fanfare))));
+    }
+
+    private static int teleportToColiseum(CommandContext<CommandSourceStack> ctx) {
+        // Build the coliseum arena (replaces current HQ) then teleport to entrance
+        try {
+            return HqFeature.build(ctx, ColiseumBuilder.ID, true);
+        } catch (Exception e) {
+            ctx.getSource().sendFailure(Component.literal("Failed to build Coliseum: " + e.getMessage()));
+            return 0;
+        }
     }
 
     private static int fanfare(CommandContext<CommandSourceStack> ctx) {
